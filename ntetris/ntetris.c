@@ -1,13 +1,4 @@
 /*
-
-         ___________     __         .__        
-  ____   \__    ___/____/  |________|__| ______
- /    \    |    |_/ __ \   __\_  __ \  |/  ___/
-|   |  \   |    |\  ___/|  |  |  | \/  |\___ \ 
-|___|  /   |____| \___  >__|  |__|  |__/____  >
-     \/               \/                    \/ 
-
-
              ______     __       _     
    ____     /_  __/__  / /______(_)____
   / __ \     / / / _ \/ __/ ___/ / ___/
@@ -18,19 +9,25 @@
 */
 
 #include <ncurses.h>
+//#include <stdlib.h>
 #include "ntetris.h"
 
-int main(void)
+int main()
 {
 	/*
-	Initialize ncurses
+	Initialization.
 	*/
+	ntetris_init();
 
-	initscr();
-	for (int i = 0; i < 5; i++)
-	{
-		printw("%s\n", title[i]);
-	}
+	
+	init_pair(2, COLOR_WHITE, COLOR_BLACK);
+	//attron(A_BOLD);
+	attron(COLOR_PAIR(Z_COLOR_PAIR));
+	printw("Start\n");
+	printw("Exit\n");
+	//attroff(A_BOLD);
+	attroff(COLOR_PAIR(2));
+	//box(stdscr, 97, 97);
 	refresh();
 	getch();
 	endwin();
