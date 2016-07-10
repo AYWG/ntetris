@@ -8,8 +8,16 @@
 #define T_COLOR_PAIR 8
 #define Z_COLOR_PAIR 9
 
-void ntetris_init();
+#define COLOR_ORANGE 8
 
+#define MENU_HEIGHT 5
+#define MENU_WIDTH 15
+
+#define ENTER_KEY 10
+
+void ntetris_init();
+void print_title();
+void print_menu(WINDOW *menu_win, int highlight);
 
 
 
