@@ -1,3 +1,6 @@
+#ifndef NTETRIS_H
+#define NTETRIS_H
+
 #define TITLE_COLOR_PAIR 1
 #define MAIN_TEXT_COLOR_PAIR 2 
 #define I_COLOR_PAIR 3
@@ -15,9 +18,60 @@
 
 #define ENTER_KEY 10
 
-void ntetris_init();
-void print_title();
-void print_menu(WINDOW *menu_win, int highlight);
+/* Start menu options */
+#define START 1
+#define EXIT 2 
+
+/* IDs of the different game pieces */
+#define TETRIMINO_I 0
+#define TETRIMINO_J 1
+#define TETRIMINO_L 2
+#define TETRIMINO_O 3 
+#define TETRIMINO_S 4
+#define TETRIMINO_T 5
+#define TETRIMINO_Z 6
+
+typedef struct 
+{
+	int y, x;
+} COORDINATE_PAIR;
+
+typedef struct 
+{
+	int tetrimino_type;
+
+	COORDINATE_PAIR pivot;
+
+	/* The coordinates of each 
+	the 4 bits that make up a tetrimino*/
+	COORDINATE_PAIR bits[4];
+
+	/*
+	COORDINATE_PAIR B;
+	COORDINATE_PAIR C;
+	COORDINATE_PAIR D;
+
+	
+	int pivot_y, pivoy_x;
+
+	int y_0, x_0;
+	int y_1, x_1;
+	int y_2, x_2;
+	int y_3, x_3;
+
+	*/
+} TETRIMINO;
+
+
+void ntetris_init ();
+void print_title ();
+void print_menu (WINDOW *menu_win, int highlight);
+int get_menu_choice ();
+void move_tetrimino (TETRIMINO *tetrimino, int direction);
+void rotate_tetrimino (TETRIMINO *tetrimino);
+void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id); 
+
+#endif
 
 
 

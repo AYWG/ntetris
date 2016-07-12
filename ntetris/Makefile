@@ -1,5 +1,5 @@
 CC=gcc
 CFLAGS=-lncurses
 
-ntetris: ntetris.o ntetris_help.o
-	$(CC) -o ntetris ntetris.o ntetris_help.o -lncurses
+ntetris: ntetris_main.o ntetris_gui.o ntetris_game.o
+	$(CC) -o ntetris ntetris_main.o ntetris_gui.o ntetris_game.o -lncurses
