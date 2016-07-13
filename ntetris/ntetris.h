@@ -17,6 +17,7 @@
 #define MENU_WIDTH 15
 
 #define ENTER_KEY 10
+#define QUIT_KEY 113
 
 /* Start menu options */
 #define START 1
@@ -69,7 +70,9 @@ void print_menu (WINDOW *menu_win, int highlight);
 int get_menu_choice ();
 void move_tetrimino (TETRIMINO *tetrimino, int direction);
 void rotate_tetrimino (TETRIMINO *tetrimino);
-void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id); 
+void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id);
+int get_rand_tetrimino ();
+void play_ntetris ();
 
 #endif
 

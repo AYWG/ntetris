@@ -134,12 +134,14 @@ int get_menu_choice ()
 				break;
 		}
 		print_menu(menu_win, highlight);
-		if(choice != 0)	/* User did a choice come out of the infinite loop */
+		if(choice != 0)	/* User did a choice, so come out of the infinite loop */
 			break;
 	}
 
 	return choice;
 }
+
+
 
 
 
