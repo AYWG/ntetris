@@ -43,7 +43,7 @@ typedef struct
 
 	COORDINATE_PAIR pivot;
 
-	/* The coordinates of each 
+	/* The coordinates of each of
 	the 4 bits that make up a tetrimino*/
 	COORDINATE_PAIR bits[4];
 
@@ -68,11 +68,17 @@ void ntetris_init ();
 void print_title ();
 void print_menu (WINDOW *menu_win, int highlight);
 int get_menu_choice ();
-void move_tetrimino (TETRIMINO *tetrimino, int direction);
+
+
+void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void rotate_tetrimino (TETRIMINO *tetrimino);
+void drop_tetrimino (TETRIMINO *tetrimino);
 void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
 void play_ntetris ();
+int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
+int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
+int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
 
 #endif
 

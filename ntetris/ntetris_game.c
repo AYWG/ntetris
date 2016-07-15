@@ -3,7 +3,71 @@
 #include <time.h>
 #include "ntetris.h"
 
-void move_tetrimino (TETRIMINO *tetrimino, int direction) 
+int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
+{
+	if (cp_1.x == cp_2.x && cp_1.y == cp_2.y)
+		return TRUE;
+
+	return FALSE;
+}
+
+int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords)
+{
+	return (coords.y < 0 || coords.y > getmaxy(win) ||
+			coords.x < 0 || coords.x > getmaxx(win) - 1);
+}
+
+int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords)
+{
+
+/* 
+
+	For each coordinate in new_coords
+	1. is it within the boundaries of the window?
+	AND
+	2. if it's not the same as one of the current coordinates, is the character at that new coordinate empty?
+
+
+	Invalid if:
+
+	1. out of boundaries
+	OR
+	2. it's not one of the current coordinates (not equal to this, not equal tothat, etc.,  and the new coordinate is occupied
+
+*/
+	int invalid = 0;
+	int matching_coords;
+
+	for (int i = 0; i < num_new_coords; i++)
+	{
+		matching_coords = 0;
+		/* Check boundaries */
+		if (out_of_boundaries(win, new_coords[i]))
+		{
+			invalid = 1;
+			break;
+		}
+
+		for (int j = 0; j < num_new_coords; j++)
+		{
+			matching_coords |= equal_coords(new_coords[i], tetrimino->bits[j]);
+		}
+
+		if (!matching_coords)
+		{
+			if (mvwinch(win, new_coords[i].y, new_coords[i].x) & A_CHARTEXT != ' ')
+			{
+				invalid = 1;
+				break;
+			}
+		}
+	}
+	if (invalid) return FALSE;
+
+	return TRUE;
+}
+
+void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction) 
 {
 	// only directions allowed are: left, right, down
 
@@ -14,13 +78,59 @@ void move_tetrimino (TETRIMINO *tetrimino, int direction)
 	a falling tetrimino to be occupying space. 
 	To show the tetrimino on the screen, we need to print it on the well. This causes
 	issues if we want to use the inch() function. We would need to somehow "ignore"
-	the space "taken up" by the falling tetrimino
+	the space "taken up" by the falling tetrimino.
 
-	if (space is unoccupied or space is occupied by tetrimino bit)  
+	if (space is unoccupied or space is occupied by tetrimino bit) 
+
+
+
 
 	This function would need to know the current status of the main game area window
 	(where the edges are, what bits have formed at the bottom)
 	*/
+	//TETRIMINO *local_tetr = tetrimino;
+
+	/* need to check if valid first */
+	int delta_y = 0;
+	int delta_x = 0;
+	int i, j;
+	COORDINATE_PAIR new_coords[4];
+
+	switch(direction)
+	{
+		case KEY_LEFT:
+			delta_x = -1;
+			break;
+
+		case KEY_RIGHT:
+			delta_x = 1;
+			break;
+
+		case KEY_DOWN:
+			delta_y = 1;
+			break;
+
+		default:
+			break;
+	}
+
+
+	for (i = 0; i < 4; i++)
+	{
+		new_coords[i].y = tetrimino->bits[i].y + delta_y;
+		new_coords[i].x = tetrimino->bits[i].x + delta_x;
+	}
+	
+	// Check if the new coordinates are valid, update position
+
+	if (valid_position(win, tetrimino, new_coords, 4))
+	{
+		for (j = 0; i < 4; j++)
+		{
+			tetrimino->bits[j].y = new_coords[j].y;
+			tetrimino->bits[j].x = new_coords[j].x;
+		}
+	} 
 
 
 }
