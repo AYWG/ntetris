@@ -3,6 +3,8 @@
 #include <time.h>
 #include "ntetris.h"
 
+
+
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
 {
 	if (cp_1.x == cp_2.x && cp_1.y == cp_2.y)
@@ -80,10 +82,6 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	issues if we want to use the inch() function. We would need to somehow "ignore"
 	the space "taken up" by the falling tetrimino.
 
-	if (space is unoccupied or space is occupied by tetrimino bit) 
-
-
-
 
 	This function would need to know the current status of the main game area window
 	(where the edges are, what bits have formed at the bottom)
@@ -135,7 +133,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 
 }
 
-void drop_tetrimino (TETRIMINO *tetrimino)
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 {
 	// instantly move the tetrimino to where it would go if 
 	// just fell naturally
@@ -146,21 +144,31 @@ void drop_tetrimino (TETRIMINO *tetrimino)
 
 WARNING: need to handle case where user attempts to rotate piece near edge of well */
 
-void rotate_tetrimino (TETRIMINO *tetrimino) 
+void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
+	// need to check valid rotation
+
+	TETRIMINO *local_tetr = tetrimino;
+	COORDINATE_PAIR new_coords[4];
 	int temp;
 	for (int i = 0; i < 4; i++)
 	{
-		tetrimino->bits[i].y -= tetrimino->pivot.y;
-		tetrimino->bits[i].x -= tetrimino->pivot.x;
+		local_tetr->bits[i].y -= local_tetr->pivot.y;
+		local_tetr->bits[i].x -= local_tetr->pivot.x;
 
-		temp = tetrimino->bits[i].y; 
-		tetrimino->bits[i].y =  !tetrimino->bits[i].x + 1;
-		tetrimino->bits[i].x = temp;
+		temp = local_tetr->bits[i].y; 
+		local_tetr->bits[i].y =  !local_tetr->bits[i].x + 1;
+		local_tetr->bits[i].x = temp;
 
-		tetrimino->bits[i].y += tetrimino->pivot.y;
-		tetrimino->bits[i].x += tetrimino->pivot.x;
+		local_tetr->bits[i].y += local_tetr->pivot.y;
+		local_tetr->bits[i].x += local_tetr->pivot.x;
+		
+		new_coords[i].y = local_tetr->bits[i].y;
+		new_coords[i].x = local_tetr->bits[i].x;
 	}
+
+	if (valid_position(win, tetrimino, new_coords, 4))
+		tetrimino = local_tetr;
 }
 
 

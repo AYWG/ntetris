@@ -32,6 +32,7 @@
 #define TETRIMINO_T 5
 #define TETRIMINO_Z 6
 
+
 typedef struct 
 {
 	int y, x;
@@ -47,20 +48,6 @@ typedef struct
 	the 4 bits that make up a tetrimino*/
 	COORDINATE_PAIR bits[4];
 
-	/*
-	COORDINATE_PAIR B;
-	COORDINATE_PAIR C;
-	COORDINATE_PAIR D;
-
-	
-	int pivot_y, pivoy_x;
-
-	int y_0, x_0;
-	int y_1, x_1;
-	int y_2, x_2;
-	int y_3, x_3;
-
-	*/
 } TETRIMINO;
 
 
@@ -71,8 +58,8 @@ int get_menu_choice ();
 
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-void rotate_tetrimino (TETRIMINO *tetrimino);
-void drop_tetrimino (TETRIMINO *tetrimino);
+void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
 void play_ntetris ();
