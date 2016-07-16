@@ -42,12 +42,12 @@ typedef struct
 {
 	int tetrimino_type;
 
-	COORDINATE_PAIR pivot;
+	int pivot_bit;
+	//COORDINATE_PAIR pivot;
 
 	/* The coordinates of each of
 	the 4 bits that make up a tetrimino*/
 	COORDINATE_PAIR bits[4];
-
 } TETRIMINO;
 
 
@@ -58,9 +58,10 @@ int get_menu_choice ();
 
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
+TETRIMINO *copy_tetrimino (TETRIMINO *tetrimino);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
-void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id);
+void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
 void play_ntetris ();
 int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
