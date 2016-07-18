@@ -54,13 +54,13 @@ in ASCII. */
 
 void print_title()
 {
-	int col = getmaxx(stdscr);
+	int num_cols = getmaxx(stdscr);
 
 	int j = 2;
 	attron(COLOR_PAIR(TITLE_COLOR_PAIR)); // title is green
 	for (int i = 0; i < 5; i++)
 	{
-		mvprintw(j, (col - strlen(title[i])) / 2, "%s", title[i]);
+		mvprintw(j, (num_cols - strlen(title[i])) / 2, "%s", title[i]);
 		j++;
 	}
 	attroff(COLOR_PAIR(TITLE_COLOR_PAIR));
@@ -100,8 +100,8 @@ int get_menu_choice ()
 	int key_pressed;
 	WINDOW *menu_win;
 
-	int MENU_Y = getcury(stdscr) + LINES / 4;
-	int MENU_X = (COLS / 2) - (MENU_WIDTH / 2) ;
+	int MENU_Y = getcury(stdscr) + getmaxy(stdscr) / 4;
+	int MENU_X = (getmaxx(stdscr) / 2) - (MENU_WIDTH / 2) ;
 
 	menu_win = newwin(MENU_HEIGHT, MENU_WIDTH, MENU_Y, MENU_X);
 	keypad(menu_win, TRUE);

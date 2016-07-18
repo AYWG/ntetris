@@ -16,6 +16,7 @@
 #define MENU_HEIGHT 5
 #define MENU_WIDTH 15
 
+
 #define ENTER_KEY 10
 #define QUIT_KEY 113
 
@@ -32,25 +33,44 @@
 #define TETRIMINO_T 5
 #define TETRIMINO_Z 6
 
+#define NUM_BITS 4
+
+/* Dimensions and initial coordinates for 
+the WINDOWs used in ntetris */
+#define WELL_HEIGHT 23
+#define WELL_WIDTH 26
+#define WELL_INIT_Y 0
+#define WELL_INIT_X 26
+
+#define COVER_HEIGHT 3
+#define COVER_WIDTH WELL_WIDTH
+#define COVER_INIT_Y WELL_INIT_Y
+#define COVER_INIT_X WELL_INIT_X
+
+
 
 typedef struct 
 {
 	int y, x;
 } COORDINATE_PAIR;
 
+
+/* Struct representing the game pieces*/
 typedef struct 
 {
+	/* Which tetrimino is it? */
 	int tetrimino_type;
 
+	/* The bit that is used as pivot when the tetrimino rotates */
 	int pivot_bit;
-	//COORDINATE_PAIR pivot;
 
 	/* The coordinates of each of
-	the 4 bits that make up a tetrimino*/
-	COORDINATE_PAIR bits[4];
+	the bits that make up the tetrimino*/
+	COORDINATE_PAIR bits[NUM_BITS];
 } TETRIMINO;
 
 
+/* Function prototypes */
 void ntetris_init ();
 void print_title ();
 void print_menu (WINDOW *menu_win, int highlight);
@@ -63,7 +83,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
-void play_ntetris ();
+void play_ntetris (int difficulty);
 int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
