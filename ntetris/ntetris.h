@@ -1,6 +1,13 @@
 #ifndef NTETRIS_H
 #define NTETRIS_H
 
+/* Libraries */
+#include <ncurses.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+
 #define TITLE_COLOR_PAIR 1
 #define MAIN_TEXT_COLOR_PAIR 2 
 #define I_COLOR_PAIR 3
@@ -24,6 +31,11 @@
 #define START 1
 #define EXIT 2 
 
+/* Difficulty levels */
+#define CASUAL 0
+#define INTERMEDIATE 1
+#define EXPERT 2
+
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
 #define TETRIMINO_J 1
@@ -36,7 +48,7 @@
 #define NUM_BITS 4
 
 /* Dimensions and initial coordinates for 
-the WINDOWs used in ntetris */
+the WINDOWs used */
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 26
 #define WELL_INIT_Y 0
@@ -47,7 +59,24 @@ the WINDOWs used in ntetris */
 #define COVER_INIT_Y WELL_INIT_Y
 #define COVER_INIT_X WELL_INIT_X
 
+#define HOLD_WIDTH
+#define HOLD_HEIGHT
+#define HOLD_INIT_Y
+#define HOLD_INIT_X
 
+#define LINE_COUNT_WIDTH
+#define LINE_COUNT_HEIGHT
+#define LINE_COUNT_INIT_Y
+#define LINE_COUNT_INIT_X
+
+#define SCORE_WIDTH
+#define SCORE_HEIGHT
+#define SCORE_INIT_Y
+#define SCORE_INIT_X
+
+
+#define SMALL_DELAY 100
+#define ONE_SEC_DELAY 1000000
 
 typedef struct 
 {

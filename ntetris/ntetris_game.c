@@ -1,7 +1,6 @@
-#include <ncurses.h>
-#include <stdlib.h>
-#include <time.h>
 #include "ntetris.h"
+
+
 
 /* Determines whether cp_1 is equal to cp_2.
 Returns 1 if true, 0 if false. */
@@ -96,9 +95,6 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 		case KEY_DOWN:
 			delta_y = 1;
 			break;
-
-		default:
-			break;
 	}
 
 
@@ -108,7 +104,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 		new_coords[i].x = tetrimino->bits[i].x + delta_x;
 	}
 	
-	// Check if the new coordinates are valid, update position
+	/* if the new coordinates are valid, update position */
 
 	if (valid_position(win, tetrimino, new_coords, 4))
 	{

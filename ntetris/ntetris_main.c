@@ -8,8 +8,6 @@
 
 */
 
-#include <ncurses.h>
-#include <stdlib.h>
 #include "ntetris.h"
 
 extern int n_menu_choices;
@@ -29,23 +27,23 @@ int main(int argc, char **argv)
 	print_title();
 	refresh();
 
+	int ch;
 	if (get_menu_choice() == START)
 	{
 		// go to main game
 		clear();
 		refresh();
-		play_ntetris(0);
-		getch();
+		play_ntetris(CASUAL);
+		//getch();
 	}
 	else 
 	{
 		// exit and return to terminal
 	}
 
-	//getch();
 	endwin();
 
-	//return 0;
+	return 0;
 }
 
 /* Top-level function for running the game. */
@@ -62,14 +60,6 @@ void play_ntetris (int difficulty)
 
 
 /*
-	int well_init_y = 0;
-	int well_init_x = COLS / 3;
-
-	int well_height = getmaxy(stdscr) - 1;
-	int well_width = well_init_x;
-	
-
-
 	int hold_y = 1;
 	int hold_x = COLS / 5;
 
@@ -95,10 +85,6 @@ void play_ntetris (int difficulty)
 	box(line_count_win, 0, 0);
 	box(score_win, 0, 0);
 */	
-	//wprintw(well_win, "I'm well_win!");
-	//wattron(cover_win, A_BOLD);
-	//mvwprintw(well_win, 2, 1, "aaaa");
-	//wattroff(cover_win, A_BOLD);
 
 	
 	wnoutrefresh(well_win);
@@ -111,26 +97,37 @@ void play_ntetris (int difficulty)
 */
 
 
-
-
 	/* Generate random number seed*/
 	
-	//srand((unsigned) time(NULL));
+	srand((unsigned) time(NULL));
 
 
-/* Algorithm for game flow:
-1. Spawn a random tetrimino at the top of the well
-	- If this fails, game over; otherwise, continue.
-2. Every second, tetrimino falls down one unit. User is able to 
-freely move/rotate the tetrimino.
-3. Once the piece lands, it becomes "part of the well" in a sense
-	- Any complete horizontal lines are cleared (well is updated)
-4. A new tetrimino is spawned and the algorithm repeats*/
+	int count = 0;
+	int ch;
 
-/*
-	while ((ch = getch()) != QUIT_KEY)
+	halfdelay(1);
+
+
+	while ((ch = wgetch(well_win)) != QUIT_KEY)
 	{
 
+		
+		if (ch != ERR)
+		{
+			usleep(50000);
+		}
+		
+		count++;
+
+		if (count == 10)
+		{
+			// do stuff every second
+			printw("one second passed!\n");
+			refresh();
+			count = 0;
+		}
+
+		
 	}
-*/	
+	
 }

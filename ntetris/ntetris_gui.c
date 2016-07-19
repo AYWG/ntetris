@@ -1,5 +1,3 @@
-#include <ncurses.h>
-#include <string.h>
 #include "ntetris.h"							 			
 
 /* The title of the game represented in ASCII art */
