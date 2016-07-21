@@ -302,3 +302,11 @@ int get_rand_tetrimino ()
 	return rand() % (upper - lower + 1) + lower;
 }
 
+/* Checks if a row in the window is "complete" - that is,
+all coordinates are occupied by an 'o' that is not one of the current
+tetrimino bits */
+
+int row_complete (WINDOW *win, int row)
+{
+	
+}

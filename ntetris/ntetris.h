@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 #define TITLE_COLOR_PAIR 1
 #define MAIN_TEXT_COLOR_PAIR 2 
@@ -81,6 +82,7 @@ the WINDOWs used */
 typedef struct 
 {
 	int y, x;
+	chtype value;
 } COORDINATE_PAIR;
 
 
@@ -98,6 +100,18 @@ typedef struct
 	COORDINATE_PAIR bits[NUM_BITS];
 } TETRIMINO;
 
+typedef struct
+{
+	WINDOW *win;
+	TETRIMINO *tetrimino;
+	int fall_flag;
+} PERIODIC_THREAD_ARGS;
+/*
+typedef struct 
+{
+	
+};
+*/
 
 /* Function prototypes */
 void ntetris_init ();
@@ -112,11 +126,13 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
-void play_ntetris (int difficulty);
+//void play_ntetris (int difficulty);
+void *play_ntetris (void *difficulty);
+void *periodic_thread(PERIODIC_THREAD_ARGS *args);
 int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
-
+int row_complete (WINDOW *win, int row);
 #endif
 
 

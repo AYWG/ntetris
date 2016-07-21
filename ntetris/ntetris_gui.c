@@ -19,8 +19,13 @@ int n_menu_choices = sizeof(menu_choices) / sizeof(char *);
 
 void ntetris_init()
 {
+	/* Initialize ncurses */
 	initscr();
+
+	/* Disable user input from echoing to terminal */
 	noecho();
+
+	/* */
 	cbreak();
 
 	/* Hide the cursor*/
@@ -139,8 +144,13 @@ int get_menu_choice ()
 	return choice;
 }
 
+/* This function draws the well*/
+/*
+void update_well(WINDOW *win, TETRIMINO *tetrimino)
+{
 
-
+}
+*/
 
 
 

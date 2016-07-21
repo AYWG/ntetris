@@ -10,7 +10,10 @@
 
 #include "ntetris.h"
 
+pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
+
 extern int n_menu_choices;
+
 
 int main(int argc, char **argv)
 {
@@ -20,6 +23,9 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+
+	pthread_t game_t;
+
 	/*
 	Initialization.
 	*/
@@ -27,29 +33,56 @@ int main(int argc, char **argv)
 	print_title();
 	refresh();
 
-	int ch;
+	/* This will later be implemented as an option in a menu */
+	int difficulty = CASUAL;
+
 	if (get_menu_choice() == START)
 	{
 		// go to main game
 		clear();
 		refresh();
-		play_ntetris(CASUAL);
-		//getch();
-	}
-	else 
-	{
-		// exit and return to terminal
+		if (pthread_create(&game_t, NULL, &play_ntetris, &difficulty))
+			printf("Could not run main phase of game\n");
+		
+		//play_ntetris(CASUAL);
 	}
 
+	if (pthread_join(game_t, NULL))
+		printf("Could not properly terminate main phase of game\n");
+
+
+
+	/* Exit ncurses */
 	endwin();
 
 	return 0;
 }
 
-/* Top-level function for running the game. */
+/* Thread responsible for moving the tetrimino down at the specified fall rate. */
 
-void play_ntetris (int difficulty) 
+void *periodic_thread(PERIODIC_THREAD_ARGS *args)
 {
+
+	/* Call move_tetrimino */
+	//usleep();
+	if (args->fall_flag)
+	{
+		pthread_mutex_lock(&tetrimino_lock);
+		move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
+		pthread_mutex_unlock(&tetrimino_lock);
+		usleep(ONE_SEC_DELAY); // change this later
+	}
+
+}
+
+/* Top-level thread for running the game. */
+
+void *play_ntetris (void *difficulty) 
+{
+
+	pthread_t periodic_t;
+	
+
 	WINDOW *well_win;
 	WINDOW *cover_win;
 	
@@ -57,8 +90,9 @@ void play_ntetris (int difficulty)
 	WINDOW *line_count_win;
 	WINDOW *score_win;
 */
+	TETRIMINO *tetrimino;
 
-
+	// set these values in ntetris.h later
 /*
 	int hold_y = 1;
 	int hold_x = COLS / 5;
@@ -77,6 +111,7 @@ void play_ntetris (int difficulty)
 	line_count_win = newwin(2, 4, line_count_y, line_count_x);
 	score_win = newwin(2, 4, score_y, score_x);
 */
+	tetrimino = malloc(sizeof(TETRIMINO));
 
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
@@ -102,12 +137,16 @@ void play_ntetris (int difficulty)
 	srand((unsigned) time(NULL));
 
 
+	PERIODIC_THREAD_ARGS *args = malloc(sizeof(PERIODIC_THREAD_ARGS));
+	args->win = well_win;
+	args->tetrimino = tetrimino;
+	args->fall_flag = 0;
+
+
 	int count = 0;
 	int ch;
 
-	halfdelay(1);
-
-
+	/*
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
 	{
 
@@ -117,17 +156,50 @@ void play_ntetris (int difficulty)
 			usleep(50000);
 		}
 		
-		count++;
+		
 
-		if (count == 10)
+		if (count == ONE_SEC_DELAY)
 		{
 			// do stuff every second
-			printw("one second passed!\n");
+			printw("one second passed! %d\n", count);
 			refresh();
 			count = 0;
+			
 		}
+		else count++;
+		if (count % 5000 == 0)
+		{
+			printw("%d\n", count);
+			refresh();
+		}
+		
+		usleep(1);
+	}
+*/
+	int QUIT_FLAG = 0;
+	while (TRUE)
+	{
+		while (count < ONE_SEC_DELAY)
+		{
+			if (ch = getch() == QUIT_KEY)
+			{
+				QUIT_FLAG = 1;
+				break;
+			}
+			count++;
+			usleep(1);
+			if (count % 10000 == 0)
+			printw("one second passed! %d\n", count);
+		}
+
+		if (QUIT_FLAG) break;
+
+		printw("one second passed! %d\n", count);
+		refresh();
+		count = 0;
 
 		
 	}
 	
+
 }
