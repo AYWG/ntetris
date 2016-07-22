@@ -55,6 +55,16 @@ the WINDOWs used */
 #define WELL_INIT_Y 0
 #define WELL_INIT_X 26
 
+#define WELL_L_BNDRY 1
+#define WELL_R_BNDRY WELL_WIDTH - 2
+#define WELL_T_BNDRY 1
+#define WELL_B_BNDRY WELL_HEIGHT - 2
+/*
+// WELL_SIZE refers to the number of different coordinates
+// for which tetriminos can exist in (i.e. all coordinates not
+// including borders)
+#define WELL_SIZE (WELL_HEIGHT - 2) * (WELL_WIDTH - 2)
+*/
 #define COVER_HEIGHT 3
 #define COVER_WIDTH WELL_WIDTH
 #define COVER_INIT_Y WELL_INIT_Y
@@ -62,7 +72,7 @@ the WINDOWs used */
 
 #define HOLD_WIDTH
 #define HOLD_HEIGHT
-#define HOLD_INIT_Y
+#define HOLD_INIT_Y WELL_INIT_Y
 #define HOLD_INIT_X
 
 #define LINE_COUNT_WIDTH
@@ -75,9 +85,7 @@ the WINDOWs used */
 #define SCORE_INIT_Y
 #define SCORE_INIT_X
 
-
-#define SMALL_DELAY 100
-#define ONE_SEC_DELAY 1000000
+#define ONE_SEC_DELAY 1000000 // microseconds
 
 typedef struct 
 {
@@ -106,18 +114,14 @@ typedef struct
 	TETRIMINO *tetrimino;
 	int fall_flag;
 } PERIODIC_THREAD_ARGS;
-/*
-typedef struct 
-{
-	
-};
-*/
+
 
 /* Function prototypes */
 void ntetris_init ();
 void print_title ();
 void print_menu (WINDOW *menu_win, int highlight);
 int get_menu_choice ();
+void clear_well(WINDOW *win);
 
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
@@ -126,13 +130,15 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
-//void play_ntetris (int difficulty);
 void *play_ntetris (void *difficulty);
 void *periodic_thread(PERIODIC_THREAD_ARGS *args);
 int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
-int row_complete (WINDOW *win, int row);
+int row_complete (int row);
+
+extern int n_menu_choices;
+extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 #endif
 
 

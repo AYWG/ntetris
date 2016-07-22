@@ -12,7 +12,7 @@
 
 pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 
-extern int n_menu_choices;
+COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
 
 int main(int argc, char **argv)
@@ -22,7 +22,6 @@ int main(int argc, char **argv)
 		printf("Usage: ntetris [--version] [--help]\n");
 		exit(1);
 	}
-
 
 	pthread_t game_t;
 
@@ -38,19 +37,14 @@ int main(int argc, char **argv)
 
 	if (get_menu_choice() == START)
 	{
-		// go to main game
 		clear();
 		refresh();
 		if (pthread_create(&game_t, NULL, &play_ntetris, &difficulty))
-			printf("Could not run main phase of game\n");
-		
-		//play_ntetris(CASUAL);
+			printf("Could not run main phase of game\n");		
 	}
 
 	if (pthread_join(game_t, NULL))
 		printf("Could not properly terminate main phase of game\n");
-
-
 
 	/* Exit ncurses */
 	endwin();
@@ -84,8 +78,7 @@ void *play_ntetris (void *difficulty)
 	
 
 	WINDOW *well_win;
-	WINDOW *cover_win;
-	
+	WINDOW *cover_win;	
 /*	WINDOW *hold_win;
 	WINDOW *line_count_win;
 	WINDOW *score_win;
@@ -115,22 +108,30 @@ void *play_ntetris (void *difficulty)
 
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
-	
 /*	box(hold_win, 0, 0);
 	box(line_count_win, 0, 0);
 	box(score_win, 0, 0);
 */	
 
-	
 	wnoutrefresh(well_win);
 	wnoutrefresh(cover_win);
+/*	wnoutrefresh(hold_win);
+	wnoutrefresh(line_count_win);
+	wnoutrefresh(score_win);
+*/
 	doupdate();
 
-/*	wrefresh(hold_win);
-	wrefresh(line_count_win);
-	wrefresh(score_win);
-*/
-
+	/* Initialize well_contents to be empty*/
+	int i, j;
+	for (i = 0; i < WELL_HEIGHT - 2; i++)
+	{
+		for (j = 0; j < WELL_WIDTH - 2; j++)
+		{
+			well_contents[i][j].y = i + 1;
+			well_contents[i][j].x = j + 1;
+			well_contents[i][j].value = ' ';
+		}
+	}
 
 	/* Generate random number seed*/
 	
@@ -145,6 +146,7 @@ void *play_ntetris (void *difficulty)
 
 	int count = 0;
 	int ch;
+
 
 	/*
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
@@ -176,6 +178,8 @@ void *play_ntetris (void *difficulty)
 		usleep(1);
 	}
 */
+
+	/*
 	int QUIT_FLAG = 0;
 	while (TRUE)
 	{
@@ -200,6 +204,6 @@ void *play_ntetris (void *difficulty)
 
 		
 	}
-	
+	*/
 
 }

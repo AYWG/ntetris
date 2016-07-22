@@ -145,12 +145,31 @@ int get_menu_choice ()
 }
 
 /* This function draws the well*/
-/*
+
 void update_well(WINDOW *win, TETRIMINO *tetrimino)
 {
-
+	/* */
+	clear_well(win);
 }
-*/
+
+/* This function "erases" the contents of the well that show up in the terminal
+(below the cover window) */
+
+void clear_well(WINDOW *win)
+{
+	int i, j;
+
+	for (i = WELL_T_BNDRY + 2; i <= WELL_B_BNDRY; i++) 
+	{
+		for (j = WELL_L_BNDRY; j <= WELL_R_BNDRY; j++)
+		{
+			mvwaddch(win, i, j, ' ');
+		}
+	}
+
+	wrefresh(win);
+}
+
 
 
 

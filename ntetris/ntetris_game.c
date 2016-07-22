@@ -27,7 +27,6 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coord
 {
 
 /* 
-
 	For each coordinate in new_coords
 	1. is it within the boundaries of the window?
 	AND
@@ -152,7 +151,9 @@ TETRIMINO *copy_tetrimino (TETRIMINO *tetrimino)
 /* Rotates the tetrimino about its pivot coordinates
 (the coordinates of one of the four circles that make up the tetrimino)
 
-WARNING: need to handle case where user attempts to rotate piece near edge of well */
+WARNING: need to handle case where user attempts to rotate piece near edge of well.
+Solution will probably involve moving the piece left or right (depending on which wall)
+so that the piece is within boundaries*/
 
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
@@ -286,6 +287,9 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 	{
 		tetrimino->bits[i].y = init_y[i];
 		tetrimino->bits[i].x = init_x[i];
+
+		/* offset of 3 between ID number and COLOUR_PAIR number*/
+		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
 	}
 	
 }
@@ -306,7 +310,14 @@ int get_rand_tetrimino ()
 all coordinates are occupied by an 'o' that is not one of the current
 tetrimino bits */
 
-int row_complete (WINDOW *win, int row)
+int row_complete (int row)
 {
-	
+	int complete = 1;
+
+	for (int j = 0; j < WELL_WIDTH - 2; j++)
+	{
+		complete &= (well_contents[row][j] & A_CHARTEXT == 'o');
+	}
+
+	return complete;
 }
