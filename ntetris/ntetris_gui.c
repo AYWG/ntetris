@@ -144,12 +144,32 @@ int get_menu_choice ()
 	return choice;
 }
 
-/* This function draws the well*/
+/* This function draws the well
+*/
 
 void update_well(WINDOW *win, TETRIMINO *tetrimino)
 {
-	/* */
+	int i, j;
+
 	clear_well(win);
+
+	for (i = 0; i < NUM_BITS; i++)
+	{
+		mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
+	}
+
+	for (i = 0; i < WELL_HEIGHT - 2; i++)
+	{
+		for (j = 0; j < WELL_WIDTH - 2; j++)
+		{
+			if (well_contents[i][j].value & A_CHARTEXT == 'o')
+			{
+				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
+			}	
+		}
+	}
+
+	wrefresh(win);
 }
 
 /* This function "erases" the contents of the well that show up in the terminal
