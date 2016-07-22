@@ -142,9 +142,10 @@ void *play_ntetris (void *difficulty)
 	}
 
 	/* Generate random number seed*/
-	
 	srand((unsigned) time(NULL));
 
+	/* Enable input from arrow keys */
+	keypad(well_win, TRUE);
 
 	PERIODIC_THREAD_ARGS *args = malloc(sizeof(PERIODIC_THREAD_ARGS));
 	args->win = well_win;
@@ -152,10 +153,9 @@ void *play_ntetris (void *difficulty)
 	args->fall_flag = 0;
 
 	int ch;
-
 	init_tetrimino(well_win, tetrimino, get_rand_tetrimino());
 	update_well(well_win, tetrimino);
-	wgetch(well_win);
+	
 	args->fall_flag = 1;
 
 	/*
@@ -167,7 +167,6 @@ void *play_ntetris (void *difficulty)
 	mvwprintw(well_win, 5, 1, "I got here!\n");
 	wrefresh(well_win);
 	*/
-	/*
 	
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
 	{
@@ -188,19 +187,29 @@ void *play_ntetris (void *difficulty)
 
 			case KEY_UP:
 				drop_tetrimino(well_win, tetrimino);
+				break;
 
 			case SPACE_KEY:
 				rotate_tetrimino(well_win, tetrimino);
 				break;
+			/*
+			default:
+				mvwprintw(well_win, 9, 1, "Invalid key pressed\n");
+				wrefresh(well_win); 
+				wgetch(well_win);
+				break;
+			*/				
 		}
 		update_well(well_win, tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
-
-		mvwprintw(well_win, 7, 1, "I'm in the loop!\n");
+		/*
+		mvwprintw(well_win, 9, 1, "I'm in the loop!\n");
 		wrefresh(well_win); 
+		*/
 	}
-	*/
+	
+	
 	/*
 	mvwprintw(well_win, 8, 1, "I hit the quit key!\n");
 	wrefresh(well_win);

@@ -19,8 +19,8 @@ Returns 1 if true, 0 if false. */
 
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords)
 {
-	return (coords.y < 1 || coords.y > getmaxy(win) - 1||
-			coords.x < 1 || coords.x > getmaxx(win) - 1);
+	return (coords.y < WELL_T_BNDRY || coords.y > getmaxy(win) - 2 ||
+			coords.x < WELL_L_BNDRY || coords.x > getmaxx(win) - 2);
 }
 
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords)
@@ -107,7 +107,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 
 	if (valid_position(win, tetrimino, new_coords, 4))
 	{
-		for (j = 0; i < NUM_BITS; j++)
+		for (j = 0; j < NUM_BITS; j++)
 		{
 			tetrimino->bits[j].y = new_coords[j].y;
 			tetrimino->bits[j].x = new_coords[j].x;
