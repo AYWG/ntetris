@@ -27,6 +27,7 @@
 
 #define ENTER_KEY 10
 #define QUIT_KEY 113
+#define SPACE_KEY 32
 
 /* Start menu options */
 #define START 1
@@ -69,6 +70,7 @@ the WINDOWs used */
 #define COVER_WIDTH WELL_WIDTH
 #define COVER_INIT_Y WELL_INIT_Y
 #define COVER_INIT_X WELL_INIT_X
+#define COVER_B_BNDRY COVER_INIT_Y + COVER_HEIGHT
 
 #define HOLD_WIDTH
 #define HOLD_HEIGHT
@@ -86,6 +88,7 @@ the WINDOWs used */
 #define SCORE_INIT_X
 
 #define ONE_SEC_DELAY 1000000 // microseconds
+#define SMALL_DELAY 1000
 
 typedef struct 
 {
@@ -121,6 +124,7 @@ void ntetris_init ();
 void print_title ();
 void print_menu (WINDOW *menu_win, int highlight);
 int get_menu_choice ();
+void update_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
 
 
@@ -131,7 +135,7 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 int get_rand_tetrimino ();
 void *play_ntetris (void *difficulty);
-void *periodic_thread(PERIODIC_THREAD_ARGS *args);
+void *periodic_thread(void *arguments);
 int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);

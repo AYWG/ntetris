@@ -155,7 +155,11 @@ void update_well(WINDOW *win, TETRIMINO *tetrimino)
 
 	for (i = 0; i < NUM_BITS; i++)
 	{
-		mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
+		/* Do not draw tetrimino bit if it is currently in the same area as the cover window */
+		if (tetrimino->bits[i].y > COVER_B_BNDRY)
+		{
+			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
+		}
 	}
 
 	for (i = 0; i < WELL_HEIGHT - 2; i++)

@@ -14,6 +14,8 @@ pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 
 COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
+int QUIT_FLAG = 0;
+
 
 int main(int argc, char **argv)
 {
@@ -54,19 +56,25 @@ int main(int argc, char **argv)
 
 /* Thread responsible for moving the tetrimino down at the specified fall rate. */
 
-void *periodic_thread(PERIODIC_THREAD_ARGS *args)
+void *periodic_thread(void *arguments)
 {
-
-	/* Call move_tetrimino */
-	//usleep();
-	if (args->fall_flag)
+	PERIODIC_THREAD_ARGS *args =(PERIODIC_THREAD_ARGS *) arguments;
+	while(TRUE)
 	{
-		pthread_mutex_lock(&tetrimino_lock);
-		move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
-		pthread_mutex_unlock(&tetrimino_lock);
-		usleep(ONE_SEC_DELAY); // change this later
-	}
+		//wprintw(args->win, "aaaaaaaaaaaaaa\n");
+		//wrefresh(args->win);
+		if (args->fall_flag)
+		{
+			usleep(ONE_SEC_DELAY); // change this later
+			pthread_mutex_lock(&tetrimino_lock);
+			move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
+			update_well(args->win, args->tetrimino);
+			pthread_mutex_unlock(&tetrimino_lock);
+			
+		}
 
+		if (QUIT_FLAG) break;
+	}
 }
 
 /* Top-level thread for running the game. */
@@ -143,67 +151,66 @@ void *play_ntetris (void *difficulty)
 	args->tetrimino = tetrimino;
 	args->fall_flag = 0;
 
-
-	int count = 0;
 	int ch;
 
+	init_tetrimino(well_win, tetrimino, get_rand_tetrimino());
+	update_well(well_win, tetrimino);
+	wgetch(well_win);
+	args->fall_flag = 1;
 
 	/*
-	while ((ch = wgetch(well_win)) != QUIT_KEY)
-	{
-
-		
-		if (ch != ERR)
-		{
-			usleep(50000);
-		}
-		
-		
-
-		if (count == ONE_SEC_DELAY)
-		{
-			// do stuff every second
-			printw("one second passed! %d\n", count);
-			refresh();
-			count = 0;
-			
-		}
-		else count++;
-		if (count % 5000 == 0)
-		{
-			printw("%d\n", count);
-			refresh();
-		}
-		
-		usleep(1);
-	}
-*/
-
-	/*
-	int QUIT_FLAG = 0;
-	while (TRUE)
-	{
-		while (count < ONE_SEC_DELAY)
-		{
-			if (ch = getch() == QUIT_KEY)
-			{
-				QUIT_FLAG = 1;
-				break;
-			}
-			count++;
-			usleep(1);
-			if (count % 10000 == 0)
-			printw("one second passed! %d\n", count);
-		}
-
-		if (QUIT_FLAG) break;
-
-		printw("one second passed! %d\n", count);
-		refresh();
-		count = 0;
-
-		
-	}
+	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
+			printf("Could not run periodic thread\n");
 	*/
 
+	/*
+	mvwprintw(well_win, 5, 1, "I got here!\n");
+	wrefresh(well_win);
+	*/
+	/*
+	
+	while ((ch = wgetch(well_win)) != QUIT_KEY)
+	{
+		pthread_mutex_lock(&tetrimino_lock);
+		switch(ch)
+		{
+			case KEY_LEFT:
+				move_tetrimino(well_win, tetrimino, KEY_LEFT);
+				break;
+
+			case KEY_RIGHT:
+				move_tetrimino(well_win, tetrimino, KEY_RIGHT);
+				break;
+
+			case KEY_DOWN:
+				move_tetrimino(well_win, tetrimino, KEY_DOWN);
+				break;
+
+			case KEY_UP:
+				drop_tetrimino(well_win, tetrimino);
+
+			case SPACE_KEY:
+				rotate_tetrimino(well_win, tetrimino);
+				break;
+		}
+		update_well(well_win, tetrimino);
+		pthread_mutex_unlock(&tetrimino_lock);
+		usleep(SMALL_DELAY);
+
+		mvwprintw(well_win, 7, 1, "I'm in the loop!\n");
+		wrefresh(well_win); 
+	}
+	*/
+	/*
+	mvwprintw(well_win, 8, 1, "I hit the quit key!\n");
+	wrefresh(well_win);
+	wgetch(well_win);
+	*/
+
+	/*
+	QUIT_FLAG = 1;
+
+	if (pthread_join(periodic_t, NULL))
+		printf("Could not properly terminate periodic thread\n");
+	*/
 }

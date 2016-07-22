@@ -157,40 +157,41 @@ so that the piece is within boundaries*/
 
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
-	// need to check valid rotation
-
-	TETRIMINO *local_tetr = copy_tetrimino(tetrimino);
-	COORDINATE_PAIR new_coords[NUM_BITS];
-	COORDINATE_PAIR pivot;
-
-	pivot.y = local_tetr->bits[local_tetr->pivot_bit].y;
-	pivot.x = local_tetr->bits[local_tetr->pivot_bit].x;
-
-	int temp;
-	for (int i = 0; i < NUM_BITS; i++)
+	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
-		local_tetr->bits[i].y -= pivot.y;
-		local_tetr->bits[i].x -= pivot.x;
+		TETRIMINO *local_tetr = copy_tetrimino(tetrimino);
+		COORDINATE_PAIR new_coords[NUM_BITS];
+		COORDINATE_PAIR pivot;
 
-		temp = local_tetr->bits[i].y; 
-		local_tetr->bits[i].y =  !local_tetr->bits[i].x + 1;
-		local_tetr->bits[i].x = temp;
+		pivot.y = local_tetr->bits[local_tetr->pivot_bit].y;
+		pivot.x = local_tetr->bits[local_tetr->pivot_bit].x;
 
-		local_tetr->bits[i].y += pivot.y;
-		local_tetr->bits[i].x += pivot.x;
-		
-		new_coords[i].y = local_tetr->bits[i].y;
-		new_coords[i].x = local_tetr->bits[i].x;
-	}
+		int temp;
+		for (int i = 0; i < NUM_BITS; i++)
+		{
+			local_tetr->bits[i].y -= pivot.y;
+			local_tetr->bits[i].x -= pivot.x;
 
-	if (valid_position(win, tetrimino, new_coords, 4))
-	{
-		free(tetrimino);
-		tetrimino = local_tetr;
-	}
-	else
-	{
-		free(local_tetr);
+			temp = local_tetr->bits[i].y; 
+			local_tetr->bits[i].y =  !local_tetr->bits[i].x + 1;
+			local_tetr->bits[i].x = temp;
+
+			local_tetr->bits[i].y += pivot.y;
+			local_tetr->bits[i].x += pivot.x;
+			
+			new_coords[i].y = local_tetr->bits[i].y;
+			new_coords[i].x = local_tetr->bits[i].x;
+		}
+
+		if (valid_position(win, tetrimino, new_coords, 4))
+		{
+			free(tetrimino);
+			tetrimino = local_tetr;
+		}
+		else
+		{
+			free(local_tetr);
+		}
 	}
 }
 
@@ -225,8 +226,6 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 	int a, b, c, d;
 	int e, f, g, h;
 
-	COORDINATE_PAIR init_coords[NUM_BITS]; 
-
 	switch(tetrimino_id)
 	{
 		case TETRIMINO_I: 
@@ -239,7 +238,7 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 		case TETRIMINO_J:
 			tetrimino->tetrimino_type = TETRIMINO_J;
 			tetrimino->pivot_bit = 1;
-			a = b = c = 1; d = 2;
+			a = b = c = 1; d = 2; 
 			e = 11; f = e + 1; g = f + 1; h = g;
 			break;
 
@@ -316,7 +315,7 @@ int row_complete (int row)
 
 	for (int j = 0; j < WELL_WIDTH - 2; j++)
 	{
-		complete &= (well_contents[row][j] & A_CHARTEXT == 'o');
+		complete &= (well_contents[row][j].value & A_CHARTEXT == 'o');
 	}
 
 	return complete;
