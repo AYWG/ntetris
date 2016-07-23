@@ -2,15 +2,11 @@
 
 
 
-/* Determines whether cp_1 is equal to cp_2.
-Returns 1 if true, 0 if false. */
+/* Determines whether cp_1 is located at the same coordinates to cp_2. */
 
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
 {
-	if (cp_1.x == cp_2.x && cp_1.y == cp_2.y)
-		return TRUE;
-
-	return FALSE;
+	return (cp_1.x == cp_2.x) && (cp_1.y == cp_2.y);
 }
 
 /* Determines whether the given coords are outside the boundaries
@@ -42,8 +38,9 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coord
 */
 	int invalid = 0;
 	int matching_coords;
+	int i, j;
 
-	for (int i = 0; i < num_new_coords; i++)
+	for (i = 0; i < num_new_coords; i++)
 	{
 		matching_coords = 0;
 		/* Check boundaries */
@@ -53,12 +50,12 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coord
 			break;
 		}
 
-		for (int j = 0; j < num_new_coords; j++)
+		for (j = 0; j < num_new_coords; j++)
 		{
-			matching_coords |= equal_coords(new_coords[i], tetrimino->bits[j]);
+			matching_coords += equal_coords(new_coords[i], tetrimino->bits[j]);
 		}
 
-		if (!matching_coords)
+		if (matching_coords == 0)
 		{
 			if (mvwinch(win, new_coords[i].y, new_coords[i].x) & A_CHARTEXT != ' ')
 			{
@@ -95,7 +92,6 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 			delta_y = 1;
 			break;
 	}
-
 
 	for (i = 0; i < NUM_BITS; i++)
 	{
@@ -173,7 +169,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 			local_tetr->bits[i].x -= pivot.x;
 
 			temp = local_tetr->bits[i].y; 
-			local_tetr->bits[i].y =  !local_tetr->bits[i].x + 1;
+			local_tetr->bits[i].y =  -local_tetr->bits[i].x;
 			local_tetr->bits[i].x = temp;
 
 			local_tetr->bits[i].y += pivot.y;
@@ -287,7 +283,7 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 		tetrimino->bits[i].y = init_y[i];
 		tetrimino->bits[i].x = init_x[i];
 
-		/* offset of 3 between ID number and COLOUR_PAIR number*/
+		/* Offset of 3 between ID number and COLOUR_PAIR number*/
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
 	}
 	

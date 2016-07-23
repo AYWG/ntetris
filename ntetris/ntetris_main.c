@@ -58,11 +58,9 @@ int main(int argc, char **argv)
 
 void *periodic_thread(void *arguments)
 {
-	PERIODIC_THREAD_ARGS *args =(PERIODIC_THREAD_ARGS *) arguments;
+	PERIODIC_THREAD_ARGS *args = (PERIODIC_THREAD_ARGS *) arguments;
 	while(TRUE)
 	{
-		//wprintw(args->win, "aaaaaaaaaaaaaa\n");
-		//wrefresh(args->win);
 		if (args->fall_flag)
 		{
 			usleep(ONE_SEC_DELAY); // change this later
@@ -70,9 +68,7 @@ void *periodic_thread(void *arguments)
 			move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
 			update_well(args->win, args->tetrimino);
 			pthread_mutex_unlock(&tetrimino_lock);
-			
 		}
-
 		if (QUIT_FLAG) break;
 	}
 }
@@ -158,13 +154,13 @@ void *play_ntetris (void *difficulty)
 	
 	args->fall_flag = 1;
 
-	/*
+	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
-			printf("Could not run periodic thread\n");
-	*/
+		printf("Could not run periodic thread\n");
+	
 
 	/*
-	mvwprintw(well_win, 5, 1, "I got here!\n");
+	mvwprintw(well_win, 5, 1, "Pivot bit is %d\n", tetrimino->pivot_bit);
 	wrefresh(well_win);
 	*/
 	
@@ -203,10 +199,6 @@ void *play_ntetris (void *difficulty)
 		update_well(well_win, tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
-		/*
-		mvwprintw(well_win, 9, 1, "I'm in the loop!\n");
-		wrefresh(well_win); 
-		*/
 	}
 	
 	
@@ -216,10 +208,10 @@ void *play_ntetris (void *difficulty)
 	wgetch(well_win);
 	*/
 
-	/*
+	
 	QUIT_FLAG = 1;
 
 	if (pthread_join(periodic_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
-	*/
+	
 }
