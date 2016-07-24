@@ -165,8 +165,8 @@ so that the piece is within boundaries*/
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
 	int i;
-	int coords_out_of_bounds;
-	int delta_x;
+	int coords_out_of_y_bounds, coords_out_of_x_bounds;
+	int delta_y, delta_x;
 	/* Only rotate if the tetrimino is not an O piece */
 	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
@@ -178,21 +178,38 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 		pivot.x = tetrimino->bits[tetrimino->pivot_bit].x;
 
 		copy_bits(tetrimino->bits, old_bits, NUM_BITS);
-		
 		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS);
 
 		while (!valid_position(win, tetrimino, new_bits, 4))
 		{
 			/* Check if at least one of the new bits is out of bounds*/
-			coords_out_of_bounds = 0;
+			coords_out_of_y_bounds = 0;
+			coords_out_of_x_bounds = 0;
 
 			for (i = 0; i < NUM_BITS; i++)
 			{
+				if (new_bits[i].y < WELL_T_BNDRY || new_bits[i].y > WELL_B_BNDRY)
+					coords_out_of_y_bounds++;
+
 				if (new_bits[i].x < WELL_L_BNDRY || new_bits[i].x > WELL_R_BNDRY)
-					coords_out_of_bounds++;
+					coords_out_of_x_bounds++;
 			}
 
-			if (coords_out_of_bounds)
+			if (coords_out_of_y_bounds)
+			{
+				/* Closer to the top? */
+				if (abs(tetrimino->bits[0].y - WELL_T_BNDRY) < abs(tetrimino->bits[0].y - WELL_B_BNDRY))
+					delta_y = 1;
+				else 
+					delta_y = -1;
+
+				for (i = 0; i < NUM_BITS; i++)
+				{
+					new_bits[i].y += delta_y;
+				}
+			}
+
+			if (coords_out_of_x_bounds)
 			{
 				/* Closer to the left? */
 				if (abs(tetrimino->bits[0].x - WELL_L_BNDRY) < abs(tetrimino->bits[0].x - WELL_R_BNDRY))
@@ -205,6 +222,8 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 					new_bits[i].x += delta_x;
 				}
 			}
+
+
 
 		}
 
