@@ -9,6 +9,19 @@ int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
 	return (cp_1.x == cp_2.x) && (cp_1.y == cp_2.y);
 }
 
+int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits)
+{
+	int i;
+	int equal = 1;
+
+	for (i = 0; i < num_bits; i++)
+	{
+		equal &= equal_coords(bits_1[i], bits_2[i]);
+	}
+
+	return equal;
+}
+
 /* Copies the location (not value) of each COORDINATE_PAIR in source_bits into dest_bits*/
 
 void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits)
@@ -341,6 +354,18 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
 	}
 	
+}
+
+void lock_tetrimino_into_well(TETRIMINO *tetrimino)
+{
+	int row, col;
+	int i;
+	for (i = 0; i < NUM_BITS; i++)
+	{
+		row = tetrimino->bits[i].y - 1;
+		col = tetrimino->bits[i].x - 1;
+		well_contents[row][col] = tetrimino->bits[i];
+	}
 }
 
 

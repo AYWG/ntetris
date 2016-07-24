@@ -34,9 +34,9 @@
 #define EXIT 2 
 
 /* Difficulty levels */
-#define CASUAL 0
-#define INTERMEDIATE 1
-#define EXPERT 2
+#define CASUAL 1000000
+#define INTERMEDIATE 600000
+#define EXPERT 300000
 
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
@@ -115,8 +115,8 @@ typedef struct
 {
 	WINDOW *win;
 	TETRIMINO *tetrimino;
-	int fall_flag;
-} PERIODIC_THREAD_ARGS;
+	int game_delay;
+} THREAD_ARGS;
 
 
 /* Function prototypes */
@@ -133,11 +133,13 @@ void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDIN
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
+void lock_tetrimino_into_well(TETRIMINO *tetrimino);
 int get_rand_tetrimino ();
 void *play_ntetris (void *difficulty);
 void *periodic_thread(void *arguments);
-void *lock_in_thread(void *args);
-int check_equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
+void *lock_in_thread(void *arguments);
+int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
+int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits);
 void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);

@@ -58,31 +58,57 @@ int main(int argc, char **argv)
 
 void *periodic_thread(void *arguments)
 {
-	PERIODIC_THREAD_ARGS *args = (PERIODIC_THREAD_ARGS *) arguments;
+	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
 	while(TRUE)
 	{
-		if (args->fall_flag)
-		{
-			usleep(ONE_SEC_DELAY >> 1); // change this later
-			if (QUIT_FLAG) break;
-			usleep(ONE_SEC_DELAY >> 1);
-			pthread_mutex_lock(&tetrimino_lock);
-			move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
-			update_well(args->win, args->tetrimino);
-			pthread_mutex_unlock(&tetrimino_lock);
-		}
+		usleep(args->game_delay >> 1); // change this later
+		if (QUIT_FLAG) break;
+		usleep(args->game_delay >> 1);
+		pthread_mutex_lock(&tetrimino_lock);
+		move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
+		update_well(args->win, args->tetrimino);
+		pthread_mutex_unlock(&tetrimino_lock);
+		
 		if (QUIT_FLAG) break;
 	}
 }
 
 /* Thread responsible for "locking in" a tetrimino into the well */
 
-void *lock_in_thread(void *args)
+void *lock_in_thread(void *arguments)
 {
-	TETRIMINO *tetrimino = (TETRIMINO *) args;
+	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
 
 	COORDINATE_PAIR current_bits[NUM_BITS];
+
+	int i;
+
+	while(TRUE)
+	{
+		if (QUIT_FLAG) break;
+
+		copy_bits(args->tetrimino->bits, current_bits, NUM_BITS);
+		usleep((2 * args->game_delay) >> 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+			continue;
+		usleep((2 * args->game_delay) >> 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+			continue;
+		usleep((2 * args->game_delay) >> 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+			continue;
+		usleep((2 * args->game_delay) >> 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+			continue;
+
+		lock_tetrimino_into_well(args->tetrimino);
+		pthread_mutex_lock(&tetrimino_lock);
+		init_tetrimino(args->win, args->tetrimino, get_rand_tetrimino());
+		update_well(args->win, args->tetrimino);
+		pthread_mutex_unlock(&tetrimino_lock);
+	}
 	
+
 }
 
 /* Top-level thread for running the game. */
@@ -91,6 +117,7 @@ void *play_ntetris (void *difficulty)
 {
 
 	pthread_t periodic_t;
+	pthread_t lock_in_t;
 	
 
 	WINDOW *well_win;
@@ -155,21 +182,20 @@ void *play_ntetris (void *difficulty)
 	/* Enable input from arrow keys */
 	keypad(well_win, TRUE);
 
-	PERIODIC_THREAD_ARGS *args = malloc(sizeof(PERIODIC_THREAD_ARGS));
+	THREAD_ARGS *args = malloc(sizeof(THREAD_ARGS));
 	args->win = well_win;
 	args->tetrimino = tetrimino;
-	args->fall_flag = 0;
+	args->game_delay = *((int *) difficulty);
 
 	int ch;
 	init_tetrimino(well_win, tetrimino, get_rand_tetrimino());
 	update_well(well_win, tetrimino);
-	
-	args->fall_flag = 1;
 
 	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
 		printf("Could not run periodic thread\n");
-	
+	if (pthread_create(&lock_in_t, NULL, &lock_in_thread, args))
+		printf("Could not run lock in thread\n");
 
 	/*
 	mvwprintw(well_win, 5, 1, "Pivot bit is %d\n", tetrimino->pivot_bit);
@@ -225,7 +251,8 @@ void *play_ntetris (void *difficulty)
 
 	if (pthread_join(periodic_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
-	
+	if (pthread_join(lock_in_t, NULL))
+		printf("Could not properly terminate lock in thread\n");
 	
 	/* Free allocated windows and other structs */
 	
