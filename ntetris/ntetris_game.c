@@ -145,7 +145,7 @@ TETRIMINO *copy_tetrimino (TETRIMINO *tetrimino)
 }
 
 /* Rotates the tetrimino about its pivot coordinates
-(the coordinates of one of the four circles that make up the tetrimino)
+(the coordinates of one of the four o's that make up the tetrimino)
 
 WARNING: need to handle case where user attempts to rotate piece near edge of well.
 Solution will probably involve moving the piece left or right (depending on which wall)
@@ -153,10 +153,12 @@ so that the piece is within boundaries*/
 
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
+	/* Only rotate if the tetrimino is not an O piece */
 	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
 		TETRIMINO *local_tetr = copy_tetrimino(tetrimino);
 		COORDINATE_PAIR new_coords[NUM_BITS];
+
 		COORDINATE_PAIR pivot;
 
 		pivot.y = local_tetr->bits[local_tetr->pivot_bit].y;
@@ -179,15 +181,26 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 			new_coords[i].x = local_tetr->bits[i].x;
 		}
 
+		
 		if (valid_position(win, tetrimino, new_coords, 4))
 		{
+			
 			free(tetrimino);
-			tetrimino = local_tetr;
+			tetrimino = local_tetr; 	
+			
 		}
+		
 		else
 		{
 			free(local_tetr);
+			
+			/*
+			mvwprintw(win, 9, 1, "INVALID!");
+			wrefresh(win);
+			wgetch(win);
+			*/
 		}
+		
 	}
 }
 
@@ -218,6 +231,8 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 {
 	/* Need to check if tetrimino can actually be initialized (if there's space);
 	If not, then game over */
+
+	/* don't actually need the win parameter */
 
 	int a, b, c, d;
 	int e, f, g, h;

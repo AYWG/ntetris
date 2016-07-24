@@ -42,12 +42,13 @@ int main(int argc, char **argv)
 		clear();
 		refresh();
 		if (pthread_create(&game_t, NULL, &play_ntetris, &difficulty))
-			printf("Could not run main phase of game\n");		
+			printf("Could not run main phase of game\n");	
+
+		if (pthread_join(game_t, NULL))
+		printf("Could not properly terminate main phase of game\n");
 	}
 
-	if (pthread_join(game_t, NULL))
-		printf("Could not properly terminate main phase of game\n");
-
+	
 	/* Exit ncurses */
 	endwin();
 
@@ -213,5 +214,8 @@ void *play_ntetris (void *difficulty)
 
 	if (pthread_join(periodic_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
+	
+	
+	/* Free allocated windows and other structs */
 	
 }
