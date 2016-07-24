@@ -144,6 +144,26 @@ TETRIMINO *copy_tetrimino (TETRIMINO *tetrimino)
 	return copied_tetr;
 }
 
+void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits)
+{
+	int temp, i;
+	for (i = 0; i < num_bits; i++)
+	{
+		old_bits[i].y -= pivot.y;
+		old_bits[i].x -= pivot.x;
+
+		temp = old_bits[i].y; 
+		old_bits[i].y =  -old_bits[i].x;
+		old_bits[i].x = temp;
+
+		old_bits[i].y += pivot.y;
+		old_bits[i].x += pivot.x;
+		
+		new_bits[i].y = old_bits[i].y;
+		new_bits[i].x = old_bits[i].x;
+	}
+}
+
 /* Rotates the tetrimino about its pivot coordinates
 (the coordinates of one of the four o's that make up the tetrimino)
 
@@ -153,52 +173,32 @@ so that the piece is within boundaries*/
 
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
+	int i;
 	/* Only rotate if the tetrimino is not an O piece */
 	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
-		TETRIMINO *local_tetr = copy_tetrimino(tetrimino);
-		COORDINATE_PAIR new_coords[NUM_BITS];
-
+		COORDINATE_PAIR old_bits[NUM_BITS];
+		COORDINATE_PAIR new_bits[NUM_BITS];
 		COORDINATE_PAIR pivot;
 
-		pivot.y = local_tetr->bits[local_tetr->pivot_bit].y;
-		pivot.x = local_tetr->bits[local_tetr->pivot_bit].x;
+		pivot.y = tetrimino->bits[tetrimino->pivot_bit].y;
+		pivot.x = tetrimino->bits[tetrimino->pivot_bit].x;
 
-		int temp;
-		for (int i = 0; i < NUM_BITS; i++)
+		for (i = 0; i < NUM_BITS; i++)
 		{
-			local_tetr->bits[i].y -= pivot.y;
-			local_tetr->bits[i].x -= pivot.x;
-
-			temp = local_tetr->bits[i].y; 
-			local_tetr->bits[i].y =  -local_tetr->bits[i].x;
-			local_tetr->bits[i].x = temp;
-
-			local_tetr->bits[i].y += pivot.y;
-			local_tetr->bits[i].x += pivot.x;
-			
-			new_coords[i].y = local_tetr->bits[i].y;
-			new_coords[i].x = local_tetr->bits[i].x;
-		}
-
-		
-		if (valid_position(win, tetrimino, new_coords, 4))
-		{
-			
-			free(tetrimino);
-			tetrimino = local_tetr; 	
-			
+			old_bits[i].y = tetrimino->bits[i].y;
+			old_bits[i].x = tetrimino->bits[i].x;
 		}
 		
-		else
+		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS);
+
+		if (valid_position(win, tetrimino, new_bits, 4))
 		{
-			free(local_tetr);
-			
-			/*
-			mvwprintw(win, 9, 1, "INVALID!");
-			wrefresh(win);
-			wgetch(win);
-			*/
+			for (i = 0; i < NUM_BITS; i++)
+			{
+				tetrimino->bits[i].y = new_bits[i].y;
+				tetrimino->bits[i].x = new_bits[i].x;
+			}
 		}
 		
 	}
