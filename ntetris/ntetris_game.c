@@ -13,6 +13,8 @@ int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
 of win.
 Returns 1 if true, 0 if false. */
 
+/* Probably don't need the window parameter, should remove it */
+
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords)
 {
 	return (coords.y < WELL_T_BNDRY || coords.y > getmaxy(win) - 2 ||
@@ -127,23 +129,6 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 
 }
 
-/* Makes a copy of the given tetrimino. */
-
-TETRIMINO *copy_tetrimino (TETRIMINO *tetrimino)
-{
-	TETRIMINO *copied_tetr = malloc(sizeof(TETRIMINO));
-
-	copied_tetr->tetrimino_type = tetrimino->tetrimino_type;
-	copied_tetr->pivot_bit = tetrimino->pivot_bit;
-	for (int i = 0; i < NUM_BITS; i++)
-	{
-		copied_tetr->bits[i].y = tetrimino->bits[i].y;
-		copied_tetr->bits[i].x = tetrimino->bits[i].x;
-	}
-
-	return copied_tetr;
-}
-
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits)
 {
 	int temp, i;
@@ -164,6 +149,7 @@ void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDIN
 	}
 }
 
+
 /* Rotates the tetrimino about its pivot coordinates
 (the coordinates of one of the four o's that make up the tetrimino)
 
@@ -174,6 +160,8 @@ so that the piece is within boundaries*/
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
 	int i;
+	int coords_out_of_bounds;
+	int delta_x;
 	/* Only rotate if the tetrimino is not an O piece */
 	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
@@ -192,6 +180,45 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 		
 		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS);
 
+		while (!valid_position(win, tetrimino, new_bits, 4))
+		{
+			/* Check if at least one of the new bits is out of bounds*/
+			coords_out_of_bounds = 0;
+
+			for (i = 0; i < NUM_BITS; i++)
+			{
+				if (new_bits[i].x < WELL_L_BNDRY || new_bits[i].x > WELL_R_BNDRY)
+					coords_out_of_bounds++;
+			}
+
+			if (coords_out_of_bounds)
+			{
+				/* Closer to the left? */
+				if (abs(tetrimino->bits[0].x - WELL_L_BNDRY) < abs(tetrimino->bits[0].x - WELL_R_BNDRY))
+				{
+					delta_x = 1;
+				}
+				else 
+				{
+					delta_x = -1;
+				}
+
+				for (i = 0; i < NUM_BITS; i++)
+				{
+					new_bits[i].x += delta_x;
+				}
+			}
+
+		}
+
+		for (i = 0; i < NUM_BITS; i++)
+			{
+				tetrimino->bits[i].y = new_bits[i].y;
+				tetrimino->bits[i].x = new_bits[i].x;
+			}
+
+
+		/*
 		if (valid_position(win, tetrimino, new_bits, 4))
 		{
 			for (i = 0; i < NUM_BITS; i++)
@@ -200,6 +227,9 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 				tetrimino->bits[i].x = new_bits[i].x;
 			}
 		}
+		*/
+
+
 		
 	}
 }

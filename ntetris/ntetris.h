@@ -129,7 +129,7 @@ void clear_well(WINDOW *win);
 
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-TETRIMINO *copy_tetrimino (TETRIMINO *tetrimino);
+void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);

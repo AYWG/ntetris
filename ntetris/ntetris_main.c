@@ -155,10 +155,10 @@ void *play_ntetris (void *difficulty)
 	
 	args->fall_flag = 1;
 
-	/*
+	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
 		printf("Could not run periodic thread\n");
-	*/
+	
 
 	/*
 	mvwprintw(well_win, 5, 1, "Pivot bit is %d\n", tetrimino->pivot_bit);
@@ -209,12 +209,12 @@ void *play_ntetris (void *difficulty)
 	wgetch(well_win);
 	*/
 
-	/*
+	
 	QUIT_FLAG = 1;
 
 	if (pthread_join(periodic_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
-	*/
+	
 	
 	/* Free allocated windows and other structs */
 	
