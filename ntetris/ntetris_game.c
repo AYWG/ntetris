@@ -9,6 +9,18 @@ int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
 	return (cp_1.x == cp_2.x) && (cp_1.y == cp_2.y);
 }
 
+/* Copies the location (not value) of each COORDINATE_PAIR in source_bits into dest_bits*/
+
+void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits)
+{
+	int i;
+	for (i = 0; i < num_bits; i++)
+	{
+		dest_bits[i].y = source_bits[i].y;
+		dest_bits[i].x = source_bits[i].x;
+	}
+}
+
 /* Determines whether the given coords are outside the boundaries
 of win.
 Returns 1 if true, 0 if false. */
@@ -103,15 +115,8 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	
 	/* if the new coordinates are valid, update position */
 
-	if (valid_position(win, tetrimino, new_coords, 4))
-	{
-		for (j = 0; j < NUM_BITS; j++)
-		{
-			tetrimino->bits[j].y = new_coords[j].y;
-			tetrimino->bits[j].x = new_coords[j].x;
-		}
-	} 
-
+	if (valid_position(win, tetrimino, new_coords, NUM_BITS))
+		copy_bits(new_coords, tetrimino->bits, NUM_BITS);
 
 }
 
@@ -172,11 +177,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 		pivot.y = tetrimino->bits[tetrimino->pivot_bit].y;
 		pivot.x = tetrimino->bits[tetrimino->pivot_bit].x;
 
-		for (i = 0; i < NUM_BITS; i++)
-		{
-			old_bits[i].y = tetrimino->bits[i].y;
-			old_bits[i].x = tetrimino->bits[i].x;
-		}
+		copy_bits(tetrimino->bits, old_bits, NUM_BITS);
 		
 		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS);
 
@@ -195,13 +196,9 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 			{
 				/* Closer to the left? */
 				if (abs(tetrimino->bits[0].x - WELL_L_BNDRY) < abs(tetrimino->bits[0].x - WELL_R_BNDRY))
-				{
 					delta_x = 1;
-				}
 				else 
-				{
 					delta_x = -1;
-				}
 
 				for (i = 0; i < NUM_BITS; i++)
 				{
@@ -211,12 +208,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 
 		}
 
-		for (i = 0; i < NUM_BITS; i++)
-			{
-				tetrimino->bits[i].y = new_bits[i].y;
-				tetrimino->bits[i].x = new_bits[i].x;
-			}
-
+		copy_bits(new_bits, tetrimino->bits, NUM_BITS);
 
 		/*
 		if (valid_position(win, tetrimino, new_bits, 4))
@@ -228,8 +220,6 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 			}
 		}
 		*/
-
-
 		
 	}
 }
@@ -353,8 +343,8 @@ tetrimino bits */
 int row_complete (int row)
 {
 	int complete = 1;
-
-	for (int j = 0; j < WELL_WIDTH - 2; j++)
+	int j;
+	for (j = 0; j < WELL_WIDTH - 2; j++)
 	{
 		complete &= (well_contents[row][j].value & A_CHARTEXT == 'o');
 	}

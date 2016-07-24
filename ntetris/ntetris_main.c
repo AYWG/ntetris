@@ -45,10 +45,9 @@ int main(int argc, char **argv)
 			printf("Could not run main phase of game\n");	
 
 		if (pthread_join(game_t, NULL))
-		printf("Could not properly terminate main phase of game\n");
+			printf("Could not properly terminate main phase of game\n");
 	}
 
-	
 	/* Exit ncurses */
 	endwin();
 
@@ -64,7 +63,9 @@ void *periodic_thread(void *arguments)
 	{
 		if (args->fall_flag)
 		{
-			usleep(ONE_SEC_DELAY); // change this later
+			usleep(ONE_SEC_DELAY >> 1); // change this later
+			if (QUIT_FLAG) break;
+			usleep(ONE_SEC_DELAY >> 1);
 			pthread_mutex_lock(&tetrimino_lock);
 			move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
 			update_well(args->win, args->tetrimino);
@@ -72,6 +73,16 @@ void *periodic_thread(void *arguments)
 		}
 		if (QUIT_FLAG) break;
 	}
+}
+
+/* Thread responsible for "locking in" a tetrimino into the well */
+
+void *lock_in_thread(void *args)
+{
+	TETRIMINO *tetrimino = (TETRIMINO *) args;
+
+	COORDINATE_PAIR current_bits[NUM_BITS];
+	
 }
 
 /* Top-level thread for running the game. */
