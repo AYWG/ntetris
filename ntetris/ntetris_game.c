@@ -143,6 +143,29 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 	then update tetrimino's coordinates
 	*/
 
+	COORDINATE_PAIR new_bits[NUM_BITS];
+	int i;
+
+	copy_bits(tetrimino->bits, new_bits, NUM_BITS);
+
+	while (valid_position(win, tetrimino, new_bits, NUM_BITS))
+	{
+		for (i = 0; i < NUM_BITS; i++)
+		{
+			new_bits[i].y++;
+		}
+	}
+
+	for (i = 0; i < NUM_BITS; i++)
+	{
+			new_bits[i].y--;
+	}
+
+	copy_bits(new_bits, tetrimino->bits, NUM_BITS);
+
+	lock_tetrimino_into_well(tetrimino);
+	init_tetrimino(win, tetrimino, get_rand_tetrimino());
+	update_well(win, tetrimino);
 
 }
 
