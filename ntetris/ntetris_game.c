@@ -1,7 +1,6 @@
 #include "ntetris.h"
 
 
-
 /* Determines whether cp_1 is located at the same coordinates to cp_2. */
 
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
@@ -84,7 +83,7 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coord
 
 		if (matching_coords == 0)
 		{
-			if (mvwinch(win, new_coords[i].y, new_coords[i].x) & A_CHARTEXT != ' ')
+			if ((mvwinch(win, new_coords[i].y, new_coords[i].x) & A_CHARTEXT) != ' ')
 			{
 				invalid = 1;
 				break;
@@ -364,7 +363,7 @@ void lock_tetrimino_into_well(TETRIMINO *tetrimino)
 	{
 		row = tetrimino->bits[i].y - 1;
 		col = tetrimino->bits[i].x - 1;
-		well_contents[row][col] = tetrimino->bits[i];
+		well_contents[row][col].value = tetrimino->bits[i].value;
 	}
 }
 
@@ -390,7 +389,7 @@ int row_complete (int row)
 	int j;
 	for (j = 0; j < WELL_WIDTH - 2; j++)
 	{
-		complete &= (well_contents[row][j].value & A_CHARTEXT == 'o');
+		complete &= ((well_contents[row][j].value & A_CHARTEXT) == 'o');
 	}
 
 	return complete;

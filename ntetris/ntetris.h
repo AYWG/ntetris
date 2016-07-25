@@ -127,7 +127,6 @@ int get_menu_choice ();
 void update_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
 
-
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);

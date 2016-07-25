@@ -1,4 +1,4 @@
-#include "ntetris.h"							 			
+#include "ntetris.h"		
 
 /* The title of the game represented in ASCII art */
 char *title[] = {
@@ -110,7 +110,7 @@ int get_menu_choice ()
 	keypad(menu_win, TRUE);
 
 	print_menu(menu_win, highlight);
-	while(1)
+	while(TRUE)
 	{	
 		key_pressed = wgetch(menu_win);
 		switch(key_pressed)
@@ -166,7 +166,7 @@ void update_well(WINDOW *win, TETRIMINO *tetrimino)
 	{
 		for (j = 0; j < WELL_WIDTH - 2; j++)
 		{
-			if (well_contents[i][j].value & A_CHARTEXT == 'o')
+			if ((well_contents[i][j].value & A_CHARTEXT) == 'o')
 			{
 				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
 			}	
@@ -193,8 +193,6 @@ void clear_well(WINDOW *win)
 
 	wrefresh(win);
 }
-
-
 
 
 

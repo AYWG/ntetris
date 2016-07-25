@@ -16,7 +16,6 @@ COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
 int QUIT_FLAG = 0;
 
-
 int main(int argc, char **argv)
 {
 	if (argc > 2)
@@ -101,8 +100,8 @@ void *lock_in_thread(void *arguments)
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
 
-		lock_tetrimino_into_well(args->tetrimino);
 		pthread_mutex_lock(&tetrimino_lock);
+		lock_tetrimino_into_well(args->tetrimino);
 		init_tetrimino(args->win, args->tetrimino, get_rand_tetrimino());
 		update_well(args->win, args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
@@ -175,7 +174,7 @@ void *play_ntetris (void *difficulty)
 			well_contents[i][j].value = ' ';
 		}
 	}
-
+	
 	/* Generate random number seed*/
 	srand((unsigned) time(NULL));
 
@@ -197,11 +196,6 @@ void *play_ntetris (void *difficulty)
 	if (pthread_create(&lock_in_t, NULL, &lock_in_thread, args))
 		printf("Could not run lock in thread\n");
 
-	/*
-	mvwprintw(well_win, 5, 1, "Pivot bit is %d\n", tetrimino->pivot_bit);
-	wrefresh(well_win);
-	*/
-	
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
 	{
 		pthread_mutex_lock(&tetrimino_lock);
@@ -238,13 +232,6 @@ void *play_ntetris (void *difficulty)
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
 	}
-	
-	
-	/*
-	mvwprintw(well_win, 8, 1, "I hit the quit key!\n");
-	wrefresh(well_win);
-	wgetch(well_win);
-	*/
 
 	
 	QUIT_FLAG = 1;
