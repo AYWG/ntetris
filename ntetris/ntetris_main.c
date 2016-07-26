@@ -87,6 +87,7 @@ void *lock_in_thread(void *arguments)
 		if (QUIT_FLAG) break;
 
 		copy_bits(args->tetrimino->bits, current_bits, NUM_BITS);
+
 		usleep((2 * args->game_delay) >> 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
@@ -106,8 +107,6 @@ void *lock_in_thread(void *arguments)
 		update_well(args->win, args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 	}
-	
-
 }
 
 /* Top-level thread for running the game. */

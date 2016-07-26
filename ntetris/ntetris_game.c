@@ -45,6 +45,9 @@ int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords)
 			coords.x < WELL_L_BNDRY || coords.x > getmaxx(win) - 2);
 }
 
+/* Determines if new_coords is a valid array of bits for the tetrimino within
+the window. */
+
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords)
 {
 
@@ -101,7 +104,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 {
 	int delta_y = 0;
 	int delta_x = 0;
-	int i, j;
+	int i;
 	COORDINATE_PAIR new_coords[NUM_BITS];
 
 	switch(direction)
@@ -132,17 +135,12 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 
 }
 
+/* Instantly move the tetrimino to where it would go if 
+   just fell naturally down the well from its current position,
+   then lock it into the well. */
+
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 {
-	// instantly move the tetrimino to where it would go if 
-	// just fell naturally
-
-	/* First, get its current coordinates. Then, 
-	keep decreasing y coordinate of each bit by 1 and
-	check for valid_position - when this returns 0, stop, 
-	then update tetrimino's coordinates
-	*/
-
 	COORDINATE_PAIR new_bits[NUM_BITS];
 	int i;
 
@@ -263,18 +261,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 		}
 
 		copy_bits(new_bits, tetrimino->bits, NUM_BITS);
-
-		/*
-		if (valid_position(win, tetrimino, new_bits, 4))
-		{
-			for (i = 0; i < NUM_BITS; i++)
-			{
-				tetrimino->bits[i].y = new_bits[i].y;
-				tetrimino->bits[i].x = new_bits[i].x;
-			}
-		}
-		*/
-		
+	
 	}
 }
 
@@ -417,3 +404,5 @@ int row_complete (int row)
 
 	return complete;
 }
+
+void clear_row 
