@@ -103,7 +103,7 @@ void *lock_in_thread(void *arguments)
 
 		pthread_mutex_lock(&tetrimino_lock);
 		lock_tetrimino_into_well(args->tetrimino);
-		update_well();
+		update_well(args->win, args->tetrimino, args->game_delay);
 		init_tetrimino(args->win, args->tetrimino, get_rand_tetrimino());
 		draw_well(args->win, args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
@@ -148,6 +148,7 @@ void *play_ntetris (void *difficulty)
 */
 	tetrimino = malloc(sizeof(TETRIMINO));
 
+	/* Draw the borders of each window */
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
 /*	box(hold_win, 0, 0);
@@ -214,7 +215,7 @@ void *play_ntetris (void *difficulty)
 				break;
 
 			case KEY_UP:
-				drop_tetrimino(well_win, tetrimino);
+				drop_tetrimino(well_win, tetrimino, args->game_delay);
 				break;
 
 			case SPACE_KEY:
@@ -233,7 +234,6 @@ void *play_ntetris (void *difficulty)
 		usleep(SMALL_DELAY);
 	}
 
-	
 	QUIT_FLAG = 1;
 
 	if (pthread_join(periodic_t, NULL))
@@ -242,5 +242,8 @@ void *play_ntetris (void *difficulty)
 		printf("Could not properly terminate lock in thread\n");
 	
 	/* Free allocated windows and other structs */
-	
+	free(tetrimino);
+	free(args);
+	delwin(well_win);
+	delwin(cover_win);
 }

@@ -139,7 +139,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
    just fell naturally down the well from its current position,
    then lock it into the well. */
 
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 {
 	COORDINATE_PAIR new_bits[NUM_BITS];
 	int i;
@@ -162,7 +162,7 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 	copy_bits(new_bits, tetrimino->bits, NUM_BITS);
 
 	lock_tetrimino_into_well(tetrimino);
-	update_well();
+	update_well(win, tetrimino, game_delay);
 	init_tetrimino(win, tetrimino, get_rand_tetrimino());
 	draw_well(win, tetrimino);
 
@@ -428,10 +428,22 @@ void clear_row (int row)
 	}
 }
 
-void update_well()
+void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 {
 	int num_complete_row = 0;
 	int i, j;
+
+	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
+	{
+		if (row_empty(i)) break;
+
+		if (row_complete(i))
+			for (j = 0; j < WELL_R_BNDRY; j++)
+					well_contents[i][j].value |= A_REVERSE;
+	}
+
+	draw_well(win, tetrimino);
+	usleep(game_delay);
 
 	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
 	{
@@ -442,7 +454,6 @@ void update_well()
 			clear_row(i);
 			num_complete_row++;
 		}
-		
 		else
 		{
 			// copy row i to row i + num_complete_row

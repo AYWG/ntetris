@@ -130,7 +130,7 @@ void clear_well(WINDOW *win);
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
 int get_rand_tetrimino ();
@@ -144,7 +144,7 @@ int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
 int row_complete (int row);
 void clear_row (int row);
-void update_well();
+void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 
 extern int n_menu_choices;
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
