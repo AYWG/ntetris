@@ -45,14 +45,14 @@ int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords)
 			coords.x < WELL_L_BNDRY || coords.x > getmaxx(win) - 2);
 }
 
-/* Determines if new_coords is a valid array of bits for the tetrimino within
+/* Determines if new_bits is a valid array of bits for the tetrimino within
 the window. */
 
-int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords)
+int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[], int num_bits)
 {
 
 /* 
-	For each coordinate in new_coords
+	For each coordinate in new_bits
 	1. is it within the boundaries of the window?
 	AND
 	2. if it's not the same as one of the current coordinates, is the character at that new coordinate empty?
@@ -66,33 +66,56 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coord
 
 */
 	int invalid = 0;
-	int matching_coords;
-	int i, j;
-
-	for (i = 0; i < num_new_coords; i++)
+	//int matching_coords;
+	int row, col;
+	int i;
+/*
+	for (i = 0; i < num_bits; i++)
 	{
 		matching_coords = 0;
-		/* Check boundaries */
-		if (out_of_boundaries(win, new_coords[i]))
+		// Check boundaries 
+		if (out_of_boundaries(win, new_bits[i]))
 		{
 			invalid = 1;
 			break;
 		}
 
-		for (j = 0; j < num_new_coords; j++)
+		for (j = 0; j < num_new_bits; j++)
 		{
-			matching_coords += equal_coords(new_coords[i], tetrimino->bits[j]);
+			matching_coords += equal_coords(new_bits[i], tetrimino->bits[j]);
 		}
 
 		if (matching_coords == 0)
 		{
-			if ((mvwinch(win, new_coords[i].y, new_coords[i].x) & A_CHARTEXT) != ' ')
+			if ((mvwinch(win, new_bits[i].y, new_bits[i].x) & A_CHARTEXT) != ' ' &&
+				(mvwinch(win, new_bits[i].y, new_bits[i].x) & A_ATTRIBUTES) != A_DIM)
 			{
 				invalid = 1;
 				break;
 			}
 		}
 	}
+*/
+	for (i = 0; i < num_bits; i++)
+	{
+		/* Check boundaries */
+		if (out_of_boundaries(win, new_bits[i]))
+		{
+			invalid = 1;
+			break;
+		}
+
+		row = new_bits[i].y - 1;
+		col = new_bits[i].x - 1;
+
+		if ((well_contents[row][col].value & A_CHARTEXT != ' ') &&
+			(well_contents[row][col].value & A_ATTRIBUTES) != A_DIM)
+		{
+			invalid = 1;
+			break;
+		}
+	}
+
 	if (invalid) return FALSE;
 
 	return TRUE;
@@ -105,7 +128,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	int delta_y = 0;
 	int delta_x = 0;
 	int i;
-	COORDINATE_PAIR new_coords[NUM_BITS];
+	COORDINATE_PAIR new_bits[NUM_BITS];
 
 	switch(direction)
 	{
@@ -124,14 +147,14 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 
 	for (i = 0; i < NUM_BITS; i++)
 	{
-		new_coords[i].y = tetrimino->bits[i].y + delta_y;
-		new_coords[i].x = tetrimino->bits[i].x + delta_x;
+		new_bits[i].y = tetrimino->bits[i].y + delta_y;
+		new_bits[i].x = tetrimino->bits[i].x + delta_x;
 	}
 	
 	/* if the new coordinates are valid, update position */
 
-	if (valid_position(win, tetrimino, new_coords, NUM_BITS))
-		copy_bits(new_coords, tetrimino->bits, NUM_BITS);
+	if (valid_position(win, tetrimino, new_bits, NUM_BITS))
+		copy_bits(new_bits, tetrimino->bits, NUM_BITS);
 
 }
 
@@ -147,18 +170,12 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 	copy_bits(tetrimino->bits, new_bits, NUM_BITS);
 
 	while (valid_position(win, tetrimino, new_bits, NUM_BITS))
-	{
 		for (i = 0; i < NUM_BITS; i++)
-		{
 			new_bits[i].y++;
-		}
-	}
 
 	for (i = 0; i < NUM_BITS; i++)
-	{
 			new_bits[i].y--;
-	}
-
+	
 	copy_bits(new_bits, tetrimino->bits, NUM_BITS);
 
 	lock_tetrimino_into_well(tetrimino);
@@ -430,20 +447,26 @@ void clear_row (int row)
 
 void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 {
+	
 	int num_complete_row = 0;
 	int i, j;
+	int complete = 0;
 
 	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
 	{
 		if (row_empty(i)) break;
 
 		if (row_complete(i))
+		{
 			for (j = 0; j < WELL_R_BNDRY; j++)
 					well_contents[i][j].value |= A_REVERSE;
+			complete = 1;
+		}
 	}
 
 	draw_well(win, tetrimino);
-	usleep(game_delay);
+	if (complete)
+		usleep(game_delay);
 
 	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
 	{
@@ -468,5 +491,6 @@ void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 		}
 
 	}
+	
 
 }

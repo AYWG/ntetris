@@ -141,7 +141,7 @@ int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
 int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits);
 void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
-int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
+int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[], int num_bits);
 int row_complete (int row);
 void clear_row (int row);
 void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);

@@ -149,19 +149,36 @@ int get_menu_choice ()
 
 void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 {
+	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
-
+	int locked_in = 1;
 	clear_well(win);
 
+	copy_bits(tetrimino->bits, shadow_bits, NUM_BITS);
+
+
+	while (valid_position(win, tetrimino, shadow_bits, NUM_BITS)) 
+	{
+		for (i = 0; i < NUM_BITS; i++)
+			shadow_bits[i].y++;
+		
+		locked_in = 0;
+	}
+	
+	
 	for (i = 0; i < NUM_BITS; i++)
 	{
+		if (!locked_in)
+			shadow_bits[i].y--;
+
+		mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino->bits[i].value | A_DIM);
+	}
+	
+	for (i = 0; i < NUM_BITS; i++)
 		/* Do not draw tetrimino bit if it is currently in the same area as the cover window */
 		if (tetrimino->bits[i].y >= COVER_B_BNDRY)
-		{
 			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
-		}
-	}
-
+		
 	for (i = 0; i < WELL_HEIGHT - 2; i++)
 	{
 		for (j = 0; j < WELL_WIDTH - 2; j++)

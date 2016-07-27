@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	refresh();
 
 	/* This will later be implemented as an option in a menu */
-	int difficulty = EXPERT;
+	int difficulty = CASUAL;
 
 	if (get_menu_choice() == START)
 	{
