@@ -7,14 +7,10 @@ char *title[] = {
 					"  / __ \\     / / / _ \\/ __/ ___/ / ___/",
 					" / / / /    / / /  __/ /_/ /  / (__  ) ",
 					"/_/ /_/    /_/  \\___/\\__/_/  /_/____/  "
-				};
+				};				   	
 
-char *menu_choices[] = {
-							"Start",
-							 "Exit"
-					   };	
+//int n_menu_choices = sizeof(menu_choices) / sizeof(char *);
 
-int n_menu_choices = sizeof(menu_choices) / sizeof(char *);
 
 
 void ntetris_init()
@@ -72,14 +68,14 @@ void print_title()
 /* Print the menu and all of its choices, highlighting whichever one
 is selected. */
 
-void print_menu(WINDOW *menu_win, int highlight)
+void print_menu(WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices)
 {
 	int x, y, i;	
 
 	x = 5;
 	y = 2;
 
-	for (i = 0; i < n_menu_choices; ++i)
+	for (i = 0; i < num_menu_choices; ++i)
 	{	
 		if (highlight == i + 1) // Highlight the present choice 
 		{	wattron(menu_win, A_REVERSE); 
@@ -96,7 +92,7 @@ void print_menu(WINDOW *menu_win, int highlight)
 /* Initializes the menu window and repeatedly updates the menu 
 by calling print_menu. Returns the choice that the user selects. */
 
-int get_menu_choice ()
+int get_menu_choice (char *menu_choices[], int num_menu_choices)
 {
 	int highlight = START;
 	int choice = 0;
@@ -109,7 +105,7 @@ int get_menu_choice ()
 	menu_win = newwin(MENU_HEIGHT, MENU_WIDTH, MENU_Y, MENU_X);
 	keypad(menu_win, TRUE);
 
-	print_menu(menu_win, highlight);
+	print_menu(menu_win, highlight, menu_choices, num_menu_choices);
 	while(TRUE)
 	{	
 		key_pressed = wgetch(menu_win);
@@ -117,13 +113,13 @@ int get_menu_choice ()
 		{	
 			case KEY_UP:
 				if(highlight == 1)
-					highlight = n_menu_choices;
+					highlight = num_menu_choices;
 				else
 					--highlight;
 				break;
 
 			case KEY_DOWN:
-				if(highlight == n_menu_choices)
+				if(highlight == num_menu_choices)
 					highlight = 1;
 				else 
 					++highlight;
@@ -136,10 +132,12 @@ int get_menu_choice ()
 			default:
 				break;
 		}
-		print_menu(menu_win, highlight);
+		print_menu(menu_win, highlight, menu_choices, num_menu_choices);
 		if(choice != 0)	/* User did a choice, so come out of the infinite loop */
 			break;
 	}
+
+	delwin(menu_win);
 
 	return choice;
 }
@@ -161,10 +159,9 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 	{
 		for (i = 0; i < NUM_BITS; i++)
 			shadow_bits[i].y++;
-		
+
 		locked_in = 0;
 	}
-	
 	
 	for (i = 0; i < NUM_BITS; i++)
 	{

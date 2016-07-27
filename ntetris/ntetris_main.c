@@ -34,19 +34,51 @@ int main(int argc, char **argv)
 	refresh();
 
 	/* This will later be implemented as an option in a menu */
-	int difficulty = CASUAL;
+	int difficulty = EXPERT;
 
-	if (get_menu_choice() == START)
+	char *start_menu_choices[] = {
+								"Start",
+							 	"Exit"
+					   		 };
+
+	char *difficulty_menu_choices[] = {
+										"Casual",
+										"Intermediate",
+										"Expert",
+										"Back"
+								  };
+
+	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
+	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
+
+	while (TRUE)
 	{
-		clear();
-		refresh();
-		if (pthread_create(&game_t, NULL, &play_ntetris, &difficulty))
-			printf("Could not run main phase of game\n");	
+		if (get_menu_choice(start_menu_choices, num_start_menu_choices) == START)
+		{	
+			if ((difficulty = get_menu_choice(difficulty_menu_choices, num_diff_menu_choices)) == 4)
+				continue;
+			else
+			{
+				switch(difficulty)
+				{
+					case 1: difficulty = CASUAL; break;
+					case 2: difficulty = INTERMEDIATE; break;
+					case 3: difficulty = EXPERT; break;
+				}
+				clear();
+				refresh();
+				if (pthread_create(&game_t, NULL, &play_ntetris, &difficulty))
+					printf("Could not run main phase of game\n");	
 
-		if (pthread_join(game_t, NULL))
-			printf("Could not properly terminate main phase of game\n");
+				if (pthread_join(game_t, NULL))
+					printf("Could not properly terminate main phase of game\n");
+
+				break;
+			}
+		}
+		else break;
 	}
-
+	
 	/* Exit ncurses */
 	endwin();
 

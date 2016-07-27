@@ -21,8 +21,8 @@
 
 #define COLOR_ORANGE 8
 
-#define MENU_HEIGHT 5
-#define MENU_WIDTH 15
+#define MENU_HEIGHT 7
+#define MENU_WIDTH 20
 
 
 #define ENTER_KEY 10
@@ -35,8 +35,8 @@
 
 /* Difficulty levels */
 #define CASUAL 1000000
-#define INTERMEDIATE 600000
-#define EXPERT 300000
+#define INTERMEDIATE 500000
+#define EXPERT 250000
 
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
@@ -122,8 +122,8 @@ typedef struct
 /* Function prototypes */
 void ntetris_init ();
 void print_title ();
-void print_menu (WINDOW *menu_win, int highlight);
-int get_menu_choice ();
+void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
+int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void draw_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
 
@@ -146,7 +146,9 @@ int row_complete (int row);
 void clear_row (int row);
 void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 
-extern int n_menu_choices;
+//extern int n_menu_choices;
+//extern char *start_menu_choices[];
+//extern char *difficulty_menu_choices[];
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 #endif
 
