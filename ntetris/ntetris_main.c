@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	refresh();
 
 	/* This will later be implemented as an option in a menu */
-	int difficulty = CASUAL;
+	int difficulty = EXPERT;
 
 	if (get_menu_choice() == START)
 	{
@@ -65,7 +65,7 @@ void *periodic_thread(void *arguments)
 		usleep(args->game_delay >> 1);
 		pthread_mutex_lock(&tetrimino_lock);
 		move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
-		update_well(args->win, args->tetrimino);
+		draw_well(args->win, args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
 		if (QUIT_FLAG) break;
@@ -103,8 +103,9 @@ void *lock_in_thread(void *arguments)
 
 		pthread_mutex_lock(&tetrimino_lock);
 		lock_tetrimino_into_well(args->tetrimino);
+		update_well();
 		init_tetrimino(args->win, args->tetrimino, get_rand_tetrimino());
-		update_well(args->win, args->tetrimino);
+		draw_well(args->win, args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 	}
 }
@@ -187,7 +188,7 @@ void *play_ntetris (void *difficulty)
 
 	int ch;
 	init_tetrimino(well_win, tetrimino, get_rand_tetrimino());
-	update_well(well_win, tetrimino);
+	draw_well(well_win, tetrimino);
 
 	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
@@ -227,7 +228,7 @@ void *play_ntetris (void *difficulty)
 				break;
 			*/				
 		}
-		update_well(well_win, tetrimino);
+		draw_well(well_win, tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
 	}

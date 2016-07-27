@@ -147,7 +147,7 @@ int get_menu_choice ()
 /* This function draws the well
 */
 
-void update_well(WINDOW *win, TETRIMINO *tetrimino)
+void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 {
 	int i, j;
 

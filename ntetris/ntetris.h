@@ -52,9 +52,9 @@
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
 #define WELL_HEIGHT 23
-#define WELL_WIDTH 26
+#define WELL_WIDTH 22
 #define WELL_INIT_Y 0
-#define WELL_INIT_X 26
+#define WELL_INIT_X 30
 
 #define WELL_L_BNDRY 1
 #define WELL_R_BNDRY WELL_WIDTH - 2
@@ -124,7 +124,7 @@ void ntetris_init ();
 void print_title ();
 void print_menu (WINDOW *menu_win, int highlight);
 int get_menu_choice ();
-void update_well(WINDOW *win, TETRIMINO *tetrimino);
+void draw_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
@@ -143,6 +143,8 @@ void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int 
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_coords[], int num_new_coords);
 int row_complete (int row);
+void clear_row (int row);
+void update_well();
 
 extern int n_menu_choices;
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];

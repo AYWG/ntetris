@@ -162,8 +162,9 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 	copy_bits(new_bits, tetrimino->bits, NUM_BITS);
 
 	lock_tetrimino_into_well(tetrimino);
+	update_well();
 	init_tetrimino(win, tetrimino, get_rand_tetrimino());
-	update_well(win, tetrimino);
+	draw_well(win, tetrimino);
 
 }
 
@@ -397,7 +398,7 @@ int row_complete (int row)
 {
 	int complete = 1;
 	int j;
-	for (j = 0; j < WELL_WIDTH - 2; j++)
+	for (j = 0; j < WELL_R_BNDRY; j++)
 	{
 		complete &= ((well_contents[row][j].value & A_CHARTEXT) == 'o');
 	}
@@ -405,4 +406,56 @@ int row_complete (int row)
 	return complete;
 }
 
-void clear_row 
+int row_empty (int row)
+{
+	int empty = 1;
+	int j;
+	for (j = 0; j < WELL_R_BNDRY; j++)
+	{
+		empty &= (well_contents[row][j].value == ' ');
+	}
+
+	return empty;
+}
+
+void clear_row (int row)
+{
+	int j;
+
+	for (j = 0; j < WELL_R_BNDRY; j++)
+	{
+		well_contents[row][j].value = ' ';	
+	}
+}
+
+void update_well()
+{
+	int num_complete_row = 0;
+	int i, j;
+
+	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
+	{
+		if (row_empty(i)) break;
+
+		if (row_complete(i))
+		{
+			clear_row(i);
+			num_complete_row++;
+		}
+		
+		else
+		{
+			// copy row i to row i + num_complete_row
+			if (i + num_complete_row != i)
+			{
+				for (j = 0; j < WELL_R_BNDRY; j++)
+				{
+					well_contents[i + num_complete_row][j].value = well_contents[i][j].value;
+				}
+				clear_row(i);
+			}
+		}
+
+	}
+
+}
