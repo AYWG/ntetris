@@ -136,7 +136,7 @@ void *lock_in_thread(void *arguments)
 		pthread_mutex_lock(&tetrimino_lock);
 		lock_tetrimino_into_well(args->tetrimino);
 		update_well(args->win, args->tetrimino, args->game_delay);
-		init_tetrimino(args->win, args->tetrimino, get_rand_tetrimino());
+		init_tetrimino(args->win, args->tetrimino, get_rand_num(0, 6));
 		draw_well(args->win, args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 	}
@@ -220,7 +220,7 @@ void *play_ntetris (void *difficulty)
 	args->game_delay = *((int *) difficulty);
 
 	int ch;
-	init_tetrimino(well_win, tetrimino, get_rand_tetrimino());
+	init_tetrimino(well_win, tetrimino, get_rand_num(0, 6));
 	draw_well(well_win, tetrimino);
 
 	

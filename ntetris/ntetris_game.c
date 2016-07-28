@@ -180,12 +180,32 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 
 	lock_tetrimino_into_well(tetrimino);
 	update_well(win, tetrimino, game_delay);
-	init_tetrimino(win, tetrimino, get_rand_tetrimino());
+	init_tetrimino(win, tetrimino, get_rand_num(0, 6));
 	draw_well(win, tetrimino);
 
 }
 
-void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits)
+void adjust_bits (COORDINATE_PAIR bits[], int num_bits, int direction)
+{
+	int delta_y, delta_x;
+	int i;
+
+	switch(direction)
+	{
+		case UP: delta_y = -1; delta_x = 0; break;
+		case DOWN: delta_y = 1; delta_x = 0; break;
+		case LEFT: delta_y = 0; delta_x = -1; break;
+		case RIGHT: delta_y = 0; delta_x = 1; break;
+	}
+
+	for (i = 0; i < num_bits; i++)
+	{
+		bits[i].y += delta_y;
+		bits[i].x += delta_x;
+	}
+}
+
+void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits)
 {
 	int temp, i;
 	for (i = 0; i < num_bits; i++)
@@ -206,18 +226,14 @@ void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDIN
 }
 
 
-/* Rotates the tetrimino about its pivot coordinates
+/*
+ Rotates the tetrimino about its pivot coordinates
 (the coordinates of one of the four o's that make up the tetrimino)
-
-WARNING: need to handle case where user attempts to rotate piece near edge of well.
-Solution will probably involve moving the piece left or right (depending on which wall)
-so that the piece is within boundaries*/
+*/
 
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
 {
-	int i;
-	int coords_out_of_y_bounds, coords_out_of_x_bounds;
-	int delta_y, delta_x;
+
 	/* Only rotate if the tetrimino is not an O piece */
 	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
@@ -225,13 +241,18 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 		COORDINATE_PAIR new_bits[NUM_BITS];
 		COORDINATE_PAIR pivot;
 
+		int i;
+		int coords_out_of_y_bounds, coords_out_of_x_bounds;
+		int delta_y, delta_x;
+		int count_adjust = 0;
+
 		pivot.y = tetrimino->bits[tetrimino->pivot_bit].y;
 		pivot.x = tetrimino->bits[tetrimino->pivot_bit].x;
 
 		copy_bits(tetrimino->bits, old_bits, NUM_BITS);
 		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS);
 
-		while (!valid_position(win, tetrimino, new_bits, 4))
+		while (!valid_position(win, tetrimino, new_bits, NUM_BITS))
 		{
 			/* Check if at least one of the new bits is out of bounds*/
 			coords_out_of_y_bounds = 0;
@@ -250,31 +271,28 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 			{
 				/* Closer to the top? */
 				if (abs(tetrimino->bits[0].y - WELL_T_BNDRY) < abs(tetrimino->bits[0].y - WELL_B_BNDRY))
-					delta_y = 1;
+					adjust_bits(new_bits, NUM_BITS, DOWN);
 				else 
-					delta_y = -1;
-
-				for (i = 0; i < NUM_BITS; i++)
-				{
-					new_bits[i].y += delta_y;
-				}
+					adjust_bits(new_bits, NUM_BITS, UP);
 			}
 
 			if (coords_out_of_x_bounds)
 			{
 				/* Closer to the left? */
 				if (abs(tetrimino->bits[0].x - WELL_L_BNDRY) < abs(tetrimino->bits[0].x - WELL_R_BNDRY))
-					delta_x = 1;
+					adjust_bits(new_bits, NUM_BITS, RIGHT);
 				else 
-					delta_x = -1;
-
-				for (i = 0; i < NUM_BITS; i++)
-				{
-					new_bits[i].x += delta_x;
-				}
+					adjust_bits(new_bits, NUM_BITS, LEFT);
 			}
 
+			if (coords_out_of_y_bounds == 0 && coords_out_of_x_bounds == 0)
+			{
+				if (count_adjust > ADJUST_LIMIT)
+					return;
 
+				adjust_bits(new_bits, NUM_BITS, get_rand_num(1, 4));
+				count_adjust++;
+			}
 
 		}
 
@@ -396,14 +414,10 @@ void lock_tetrimino_into_well(TETRIMINO *tetrimino)
 }
 
 
-/* Generate a random tetrimino ID ranging from 0 to 6 inclusive 
-(one for each of the pieces) */
+/* Generate a random number ranging from lower to upper inclusive */
 
-int get_rand_tetrimino ()
+int get_rand_num (int lower, int upper)
 {
-	int lower = 0;
-	int upper = 6;
-
 	return rand() % (upper - lower + 1) + lower;
 }
 

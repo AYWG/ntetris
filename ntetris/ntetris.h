@@ -49,6 +49,11 @@
 
 #define NUM_BITS 4
 
+#define UP 1
+#define DOWN 2
+#define LEFT 3
+#define RIGHT 4
+
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
 #define WELL_HEIGHT 23
@@ -89,6 +94,8 @@ the WINDOWs used */
 
 #define ONE_SEC_DELAY 1000000 // microseconds
 #define SMALL_DELAY 1000
+
+#define ADJUST_LIMIT 20
 
 typedef struct 
 {
@@ -133,7 +140,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
-int get_rand_tetrimino ();
+int get_rand_num (int lower, int upper);
 void *play_ntetris (void *difficulty);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
