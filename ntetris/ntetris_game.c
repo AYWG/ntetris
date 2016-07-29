@@ -35,7 +35,7 @@ void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int 
 
 /* Determines whether the given coords are outside the boundaries
 of win.
-Returns 1 if true, 0 if false. */
+ */
 
 /* Probably don't need the window parameter, should remove it */
 
@@ -50,52 +50,10 @@ the window. */
 
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[], int num_bits)
 {
-
-/* 
-	For each coordinate in new_bits
-	1. is it within the boundaries of the window?
-	AND
-	2. if it's not the same as one of the current coordinates, is the character at that new coordinate empty?
-
-
-	Invalid if:
-
-	1. out of boundaries
-	OR
-	2. it's not one of the current coordinates (not equal to this, not equal tothat, etc.,  and the new coordinate is occupied
-
-*/
 	int invalid = 0;
-	//int matching_coords;
 	int row, col;
 	int i;
-/*
-	for (i = 0; i < num_bits; i++)
-	{
-		matching_coords = 0;
-		// Check boundaries 
-		if (out_of_boundaries(win, new_bits[i]))
-		{
-			invalid = 1;
-			break;
-		}
 
-		for (j = 0; j < num_new_bits; j++)
-		{
-			matching_coords += equal_coords(new_bits[i], tetrimino->bits[j]);
-		}
-
-		if (matching_coords == 0)
-		{
-			if ((mvwinch(win, new_bits[i].y, new_bits[i].x) & A_CHARTEXT) != ' ' &&
-				(mvwinch(win, new_bits[i].y, new_bits[i].x) & A_ATTRIBUTES) != A_DIM)
-			{
-				invalid = 1;
-				break;
-			}
-		}
-	}
-*/
 	for (i = 0; i < num_bits; i++)
 	{
 		/* Check boundaries */
@@ -160,7 +118,8 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 
 /* Instantly move the tetrimino to where it would go if 
    just fell naturally down the well from its current position,
-   then lock it into the well. */
+   then lock it into the well. 
+ */
 
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay)
 {
@@ -224,7 +183,6 @@ void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDI
 		new_bits[i].x = old_bits[i].x;
 	}
 }
-
 
 /*
  Rotates the tetrimino about its pivot coordinates
@@ -410,6 +368,22 @@ void lock_tetrimino_into_well(TETRIMINO *tetrimino)
 		row = tetrimino->bits[i].y - 1;
 		col = tetrimino->bits[i].x - 1;
 		well_contents[row][col].value = tetrimino->bits[i].value;
+	}
+	RECENT_HOLD = 0;
+}
+
+void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino)
+{
+	if (!RECENT_HOLD)
+	{
+		int old_id = update_hold(hold_win, tetrimino->tetrimino_type);
+
+		if (old_id != INVALID_ID)
+			init_tetrimino(well_win, tetrimino, old_id);
+		else
+			init_tetrimino(well_win, tetrimino, get_rand_num(0, 6));
+
+		RECENT_HOLD = 1;
 	}
 }
 

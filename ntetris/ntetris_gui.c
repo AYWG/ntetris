@@ -9,9 +9,6 @@ char *title[] = {
 					"/_/ /_/    /_/  \\___/\\__/_/  /_/____/  "
 				};				   	
 
-//int n_menu_choices = sizeof(menu_choices) / sizeof(char *);
-
-
 
 void ntetris_init()
 {
@@ -208,6 +205,69 @@ void clear_well(WINDOW *win)
 	wrefresh(win);
 }
 
+int update_hold(WINDOW *win, int tetrimino_id)
+{
+	int i, j;
+	int old_id = CURRENTLY_HELD_TETRIMINO_ID;
+	CURRENTLY_HELD_TETRIMINO_ID = tetrimino_id;
 
+	/* First, clear the window contents */
+	for (i = HOLD_T_BNDRY; i <= HOLD_B_BNDRY; i++)
+		for (j = HOLD_L_BNDRY; j <= HOLD_R_BNDRY; j++)
+			mvwaddch(win, i, j, ' ');
+
+	int a, b, c, d;
+	int e, f, g, h;
+
+	switch(tetrimino_id)
+	{
+		case TETRIMINO_I: 
+			a = b = c = d = 2;
+			e = 2; f = e + 1; g = f + 1; h = g + 1;
+			break;
+			
+		case TETRIMINO_J:
+			a = b = c = 2; d = 3; 
+			e = 2; f = e + 1; g = f + 1; h = g;
+			break;
+
+		case TETRIMINO_L:
+			a = b = c = 2; d = 3;
+			e = 2; f = e + 1; g = f + 1; h = e;
+			break;
+
+		case TETRIMINO_O:
+			a = b = 2; c = d = 3;
+			e = g = 3; f = h = 4;
+			break;
+
+		case TETRIMINO_S:
+			a = b = 2; c = d = 3;
+			e = h = 3; f = 4; g = 2;
+			break;
+
+		case TETRIMINO_T:
+			a = b = c = 2; d = 3;
+			e = 2; f = e + 1; g = f + 1; h = f;
+			break;
+
+		case TETRIMINO_Z:
+			a = b = 2; c = d = 3;
+			e = 2; f = g = 3; h = 4;
+			break; 
+	}
+
+	int tetr_y[NUM_BITS] = {a, b, c, d};
+	int tetr_x[NUM_BITS] = {e, f, g, h};
+
+
+	for (i = 0; i < NUM_BITS; i++)
+		/* Offset of 3 between ID number and COLOUR_PAIR number*/
+		mvwaddch(win, tetr_y[i], tetr_x[i], 'o' | COLOR_PAIR(tetrimino_id + 3));
+
+	wrefresh(win);
+
+	return old_id;
+}
 
 

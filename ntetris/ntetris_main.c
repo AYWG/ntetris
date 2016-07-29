@@ -15,6 +15,8 @@ pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
 int QUIT_FLAG = 0;
+int RECENT_HOLD = 0;
+int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
 
 int main(int argc, char **argv)
 {
@@ -33,8 +35,7 @@ int main(int argc, char **argv)
 	print_title();
 	refresh();
 
-	/* This will later be implemented as an option in a menu */
-	int difficulty = EXPERT;
+	int difficulty;
 
 	char *start_menu_choices[] = {
 								"Start",
@@ -153,8 +154,8 @@ void *play_ntetris (void *difficulty)
 
 	WINDOW *well_win;
 	WINDOW *cover_win;	
-/*	WINDOW *hold_win;
-	WINDOW *line_count_win;
+	WINDOW *hold_win;
+/*	WINDOW *line_count_win;
 	WINDOW *score_win;
 */
 	TETRIMINO *tetrimino;
@@ -173,9 +174,9 @@ void *play_ntetris (void *difficulty)
 
 	well_win = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
 	cover_win = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);
-/*
-	hold_win = newwin(6, 6, hold_y, hold_x);
-	line_count_win = newwin(2, 4, line_count_y, line_count_x);
+
+	hold_win = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
+/*	line_count_win = newwin(2, 4, line_count_y, line_count_x);
 	score_win = newwin(2, 4, score_y, score_x);
 */
 	tetrimino = malloc(sizeof(TETRIMINO));
@@ -183,15 +184,15 @@ void *play_ntetris (void *difficulty)
 	/* Draw the borders of each window */
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
-/*	box(hold_win, 0, 0);
-	box(line_count_win, 0, 0);
+	box(hold_win, 0, 0);
+/*	box(line_count_win, 0, 0);
 	box(score_win, 0, 0);
 */	
 
 	wnoutrefresh(well_win);
 	wnoutrefresh(cover_win);
-/*	wnoutrefresh(hold_win);
-	wnoutrefresh(line_count_win);
+	wnoutrefresh(hold_win);
+/*	wnoutrefresh(line_count_win);
 	wnoutrefresh(score_win);
 */
 	doupdate();
@@ -252,6 +253,10 @@ void *play_ntetris (void *difficulty)
 
 			case SPACE_KEY:
 				rotate_tetrimino(well_win, tetrimino);
+				break;
+
+			case HOLD_KEY:
+				hold_tetrimino(well_win, hold_win, tetrimino);
 				break;
 			/*
 			default:

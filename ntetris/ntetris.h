@@ -28,6 +28,7 @@
 #define ENTER_KEY 10
 #define QUIT_KEY 113
 #define SPACE_KEY 32
+#define HOLD_KEY 122
 
 /* Start menu options */
 #define START 1
@@ -46,6 +47,7 @@
 #define TETRIMINO_S 4
 #define TETRIMINO_T 5
 #define TETRIMINO_Z 6
+#define INVALID_ID 7
 
 #define NUM_BITS 4
 
@@ -77,10 +79,16 @@ the WINDOWs used */
 #define COVER_INIT_X WELL_INIT_X
 #define COVER_B_BNDRY COVER_INIT_Y + COVER_HEIGHT
 
-#define HOLD_WIDTH
-#define HOLD_HEIGHT
-#define HOLD_INIT_Y WELL_INIT_Y
-#define HOLD_INIT_X
+#define HOLD_WIDTH 8
+#define HOLD_HEIGHT 6
+#define HOLD_INIT_Y WELL_INIT_Y + COVER_HEIGHT - 1
+#define HOLD_INIT_X WELL_INIT_X - 10
+
+#define HOLD_L_BNDRY 1
+#define HOLD_R_BNDRY HOLD_WIDTH - 2
+#define HOLD_T_BNDRY 1
+#define HOLD_B_BNDRY HOLD_HEIGHT - 2
+
 
 #define LINE_COUNT_WIDTH
 #define LINE_COUNT_HEIGHT
@@ -133,6 +141,7 @@ void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void draw_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
+int update_hold(WINDOW *win, int tetrimino_id);
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits);
@@ -140,6 +149,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
+void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino);
 int get_rand_num (int lower, int upper);
 void *play_ntetris (void *difficulty);
 void *periodic_thread(void *arguments);
@@ -156,6 +166,8 @@ void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 //extern int n_menu_choices;
 //extern char *start_menu_choices[];
 //extern char *difficulty_menu_choices[];
+extern int RECENT_HOLD;
+extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 #endif
 
