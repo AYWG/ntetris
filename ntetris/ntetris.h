@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <time.h>
 #include <pthread.h>
 
 #define TITLE_COLOR_PAIR 1
@@ -58,6 +57,8 @@
 
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
+#define NUM_WINDOWS 5
+
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
 #define WELL_INIT_Y 0
@@ -67,12 +68,7 @@ the WINDOWs used */
 #define WELL_R_BNDRY WELL_WIDTH - 2
 #define WELL_T_BNDRY 1
 #define WELL_B_BNDRY WELL_HEIGHT - 2
-/*
-// WELL_SIZE refers to the number of different coordinates
-// for which tetriminos can exist in (i.e. all coordinates not
-// including borders)
-#define WELL_SIZE (WELL_HEIGHT - 2) * (WELL_WIDTH - 2)
-*/
+
 #define COVER_HEIGHT 3
 #define COVER_WIDTH WELL_WIDTH
 #define COVER_INIT_Y WELL_INIT_Y
@@ -90,15 +86,15 @@ the WINDOWs used */
 #define HOLD_B_BNDRY HOLD_HEIGHT - 2
 
 
-#define LINE_COUNT_WIDTH
-#define LINE_COUNT_HEIGHT
-#define LINE_COUNT_INIT_Y
-#define LINE_COUNT_INIT_X
+#define LINE_COUNT_WIDTH 15
+#define LINE_COUNT_HEIGHT 3
+#define LINE_COUNT_INIT_Y WELL_HEIGHT - 5
+#define LINE_COUNT_INIT_X HOLD_INIT_X - 10
 
-#define SCORE_WIDTH
-#define SCORE_HEIGHT
-#define SCORE_INIT_Y
-#define SCORE_INIT_X
+#define SCORE_WIDTH 10
+#define SCORE_HEIGHT 3
+#define SCORE_INIT_Y HOLD_INIT_Y
+#define SCORE_INIT_X WELL_INIT_X + WELL_WIDTH + 5
 
 #define ONE_SEC_DELAY 1000000 // microseconds
 #define SMALL_DELAY 1000
@@ -128,7 +124,7 @@ typedef struct
 
 typedef struct
 {
-	WINDOW *win;
+	WINDOW *win[NUM_WINDOWS];
 	TETRIMINO *tetrimino;
 	int game_delay;
 } THREAD_ARGS;
@@ -142,12 +138,13 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void draw_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
 int update_hold(WINDOW *win, int tetrimino_id);
+void update_line_count(WINDOW *win);
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay);
-void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
+int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
 void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino);
 int get_rand_num (int lower, int upper);
@@ -163,11 +160,9 @@ int row_complete (int row);
 void clear_row (int row);
 void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 
-//extern int n_menu_choices;
-//extern char *start_menu_choices[];
-//extern char *difficulty_menu_choices[];
 extern int RECENT_HOLD;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
+extern int LINE_COUNT;
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 #endif
 

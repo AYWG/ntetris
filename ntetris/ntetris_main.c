@@ -17,6 +17,7 @@ COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 int QUIT_FLAG = 0;
 int RECENT_HOLD = 0;
 int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
+int LINE_COUNT = 0;
 
 int main(int argc, char **argv)
 {
@@ -97,8 +98,8 @@ void *periodic_thread(void *arguments)
 		if (QUIT_FLAG) break;
 		usleep(args->game_delay >> 1);
 		pthread_mutex_lock(&tetrimino_lock);
-		move_tetrimino(args->win, args->tetrimino, KEY_DOWN);
-		draw_well(args->win, args->tetrimino);
+		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN);
+		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
 		if (QUIT_FLAG) break;
@@ -136,9 +137,10 @@ void *lock_in_thread(void *arguments)
 
 		pthread_mutex_lock(&tetrimino_lock);
 		lock_tetrimino_into_well(args->tetrimino);
-		update_well(args->win, args->tetrimino, args->game_delay);
-		init_tetrimino(args->win, args->tetrimino, get_rand_num(0, 6));
-		draw_well(args->win, args->tetrimino);
+		update_well(args->win[0], args->tetrimino, args->game_delay);
+		update_line_count(args->win[3]);
+		init_tetrimino(args->win[0], args->tetrimino, get_rand_num(0, 6));
+		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 	}
 }
@@ -155,46 +157,34 @@ void *play_ntetris (void *difficulty)
 	WINDOW *well_win;
 	WINDOW *cover_win;	
 	WINDOW *hold_win;
-/*	WINDOW *line_count_win;
+	WINDOW *line_count_win;
 	WINDOW *score_win;
-*/
+
 	TETRIMINO *tetrimino;
-
-	// set these values in ntetris.h later
-/*
-	int hold_y = 1;
-	int hold_x = COLS / 5;
-
-	int line_count_y = LINES - 4;
-	int line_count_x = COLS / 5;
-
-	int score_y = LINES - 4;
-	int score_x = 4 * COLS / 5;
-*/
 
 	well_win = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
 	cover_win = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);
 
 	hold_win = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
-/*	line_count_win = newwin(2, 4, line_count_y, line_count_x);
-	score_win = newwin(2, 4, score_y, score_x);
-*/
+	line_count_win = newwin(LINE_COUNT_HEIGHT, LINE_COUNT_WIDTH, LINE_COUNT_INIT_Y, LINE_COUNT_INIT_X);
+	score_win = newwin(SCORE_HEIGHT, SCORE_WIDTH, SCORE_INIT_Y, SCORE_INIT_X);
+
 	tetrimino = malloc(sizeof(TETRIMINO));
 
 	/* Draw the borders of each window */
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
 	box(hold_win, 0, 0);
-/*	box(line_count_win, 0, 0);
-	box(score_win, 0, 0);
-*/	
+	//box(line_count_win, 0, 0);
+	//box(score_win, 0, 0);
+	mvwprintw(line_count_win, 0,0, "Lines Cleared");
+	update_line_count(line_count_win);
 
 	wnoutrefresh(well_win);
 	wnoutrefresh(cover_win);
 	wnoutrefresh(hold_win);
-/*	wnoutrefresh(line_count_win);
+	wnoutrefresh(line_count_win);
 	wnoutrefresh(score_win);
-*/
 	doupdate();
 
 	/* Initialize well_contents to be empty*/
@@ -216,7 +206,11 @@ void *play_ntetris (void *difficulty)
 	keypad(well_win, TRUE);
 
 	THREAD_ARGS *args = malloc(sizeof(THREAD_ARGS));
-	args->win = well_win;
+	args->win[0] = well_win;
+	args->win[1] = cover_win;
+	args->win[2] = hold_win;
+	args->win[3] = line_count_win;
+	args->win[4] = score_win;
 	args->tetrimino = tetrimino;
 	args->game_delay = *((int *) difficulty);
 
@@ -267,6 +261,7 @@ void *play_ntetris (void *difficulty)
 			*/				
 		}
 		draw_well(well_win, tetrimino);
+		update_line_count(line_count_win);
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
 	}

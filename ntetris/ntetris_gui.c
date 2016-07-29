@@ -270,4 +270,11 @@ int update_hold(WINDOW *win, int tetrimino_id)
 	return old_id;
 }
 
+void update_line_count(WINDOW *win)
+{
+	wmove(win, 1, 0);
+	wclrtoeol(win);
+	mvwprintw(win, 1, 0, "%05d", LINE_COUNT);
+	wrefresh(win);
+}
 
