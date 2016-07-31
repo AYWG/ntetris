@@ -1,5 +1,7 @@
 #include "ntetris.h"
 
+int base_pts_for_line_clears[] = {40, 100, 300, 1200};
+
 
 /* Determines whether cp_1 is located at the same coordinates to cp_2. */
 
@@ -112,7 +114,11 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	/* if the new coordinates are valid, update position */
 
 	if (valid_position(win, tetrimino, new_bits, NUM_BITS))
+	{
 		copy_bits(new_bits, tetrimino->bits, NUM_BITS);
+		if (direction == KEY_DOWN)
+			SCORE++;
+	}
 
 }
 
@@ -121,27 +127,30 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
    then lock it into the well. 
  */
 
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay)
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 {
 	COORDINATE_PAIR new_bits[NUM_BITS];
 	int i;
-
+	int distance_traveled = 0;
 	copy_bits(tetrimino->bits, new_bits, NUM_BITS);
 
 	while (valid_position(win, tetrimino, new_bits, NUM_BITS))
+	{
 		for (i = 0; i < NUM_BITS; i++)
 			new_bits[i].y++;
-
+		distance_traveled++;
+	}
 	for (i = 0; i < NUM_BITS; i++)
 			new_bits[i].y--;
-	
+	distance_traveled--;
+
 	copy_bits(new_bits, tetrimino->bits, NUM_BITS);
 
 	lock_tetrimino_into_well(tetrimino);
-	update_well(win, tetrimino, game_delay);
+	update_lines(win, tetrimino, difficulty);
+	SCORE += 2 * distance_traveled;
 	init_tetrimino(win, tetrimino, get_rand_num(0, 6));
 	draw_well(win, tetrimino);
-
 }
 
 void adjust_bits (COORDINATE_PAIR bits[], int num_bits, int direction)
@@ -409,11 +418,11 @@ int get_rand_num (int lower, int upper)
 	return rand() % (upper - lower + 1) + lower;
 }
 
-/* Checks if a row in the window is "complete" - that is,
+/* Checks if a line in the window is "complete" - that is,
 all coordinates are occupied by an 'o' that is not one of the current
 tetrimino bits */
 
-int row_complete (int row)
+int line_complete (int row)
 {
 	int complete = 1;
 	int j;
@@ -425,7 +434,7 @@ int row_complete (int row)
 	return complete;
 }
 
-int row_empty (int row)
+int line_empty (int row)
 {
 	int empty = 1;
 	int j;
@@ -437,7 +446,7 @@ int row_empty (int row)
 	return empty;
 }
 
-void clear_row (int row)
+void clear_line (int row)
 {
 	int j;
 
@@ -447,53 +456,61 @@ void clear_row (int row)
 	}
 }
 
-void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay)
+void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 {
 	
-	int num_complete_row = 0;
+	int num_complete_lines = 0;
 	int i, j;
 	int complete = 0;
+	int consec_complete_lines = 0;
 
 	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
 	{
-		if (row_empty(i)) break;
+		if (line_empty(i)) break;
 
-		if (row_complete(i))
+		if (line_complete(i))
 		{
 			for (j = 0; j < WELL_R_BNDRY; j++)
-					well_contents[i][j].value |= A_REVERSE;
+				well_contents[i][j].value |= A_REVERSE;
 			complete = 1;
+			consec_complete_lines++;
 		}
+		else
+		{
+			if (consec_complete_lines > 0)
+				SCORE += (base_pts_for_line_clears[consec_complete_lines - 1] * ((LINE_COUNT / 10) + 1 + difficulty));
+			
+			consec_complete_lines = 0;
+		} 
 	}
 
 	draw_well(win, tetrimino);
 	if (complete)
-		usleep(game_delay);
+		usleep(GAME_DELAY);
 
 	for (i = WELL_B_BNDRY - 1; i >= 0; i--)
 	{
-		if (row_empty(i)) break;
+		if (line_empty(i)) break;
 
-		if (row_complete(i))
+		if (line_complete(i))
 		{
-			clear_row(i);
-			num_complete_row++;
+			clear_line(i);
+			num_complete_lines++;
 			LINE_COUNT++;
 		}
 		else
 		{
-			// copy row i to row i + num_complete_row
-			if (i + num_complete_row != i)
+			// copy line i to line i + num_complete_lines
+			if (i + num_complete_lines != i)
 			{
 				for (j = 0; j < WELL_R_BNDRY; j++)
 				{
-					well_contents[i + num_complete_row][j].value = well_contents[i][j].value;
+					well_contents[i + num_complete_lines][j].value = well_contents[i][j].value;
 				}
-				clear_row(i);
+				clear_line(i);
 			}
 		}
 
 	}
 	
-
 }

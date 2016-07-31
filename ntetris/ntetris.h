@@ -36,9 +36,13 @@
 #define EXIT 3
 
 /* Difficulty levels */
-#define CASUAL 1000000
-#define INTERMEDIATE 500000
-#define EXPERT 250000
+#define CASUAL 0
+#define INTERMEDIATE 1
+#define EXPERT 2
+
+#define CASUAL_INIT_DELAY 1000000
+#define INTERMEDIATE_INIT_DELAY 500000
+#define EXPERT_INIT_DELAY 250000
 
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
@@ -142,7 +146,7 @@ typedef struct
 {
 	WINDOW *win[NUM_WINDOWS];
 	TETRIMINO *tetrimino;
-	int game_delay;
+	int difficulty;
 } THREAD_ARGS;
 
 
@@ -157,6 +161,7 @@ void clear_well(WINDOW *win);
 int update_hold(WINDOW *win, int tetrimino_id);
 void update_line_count(WINDOW *win);
 void update_level(WINDOW *win);
+void update_score(WINDOW *win);
 void print_controls();
 void print_title_small(WINDOW *win);
 
@@ -165,7 +170,7 @@ void print_title_small(WINDOW *win);
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay);
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty);
 int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
 void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino);
@@ -178,14 +183,17 @@ int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits
 void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[], int num_bits);
-int row_complete (int row);
-void clear_row (int row);
-void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);
+int line_complete (int row);
+int line_empty (int row);
+void clear_line (int row);
+void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty);
 
+extern int GAME_DELAY;
 extern int GAME_OVER_FLAG;
 extern int RECENT_HOLD;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
+extern int SCORE;
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 #endif
 

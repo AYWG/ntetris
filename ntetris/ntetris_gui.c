@@ -40,23 +40,6 @@ void ntetris_init()
 /* Displays the title of the game at the top of the screen 
 in ASCII. */
 
-/*
-void print_title(WINDOW *win)
-{
-	int num_cols = getmaxx(win);
-
-	int j = 2;
-	attron(COLOR_PAIR(TITLE_COLOR_PAIR)); // title is green
-	for (int i = 0; i < 5; i++)
-	{
-		mvprintw(j, (num_cols - strlen(title[i])) / 2, "%s", title[i]);
-		j++;
-	}
-	attroff(COLOR_PAIR(TITLE_COLOR_PAIR));
-
-	wrefresh(win);
-}
-*/
 void print_title(WINDOW *win, char *title[], int title_size)
 {
 	int num_cols = getmaxx(win);
@@ -281,6 +264,14 @@ void update_level(WINDOW *win)
 	wmove(win, 2, 0);
 	wclrtoeol(win);
 	mvwprintw(win, 2, 0, "%03d", LINE_COUNT / 10);
+	wrefresh(win);
+}
+
+void update_score(WINDOW *win)
+{
+	wmove(win, 2, 0);
+	wclrtoeol(win);
+	mvwprintw(win, 2, 0, "%010d", SCORE);
 	wrefresh(win);
 }
 

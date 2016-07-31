@@ -14,11 +14,13 @@ pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 
 COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
+int GAME_DELAY;
 int QUIT_FLAG = 0;
 int GAME_OVER_FLAG = 0;
 int RECENT_HOLD = 0;
 int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
 int LINE_COUNT = 0;
+int SCORE = 0;
 
 /* The title of the game represented in ASCII art */
 char *title[] = {
@@ -80,9 +82,18 @@ int main(int argc, char **argv)
 			{
 				switch(difficulty)
 				{
-					case 1: difficulty = CASUAL; break;
-					case 2: difficulty = INTERMEDIATE; break;
-					case 3: difficulty = EXPERT; break;
+					case 1: 
+						difficulty = CASUAL; 
+						GAME_DELAY = CASUAL_INIT_DELAY;
+						break;
+					case 2: 
+						difficulty = INTERMEDIATE;
+						GAME_DELAY = INTERMEDIATE_INIT_DELAY;
+						break;
+					case 3: 
+						difficulty = EXPERT;
+						GAME_DELAY = EXPERT_INIT_DELAY;
+						break;
 				}
 				clear();
 				refresh();
@@ -109,6 +120,10 @@ int main(int argc, char **argv)
 	/* Exit ncurses */
 	endwin();
 
+	printf("\n----------------------\n");
+	printf("Final level : %d\n", LINE_COUNT / 10);
+	printf("Final score : %d\n", SCORE);
+
 	return 0;
 }
 
@@ -119,11 +134,12 @@ void *periodic_thread(void *arguments)
 	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
 	while(TRUE)
 	{
-		usleep(args->game_delay >> 1); // change this later
+		usleep(GAME_DELAY >> 1); // change this later
 		if (QUIT_FLAG) break;
-		usleep(args->game_delay >> 1);
+		usleep(GAME_DELAY >> 1);
 		pthread_mutex_lock(&tetrimino_lock);
 		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN);
+		update_score(args->win[4]);
 		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
@@ -145,23 +161,24 @@ void *lock_in_thread(void *arguments)
 
 		copy_bits(args->tetrimino->bits, current_bits, NUM_BITS);
 
-		usleep((2 * args->game_delay) >> 2);
+		usleep((2 * GAME_DELAY) >> 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
-		usleep((2 * args->game_delay) >> 2);
+		usleep((2 * GAME_DELAY) >> 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
-		usleep((2 * args->game_delay) >> 2);
+		usleep((2 * GAME_DELAY) >> 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
-		usleep((2 * args->game_delay) >> 2);
+		usleep((2 * GAME_DELAY) >> 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
 
 		pthread_mutex_lock(&tetrimino_lock);
 		lock_tetrimino_into_well(args->tetrimino);
-		update_well(args->win[0], args->tetrimino, args->game_delay);
+		update_lines(args->win[0], args->tetrimino, args->difficulty);
 		update_line_count(args->win[3]);
+		update_score(args->win[4]);
 		update_level(args->win[5]);
 		init_tetrimino(args->win[0], args->tetrimino, get_rand_num(0, 6));
 		draw_well(args->win[0], args->tetrimino);
@@ -217,6 +234,7 @@ void *play_ntetris (void *difficulty)
 	wattroff(line_count_win, A_BOLD);
 
 	update_line_count(line_count_win);
+	update_score(score_win);
 	update_level(level_win);
 	print_title_small(title_small_win);
 
@@ -256,7 +274,7 @@ void *play_ntetris (void *difficulty)
 	args->win[4] = score_win;
 	args->win[5] = level_win;
 	args->tetrimino = tetrimino;
-	args->game_delay = *((int *) difficulty);
+	args->difficulty = *((int *) difficulty);
 
 	int ch;
 	init_tetrimino(well_win, tetrimino, get_rand_num(0, 6));
@@ -286,7 +304,7 @@ void *play_ntetris (void *difficulty)
 				break;
 
 			case KEY_UP:
-				drop_tetrimino(well_win, tetrimino, args->game_delay);
+				drop_tetrimino(well_win, tetrimino, args->difficulty);
 				break;
 
 			case ROTATE_CW_KEY:
@@ -303,6 +321,7 @@ void *play_ntetris (void *difficulty)
 		}
 		draw_well(well_win, tetrimino);
 		update_line_count(line_count_win);
+		update_score(score_win);
 		update_level(level_win);
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
