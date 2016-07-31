@@ -1,13 +1,6 @@
 #include "ntetris.h"		
 
-/* The title of the game represented in ASCII art */
-char *title[] = {
-					"             ______     __       _     ",
-					"   ____     /_  __/__  / /______(_)____",
-					"  / __ \\     / / / _ \\/ __/ ___/ / ___/",
-					" / / / /    / / /  __/ /_/ /  / (__  ) ",
-					"/_/ /_/    /_/  \\___/\\__/_/  /_/____/  "
-				};				   	
+								   	
 
 
 void ntetris_init()
@@ -23,7 +16,6 @@ void ntetris_init()
 
 	/* Hide the cursor*/
 	curs_set(0);
-
 
 	start_color();
 
@@ -48,13 +40,30 @@ void ntetris_init()
 /* Displays the title of the game at the top of the screen 
 in ASCII. */
 
-void print_title()
+/*
+void print_title(WINDOW *win)
 {
-	int num_cols = getmaxx(stdscr);
+	int num_cols = getmaxx(win);
 
 	int j = 2;
 	attron(COLOR_PAIR(TITLE_COLOR_PAIR)); // title is green
 	for (int i = 0; i < 5; i++)
+	{
+		mvprintw(j, (num_cols - strlen(title[i])) / 2, "%s", title[i]);
+		j++;
+	}
+	attroff(COLOR_PAIR(TITLE_COLOR_PAIR));
+
+	wrefresh(win);
+}
+*/
+void print_title(WINDOW *win, char *title[], int title_size)
+{
+	int num_cols = getmaxx(win);
+
+	int j = 2;
+	attron(COLOR_PAIR(TITLE_COLOR_PAIR)); // title is green
+	for (int i = 0; i < title_size; i++)
 	{
 		mvprintw(j, (num_cols - strlen(title[i])) / 2, "%s", title[i]);
 		j++;
@@ -151,7 +160,6 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 
 	copy_bits(tetrimino->bits, shadow_bits, NUM_BITS);
 
-
 	while (valid_position(win, tetrimino, shadow_bits, NUM_BITS)) 
 	{
 		for (i = 0; i < NUM_BITS; i++)
@@ -174,16 +182,10 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
 		
 	for (i = 0; i < WELL_HEIGHT - 2; i++)
-	{
 		for (j = 0; j < WELL_WIDTH - 2; j++)
-		{
 			if ((well_contents[i][j].value & A_CHARTEXT) == 'o')
-			{
 				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
-			}	
-		}
-	}
-
+				
 	wrefresh(win);
 }
 
@@ -195,12 +197,8 @@ void clear_well(WINDOW *win)
 	int i, j;
 
 	for (i = WELL_T_BNDRY + 2; i <= WELL_B_BNDRY; i++) 
-	{
 		for (j = WELL_L_BNDRY; j <= WELL_R_BNDRY; j++)
-		{
 			mvwaddch(win, i, j, ' ');
-		}
-	}
 
 	wrefresh(win);
 }
@@ -272,9 +270,43 @@ int update_hold(WINDOW *win, int tetrimino_id)
 
 void update_line_count(WINDOW *win)
 {
-	wmove(win, 1, 0);
+	wmove(win, 2, 0);
 	wclrtoeol(win);
-	mvwprintw(win, 1, 0, "%05d", LINE_COUNT);
+	mvwprintw(win, 2, 0, "%05d", LINE_COUNT);
 	wrefresh(win);
 }
 
+void update_level(WINDOW *win)
+{
+	wmove(win, 2, 0);
+	wclrtoeol(win);
+	mvwprintw(win, 2, 0, "%03d", LINE_COUNT / 10);
+	wrefresh(win);
+}
+
+void print_controls()
+{
+	attron(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
+	mvprintw(4, CONTROLS_INIT_X, "NTETRIS CONTROLS");
+	attroff(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
+	mvprintw(6, CONTROLS_INIT_X, "Move tetrimino left                   Left arrow key");
+	mvprintw(7, CONTROLS_INIT_X, "Move tetrimino right                  Right arrow key");
+	mvprintw(8, CONTROLS_INIT_X, "Move tetrimino down                   Down arrow key");
+	mvprintw(10, CONTROLS_INIT_X, "Drop tetrimino                        Up arrow key");
+	mvprintw(12, CONTROLS_INIT_X, "Rotate tetrimino clockwise            X");
+	mvprintw(13, CONTROLS_INIT_X, "Rotate tetrimino counterclockwise     Z");
+	mvprintw(14, CONTROLS_INIT_X, "Hold tetrimino                        Space");
+
+	mvprintw(18, CONTROLS_INIT_X, "Press any key to return");
+}
+
+void print_title_small(WINDOW *win)
+{
+	waddch(win, 'N' | A_BOLD | COLOR_PAIR(I_COLOR_PAIR));
+	waddch(win, 'T' | A_BOLD | COLOR_PAIR(J_COLOR_PAIR));
+	waddch(win, 'E' | A_BOLD | COLOR_PAIR(L_COLOR_PAIR));
+	waddch(win, 'T' | A_BOLD | COLOR_PAIR(O_COLOR_PAIR));
+	waddch(win, 'R' | A_BOLD | COLOR_PAIR(S_COLOR_PAIR));
+	waddch(win, 'I' | A_BOLD | COLOR_PAIR(T_COLOR_PAIR));
+	waddch(win, 'S' | A_BOLD | COLOR_PAIR(Z_COLOR_PAIR));
+}

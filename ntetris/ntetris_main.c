@@ -15,9 +15,20 @@ pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
 int QUIT_FLAG = 0;
+int GAME_OVER_FLAG = 0;
 int RECENT_HOLD = 0;
 int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
 int LINE_COUNT = 0;
+
+/* The title of the game represented in ASCII art */
+char *title[] = {
+				"             ______     __       _     ",
+				"   ____     /_  __/__  / /______(_)____",
+				"  / __ \\     / / / _ \\/ __/ ___/ / ___/",
+				" / / / /    / / /  __/ /_/ /  / (__  ) ",
+				"/_/ /_/    /_/  \\___/\\__/_/  /_/____/  "
+				};
+
 
 int main(int argc, char **argv)
 {
@@ -33,29 +44,35 @@ int main(int argc, char **argv)
 	Initialization.
 	*/
 	ntetris_init();
-	print_title();
-	refresh();
+	//print_title();
+	//refresh();
 
 	int difficulty;
+	int choice;
+
 
 	char *start_menu_choices[] = {
-								"Start",
-							 	"Exit"
-					   		 };
+									"Start",
+									"Controls", 
+							 		"Exit"
+					   		 	 };
 
 	char *difficulty_menu_choices[] = {
 										"Casual",
 										"Intermediate",
 										"Expert",
 										"Back"
-								  };
+								 	  };
 
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
 
 	while (TRUE)
 	{
-		if (get_menu_choice(start_menu_choices, num_start_menu_choices) == START)
+		clear();
+		print_title(stdscr, title, 5);
+		refresh();
+		if ((choice = get_menu_choice(start_menu_choices, num_start_menu_choices)) == START)
 		{	
 			if ((difficulty = get_menu_choice(difficulty_menu_choices, num_diff_menu_choices)) == 4)
 				continue;
@@ -77,6 +94,14 @@ int main(int argc, char **argv)
 
 				break;
 			}
+		}
+		else if (choice == CONTROLS)
+		{
+			clear();
+			refresh();
+			print_controls();
+			getch();
+			continue;
 		}
 		else break;
 	}
@@ -114,8 +139,6 @@ void *lock_in_thread(void *arguments)
 
 	COORDINATE_PAIR current_bits[NUM_BITS];
 
-	int i;
-
 	while(TRUE)
 	{
 		if (QUIT_FLAG) break;
@@ -139,6 +162,7 @@ void *lock_in_thread(void *arguments)
 		lock_tetrimino_into_well(args->tetrimino);
 		update_well(args->win[0], args->tetrimino, args->game_delay);
 		update_line_count(args->win[3]);
+		update_level(args->win[5]);
 		init_tetrimino(args->win[0], args->tetrimino, get_rand_num(0, 6));
 		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
@@ -159,15 +183,20 @@ void *play_ntetris (void *difficulty)
 	WINDOW *hold_win;
 	WINDOW *line_count_win;
 	WINDOW *score_win;
+	WINDOW *level_win;
+	//WINDOW *controls_win;
+	WINDOW *title_small_win;
 
 	TETRIMINO *tetrimino;
 
 	well_win = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
 	cover_win = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);
-
 	hold_win = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
 	line_count_win = newwin(LINE_COUNT_HEIGHT, LINE_COUNT_WIDTH, LINE_COUNT_INIT_Y, LINE_COUNT_INIT_X);
 	score_win = newwin(SCORE_HEIGHT, SCORE_WIDTH, SCORE_INIT_Y, SCORE_INIT_X);
+	level_win = newwin(LEVEL_HEIGHT, LEVEL_WIDTH, LEVEL_INIT_Y, LEVEL_INIT_X);
+	//controls_win = newwin(CONTROLS_HEIGHT, CONTROLS_WIDTH, CONTROLS_INIT_Y, CONTROLS_INIT_X);
+	title_small_win = newwin(TITLE_SMALL_HEIGHT, TITLE_SMALL_WIDTH, TITLE_SMALL_INIT_Y, TITLE_SMALL_INIT_X);
 
 	tetrimino = malloc(sizeof(TETRIMINO));
 
@@ -175,16 +204,30 @@ void *play_ntetris (void *difficulty)
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
 	box(hold_win, 0, 0);
-	//box(line_count_win, 0, 0);
-	//box(score_win, 0, 0);
-	mvwprintw(line_count_win, 0,0, "Lines Cleared");
+	box(title_small_win, 0, 0);
+	wattron(level_win, A_BOLD);
+	wattron(score_win, A_BOLD);
+	wattron(line_count_win, A_BOLD);
+	mvwprintw(level_win, 0, 0, "Level");
+	mvwprintw(score_win, 1, 0, "Score");
+	mvwprintw(line_count_win, 0, 0, "Lines Cleared");
+
+	wattroff(level_win, A_BOLD);
+	wattroff(score_win, A_BOLD);
+	wattroff(line_count_win, A_BOLD);
+
 	update_line_count(line_count_win);
+	update_level(level_win);
+	print_title_small(title_small_win);
 
 	wnoutrefresh(well_win);
 	wnoutrefresh(cover_win);
 	wnoutrefresh(hold_win);
 	wnoutrefresh(line_count_win);
 	wnoutrefresh(score_win);
+	wnoutrefresh(level_win);
+	//wnoutrefresh(controls_win);
+	wnoutrefresh(title_small_win);
 	doupdate();
 
 	/* Initialize well_contents to be empty*/
@@ -211,6 +254,7 @@ void *play_ntetris (void *difficulty)
 	args->win[2] = hold_win;
 	args->win[3] = line_count_win;
 	args->win[4] = score_win;
+	args->win[5] = level_win;
 	args->tetrimino = tetrimino;
 	args->game_delay = *((int *) difficulty);
 
@@ -245,23 +289,21 @@ void *play_ntetris (void *difficulty)
 				drop_tetrimino(well_win, tetrimino, args->game_delay);
 				break;
 
-			case SPACE_KEY:
-				rotate_tetrimino(well_win, tetrimino);
+			case ROTATE_CW_KEY:
+				rotate_tetrimino(well_win, tetrimino, CLOCKWISE);
+				break;
+
+			case ROTATE_CCW_KEY:
+				rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE);
 				break;
 
 			case HOLD_KEY:
 				hold_tetrimino(well_win, hold_win, tetrimino);
-				break;
-			/*
-			default:
-				mvwprintw(well_win, 9, 1, "Invalid key pressed\n");
-				wrefresh(well_win); 
-				wgetch(well_win);
-				break;
-			*/				
+				break;		
 		}
 		draw_well(well_win, tetrimino);
 		update_line_count(line_count_win);
+		update_level(level_win);
 		pthread_mutex_unlock(&tetrimino_lock);
 		usleep(SMALL_DELAY);
 	}

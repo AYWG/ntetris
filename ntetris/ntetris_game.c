@@ -164,7 +164,7 @@ void adjust_bits (COORDINATE_PAIR bits[], int num_bits, int direction)
 	}
 }
 
-void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits)
+void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction)
 {
 	int temp, i;
 	for (i = 0; i < num_bits; i++)
@@ -172,9 +172,18 @@ void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDI
 		old_bits[i].y -= pivot.y;
 		old_bits[i].x -= pivot.x;
 
-		temp = old_bits[i].y; 
-		old_bits[i].y =  -old_bits[i].x;
-		old_bits[i].x = temp;
+		if (direction == CLOCKWISE)
+		{
+			temp = old_bits[i].y; 
+			old_bits[i].y =  -old_bits[i].x;
+			old_bits[i].x = temp;
+		}
+		else // CNT_CLOCKWISE
+		{
+			temp = old_bits[i].x; 
+			old_bits[i].x =  -old_bits[i].y;
+			old_bits[i].y = temp;
+		}
 
 		old_bits[i].y += pivot.y;
 		old_bits[i].x += pivot.x;
@@ -189,7 +198,7 @@ void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDI
 (the coordinates of one of the four o's that make up the tetrimino)
 */
 
-void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino) 
+void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction) 
 {
 
 	/* Only rotate if the tetrimino is not an O piece */
@@ -208,7 +217,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino)
 		pivot.x = tetrimino->bits[tetrimino->pivot_bit].x;
 
 		copy_bits(tetrimino->bits, old_bits, NUM_BITS);
-		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS);
+		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS, direction);
 
 		while (!valid_position(win, tetrimino, new_bits, NUM_BITS))
 		{
@@ -352,7 +361,6 @@ int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 	{
 		if ((well_contents[init_y[i] - 1][init_x[i] - 1].value & A_CHARTEXT) != ' ')
 			return FALSE;
-
 
 		tetrimino->bits[i].y = init_y[i];
 		tetrimino->bits[i].x = init_x[i];

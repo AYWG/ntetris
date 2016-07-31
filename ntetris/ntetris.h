@@ -26,12 +26,14 @@
 
 #define ENTER_KEY 10
 #define QUIT_KEY 113
-#define SPACE_KEY 32
-#define HOLD_KEY 122
+#define HOLD_KEY 32 // space
+#define ROTATE_CW_KEY 120 // x
+#define ROTATE_CCW_KEY 122 // z
 
 /* Start menu options */
 #define START 1
-#define EXIT 2 
+#define CONTROLS 2
+#define EXIT 3
 
 /* Difficulty levels */
 #define CASUAL 1000000
@@ -55,9 +57,12 @@
 #define LEFT 3
 #define RIGHT 4
 
+#define CLOCKWISE 0
+#define CNT_CLOCKWISE 1
+
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
-#define NUM_WINDOWS 5
+#define NUM_WINDOWS 6
 
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
@@ -85,16 +90,27 @@ the WINDOWs used */
 #define HOLD_T_BNDRY 1
 #define HOLD_B_BNDRY HOLD_HEIGHT - 2
 
-
 #define LINE_COUNT_WIDTH 15
 #define LINE_COUNT_HEIGHT 3
 #define LINE_COUNT_INIT_Y WELL_HEIGHT - 5
-#define LINE_COUNT_INIT_X HOLD_INIT_X - 10
+#define LINE_COUNT_INIT_X HOLD_INIT_X - 6
 
 #define SCORE_WIDTH 10
 #define SCORE_HEIGHT 3
 #define SCORE_INIT_Y HOLD_INIT_Y
 #define SCORE_INIT_X WELL_INIT_X + WELL_WIDTH + 5
+
+#define LEVEL_WIDTH 10
+#define LEVEL_HEIGHT 3
+#define LEVEL_INIT_Y LINE_COUNT_INIT_Y - 6
+#define LEVEL_INIT_X LINE_COUNT_INIT_X
+
+#define TITLE_SMALL_WIDTH 1
+#define TITLE_SMALL_HEIGHT 7
+#define TITLE_SMALL_INIT_Y LEVEL_INIT_Y
+#define TITLE_SMALL_INIT_X SCORE_INIT_X
+
+#define CONTROLS_INIT_X 15
 
 #define ONE_SEC_DELAY 1000000 // microseconds
 #define SMALL_DELAY 1000
@@ -132,17 +148,23 @@ typedef struct
 
 /* Function prototypes */
 void ntetris_init ();
-void print_title ();
+void print_title(WINDOW *win, char *title[], int title_size);
+//void print_title_small(WINDOW *win);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void draw_well(WINDOW *win, TETRIMINO *tetrimino);
 void clear_well(WINDOW *win);
 int update_hold(WINDOW *win, int tetrimino_id);
 void update_line_count(WINDOW *win);
+void update_level(WINDOW *win);
+void print_controls();
+void print_title_small(WINDOW *win);
+
+
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits);
-void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino);
+void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction);
+void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
@@ -160,6 +182,7 @@ int row_complete (int row);
 void clear_row (int row);
 void update_well(WINDOW *win, TETRIMINO *tetrimino, int game_delay);
 
+extern int GAME_OVER_FLAG;
 extern int RECENT_HOLD;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
