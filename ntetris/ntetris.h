@@ -171,7 +171,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty);
-int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
+void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
 void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino);
 int get_rand_num (int lower, int upper);

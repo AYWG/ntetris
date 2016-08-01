@@ -132,18 +132,18 @@ int main(int argc, char **argv)
 void *periodic_thread(void *arguments)
 {
 	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
-	while(TRUE)
+	while(!QUIT_FLAG && !GAME_OVER_FLAG)
 	{
-		usleep(GAME_DELAY >> 1); // change this later
-		if (QUIT_FLAG) break;
-		usleep(GAME_DELAY >> 1);
+		usleep(GAME_DELAY / 2); 
+		if (QUIT_FLAG || GAME_OVER_FLAG) break;
+		usleep(GAME_DELAY / 2);
 		pthread_mutex_lock(&tetrimino_lock);
 		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN);
 		update_score(args->win[4]);
 		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
-		if (QUIT_FLAG) break;
+		if (QUIT_FLAG || GAME_OVER_FLAG) break;
 	}
 }
 
@@ -155,9 +155,9 @@ void *lock_in_thread(void *arguments)
 
 	COORDINATE_PAIR current_bits[NUM_BITS];
 
-	while(TRUE)
+	while(!QUIT_FLAG && !GAME_OVER_FLAG)
 	{
-		if (QUIT_FLAG) break;
+		if (QUIT_FLAG || GAME_OVER_FLAG) break;
 
 		copy_bits(args->tetrimino->bits, current_bits, NUM_BITS);
 
@@ -286,45 +286,55 @@ void *play_ntetris (void *difficulty)
 	if (pthread_create(&lock_in_t, NULL, &lock_in_thread, args))
 		printf("Could not run lock in thread\n");
 
+	halfdelay(1);
+
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
 	{
-		pthread_mutex_lock(&tetrimino_lock);
-		switch(ch)
+		if (ch != ERR)
 		{
-			case KEY_LEFT:
-				move_tetrimino(well_win, tetrimino, KEY_LEFT);
-				break;
+			pthread_mutex_lock(&tetrimino_lock);
+			switch(ch)
+			{
+				case KEY_LEFT:
+					move_tetrimino(well_win, tetrimino, KEY_LEFT);
+					break;
 
-			case KEY_RIGHT:
-				move_tetrimino(well_win, tetrimino, KEY_RIGHT);
-				break;
+				case KEY_RIGHT:
+					move_tetrimino(well_win, tetrimino, KEY_RIGHT);
+					break;
 
-			case KEY_DOWN:
-				move_tetrimino(well_win, tetrimino, KEY_DOWN);
-				break;
+				case KEY_DOWN:
+					move_tetrimino(well_win, tetrimino, KEY_DOWN);
+					break;
 
-			case KEY_UP:
-				drop_tetrimino(well_win, tetrimino, args->difficulty);
-				break;
+				case KEY_UP:
+					drop_tetrimino(well_win, tetrimino, args->difficulty);
+					break;
 
-			case ROTATE_CW_KEY:
-				rotate_tetrimino(well_win, tetrimino, CLOCKWISE);
-				break;
+				case ROTATE_CW_KEY:
+					rotate_tetrimino(well_win, tetrimino, CLOCKWISE);
+					break;
 
-			case ROTATE_CCW_KEY:
-				rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE);
-				break;
+				case ROTATE_CCW_KEY:
+					rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE);
+					break;
 
-			case HOLD_KEY:
-				hold_tetrimino(well_win, hold_win, tetrimino);
-				break;		
+				case HOLD_KEY:
+					hold_tetrimino(well_win, hold_win, tetrimino);
+					break;		
+			}
+			draw_well(well_win, tetrimino);
+			update_line_count(line_count_win);
+			update_score(score_win);
+			update_level(level_win);
+			pthread_mutex_unlock(&tetrimino_lock);
+			if (GAME_OVER_FLAG) break;
+			usleep(SMALL_DELAY);
 		}
-		draw_well(well_win, tetrimino);
-		update_line_count(line_count_win);
-		update_score(score_win);
-		update_level(level_win);
-		pthread_mutex_unlock(&tetrimino_lock);
-		usleep(SMALL_DELAY);
+		else
+		{
+			if (GAME_OVER_FLAG) break;
+		}
 	}
 
 	QUIT_FLAG = 1;

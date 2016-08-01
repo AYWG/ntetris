@@ -300,7 +300,7 @@ Z : oo 	 - bits: 0 1 	  Pivot = 2
 */
 
 
-int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
+void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 {
 	/* Need to check if tetrimino can actually be initialized (if there's space);
 	If not, then game over */
@@ -369,7 +369,10 @@ int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 	for (int i = 0; i < NUM_BITS; i++)
 	{
 		if ((well_contents[init_y[i] - 1][init_x[i] - 1].value & A_CHARTEXT) != ' ')
-			return FALSE;
+		{
+			GAME_OVER_FLAG = 1;
+			return;
+		}
 
 		tetrimino->bits[i].y = init_y[i];
 		tetrimino->bits[i].x = init_x[i];
@@ -378,8 +381,6 @@ int init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
 		
 	}
-
-	return TRUE;
 }
 
 void lock_tetrimino_into_well(TETRIMINO *tetrimino)
