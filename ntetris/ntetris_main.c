@@ -15,7 +15,6 @@ pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
 int GAME_DELAY;
-int QUIT_FLAG = 0;
 int GAME_OVER_FLAG = 0;
 int RECENT_HOLD = 0;
 int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
@@ -31,7 +30,6 @@ char *title[] = {
 				"/_/ /_/    /_/  \\___/\\__/_/  /_/____/  "
 				};
 
-
 int main(int argc, char **argv)
 {
 	if (argc > 2)
@@ -42,16 +40,12 @@ int main(int argc, char **argv)
 
 	pthread_t game_t;
 
-	/*
-	Initialization.
-	*/
 	ntetris_init();
-	//print_title();
-	//refresh();
 
 	int difficulty;
 	int choice;
-
+	int row, col;
+	getmaxyx(stdscr, row, col);
 
 	char *start_menu_choices[] = {
 									"Start",
@@ -65,6 +59,10 @@ int main(int argc, char **argv)
 										"Expert",
 										"Back"
 								 	  };
+
+	char game_over_msg[] = "GAME OVER";								 	  
+	char game_over_msg_opt_1[] = "Press R to return to the main menu";
+	char game_over_msg_opt_2[] = "Press any other key to quit";
 
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
@@ -102,8 +100,25 @@ int main(int argc, char **argv)
 
 				if (pthread_join(game_t, NULL))
 					printf("Could not properly terminate main phase of game\n");
+				
+				if(GAME_OVER_FLAG)
+				{
+					clear();
+					attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+					mvprintw(row/2 - 6, (col-strlen(game_over_msg))/2, "%s", game_over_msg);
+					attroff(COLOR_PAIR(Z_COLOR_PAIR));
+					mvprintw(row/2 - 4, 24, "Final level : %d", LINE_COUNT / 10);
+					mvprintw(row/2 - 3, 24, "Final # of lines cleared: %d", LINE_COUNT);
+					mvprintw(row/2 - 2, 24, "Final score : %d", SCORE);
 
-				break;
+					mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
+					mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
+					
+					int game_over_choice = getch();
+					if (game_over_choice == RESTART_KEY) continue;
+					else break;
+				}
+				else break;
 			}
 		}
 		else if (choice == CONTROLS)
@@ -122,6 +137,7 @@ int main(int argc, char **argv)
 
 	printf("\n----------------------\n");
 	printf("Final level : %d\n", LINE_COUNT / 10);
+	printf("Final # of lines cleared: %d\n", LINE_COUNT);
 	printf("Final score : %d\n", SCORE);
 
 	return 0;
@@ -132,10 +148,10 @@ int main(int argc, char **argv)
 void *periodic_thread(void *arguments)
 {
 	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
-	while(!QUIT_FLAG && !GAME_OVER_FLAG)
+	while(!GAME_OVER_FLAG)
 	{
 		usleep(GAME_DELAY / 2); 
-		if (QUIT_FLAG || GAME_OVER_FLAG) break;
+		if (GAME_OVER_FLAG) break;
 		usleep(GAME_DELAY / 2);
 		pthread_mutex_lock(&tetrimino_lock);
 		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN);
@@ -143,7 +159,7 @@ void *periodic_thread(void *arguments)
 		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
-		if (QUIT_FLAG || GAME_OVER_FLAG) break;
+		if (GAME_OVER_FLAG) break;
 	}
 }
 
@@ -155,22 +171,22 @@ void *lock_in_thread(void *arguments)
 
 	COORDINATE_PAIR current_bits[NUM_BITS];
 
-	while(!QUIT_FLAG && !GAME_OVER_FLAG)
+	while(!GAME_OVER_FLAG)
 	{
-		if (QUIT_FLAG || GAME_OVER_FLAG) break;
+		if (GAME_OVER_FLAG) break;
 
 		copy_bits(args->tetrimino->bits, current_bits, NUM_BITS);
 
-		usleep((2 * GAME_DELAY) >> 2);
+		usleep((GAME_DELAY) / 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
-		usleep((2 * GAME_DELAY) >> 2);
+		usleep((GAME_DELAY) / 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
-		usleep((2 * GAME_DELAY) >> 2);
+		usleep((GAME_DELAY) / 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
-		usleep((2 * GAME_DELAY) >> 2);
+		usleep((GAME_DELAY) / 2);
 		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
 			continue;
 
@@ -190,45 +206,31 @@ void *lock_in_thread(void *arguments)
 
 void *play_ntetris (void *difficulty) 
 {
+	/* Allocate memory for tetrimino and necessary windows */
 
-	pthread_t periodic_t;
-	pthread_t lock_in_t;
-	
+	WINDOW *well_win = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
+	WINDOW *cover_win = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);	
+	WINDOW *hold_win = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
+	WINDOW *line_count_win = newwin(LINE_COUNT_HEIGHT, LINE_COUNT_WIDTH, LINE_COUNT_INIT_Y, LINE_COUNT_INIT_X);
+	WINDOW *score_win = newwin(SCORE_HEIGHT, SCORE_WIDTH, SCORE_INIT_Y, SCORE_INIT_X);
+	WINDOW *level_win = newwin(LEVEL_HEIGHT, LEVEL_WIDTH, LEVEL_INIT_Y, LEVEL_INIT_X);
+	WINDOW *title_small_win = newwin(TITLE_SMALL_HEIGHT, TITLE_SMALL_WIDTH, TITLE_SMALL_INIT_Y, TITLE_SMALL_INIT_X);
+	TETRIMINO *tetrimino = malloc(sizeof(TETRIMINO));
 
-	WINDOW *well_win;
-	WINDOW *cover_win;	
-	WINDOW *hold_win;
-	WINDOW *line_count_win;
-	WINDOW *score_win;
-	WINDOW *level_win;
-	//WINDOW *controls_win;
-	WINDOW *title_small_win;
+	/* Draw borders for some windows */
 
-	TETRIMINO *tetrimino;
-
-	well_win = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
-	cover_win = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);
-	hold_win = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
-	line_count_win = newwin(LINE_COUNT_HEIGHT, LINE_COUNT_WIDTH, LINE_COUNT_INIT_Y, LINE_COUNT_INIT_X);
-	score_win = newwin(SCORE_HEIGHT, SCORE_WIDTH, SCORE_INIT_Y, SCORE_INIT_X);
-	level_win = newwin(LEVEL_HEIGHT, LEVEL_WIDTH, LEVEL_INIT_Y, LEVEL_INIT_X);
-	//controls_win = newwin(CONTROLS_HEIGHT, CONTROLS_WIDTH, CONTROLS_INIT_Y, CONTROLS_INIT_X);
-	title_small_win = newwin(TITLE_SMALL_HEIGHT, TITLE_SMALL_WIDTH, TITLE_SMALL_INIT_Y, TITLE_SMALL_INIT_X);
-
-	tetrimino = malloc(sizeof(TETRIMINO));
-
-	/* Draw the borders of each window */
 	box(well_win, 0, 0);
 	wborder(cover_win, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
 	box(hold_win, 0, 0);
-	box(title_small_win, 0, 0);
+
+	/* Print some bold headings */
+
 	wattron(level_win, A_BOLD);
 	wattron(score_win, A_BOLD);
 	wattron(line_count_win, A_BOLD);
 	mvwprintw(level_win, 0, 0, "Level");
 	mvwprintw(score_win, 1, 0, "Score");
 	mvwprintw(line_count_win, 0, 0, "Lines Cleared");
-
 	wattroff(level_win, A_BOLD);
 	wattroff(score_win, A_BOLD);
 	wattroff(line_count_win, A_BOLD);
@@ -244,11 +246,10 @@ void *play_ntetris (void *difficulty)
 	wnoutrefresh(line_count_win);
 	wnoutrefresh(score_win);
 	wnoutrefresh(level_win);
-	//wnoutrefresh(controls_win);
 	wnoutrefresh(title_small_win);
 	doupdate();
 
-	/* Initialize well_contents to be empty*/
+	/* Initialize well_contents to be empty */
 	int i, j;
 	for (i = 0; i < WELL_HEIGHT - 2; i++)
 	{
@@ -276,18 +277,19 @@ void *play_ntetris (void *difficulty)
 	args->tetrimino = tetrimino;
 	args->difficulty = *((int *) difficulty);
 
-	int ch;
 	init_tetrimino(well_win, tetrimino, get_rand_num(0, 6));
 	draw_well(well_win, tetrimino);
 
+	pthread_t periodic_t;
+	pthread_t lock_in_t;
 	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t, NULL, &lock_in_thread, args))
 		printf("Could not run lock in thread\n");
 
+	int ch;
 	halfdelay(1);
-
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
 	{
 		if (ch != ERR)
@@ -328,25 +330,33 @@ void *play_ntetris (void *difficulty)
 			update_score(score_win);
 			update_level(level_win);
 			pthread_mutex_unlock(&tetrimino_lock);
-			if (GAME_OVER_FLAG) break;
 			usleep(SMALL_DELAY);
 		}
-		else
+		else 
 		{
 			if (GAME_OVER_FLAG) break;
 		}
 	}
+	nocbreak();
+	cbreak();
 
-	QUIT_FLAG = 1;
+	//getch();
+	pthread_cancel(periodic_t);
+	pthread_cancel(lock_in_t);
 
 	if (pthread_join(periodic_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
 	if (pthread_join(lock_in_t, NULL))
 		printf("Could not properly terminate lock in thread\n");
-	
+
 	/* Free allocated windows and other structs */
 	free(tetrimino);
 	free(args);
 	delwin(well_win);
 	delwin(cover_win);
+	delwin(hold_win);
+	delwin(line_count_win);
+	delwin(score_win);
+	delwin(level_win);
+	delwin(title_small_win);
 }

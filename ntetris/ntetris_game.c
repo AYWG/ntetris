@@ -1,3 +1,5 @@
+/* Gameplay-related functions for ntetris */
+
 #include "ntetris.h"
 
 int base_pts_for_line_clears[] = {40, 100, 300, 1200};
@@ -365,7 +367,6 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 	int init_y[NUM_BITS] = {a, b, c, d};
 	int init_x[NUM_BITS] = {e, f, g, h};
 
-
 	for (int i = 0; i < NUM_BITS; i++)
 	{
 		if ((well_contents[init_y[i] - 1][init_x[i] - 1].value & A_CHARTEXT) != ' ')
@@ -379,7 +380,6 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 
 		/* Offset of 3 between ID number and COLOUR_PAIR number*/
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
-		
 	}
 }
 

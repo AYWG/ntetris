@@ -29,6 +29,7 @@
 #define HOLD_KEY 32 // space
 #define ROTATE_CW_KEY 120 // x
 #define ROTATE_CCW_KEY 122 // z
+#define RESTART_KEY 114
 
 /* Start menu options */
 #define START 1
@@ -153,7 +154,6 @@ typedef struct
 /* Function prototypes */
 void ntetris_init ();
 void print_title(WINDOW *win, char *title[], int title_size);
-//void print_title_small(WINDOW *win);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void draw_well(WINDOW *win, TETRIMINO *tetrimino);
@@ -164,8 +164,6 @@ void update_level(WINDOW *win);
 void update_score(WINDOW *win);
 void print_controls();
 void print_title_small(WINDOW *win);
-
-
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction);

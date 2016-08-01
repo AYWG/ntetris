@@ -1,8 +1,9 @@
+/* GUI-related functions for ntetris */
+
 #include "ntetris.h"		
 
-								   	
-
-
+/* Initialization function that must be called */
+						   
 void ntetris_init()
 {
 	/* Initialize ncurses */
@@ -11,12 +12,14 @@ void ntetris_init()
 	/* Disable user input from echoing to terminal */
 	noecho();
 
-	/* */
+	/* Disable line buffering (characters are available the instant
+	they are typed by the user) */
 	cbreak();
 
 	/* Hide the cursor*/
 	curs_set(0);
 
+	/* Enable colors */
 	start_color();
 
 	/* Define COLOR_ORANGE to have RGB values for orange
@@ -131,8 +134,8 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 	return choice;
 }
 
-/* This function draws the well
-*/
+/* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates
+where it will land in the well */
 
 void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 {
@@ -155,8 +158,8 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 	{
 		if (!locked_in)
 			shadow_bits[i].y--;
-
-		mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino->bits[i].value | A_DIM);
+		if (shadow_bits[i].y >= COVER_B_BNDRY)
+			mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino->bits[i].value | A_DIM);
 	}
 	
 	for (i = 0; i < NUM_BITS; i++)
@@ -166,7 +169,7 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 		
 	for (i = 0; i < WELL_HEIGHT - 2; i++)
 		for (j = 0; j < WELL_WIDTH - 2; j++)
-			if ((well_contents[i][j].value & A_CHARTEXT) == 'o')
+			if ((well_contents[i][j].value & A_CHARTEXT) == 'o' && well_contents[i][j].y >= COVER_B_BNDRY)
 				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
 				
 	wrefresh(win);
@@ -287,7 +290,6 @@ void print_controls()
 	mvprintw(12, CONTROLS_INIT_X, "Rotate tetrimino clockwise            X");
 	mvprintw(13, CONTROLS_INIT_X, "Rotate tetrimino counterclockwise     Z");
 	mvprintw(14, CONTROLS_INIT_X, "Hold tetrimino                        Space");
-
 	mvprintw(18, CONTROLS_INIT_X, "Press any key to return");
 }
 
