@@ -498,6 +498,18 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 			clear_line(i);
 			num_complete_lines++;
 			LINE_COUNT++;
+			if (LINE_COUNT % 10 == 0) 
+			{
+				switch(difficulty)
+				{
+					case CASUAL:
+						GAME_DELAY -= CASUAL_INIT_DELAY / 20; break;
+					case INTERMEDIATE:
+						GAME_DELAY -= INTERMEDIATE_INIT_DELAY / 20; break;
+					case EXPERT:
+						GAME_DELAY -= EXPERT_INIT_DELAY / 20; break;
+				}
+			}
 		}
 		else
 		{

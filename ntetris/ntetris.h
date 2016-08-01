@@ -43,7 +43,9 @@
 
 #define CASUAL_INIT_DELAY 1000000
 #define INTERMEDIATE_INIT_DELAY 500000
-#define EXPERT_INIT_DELAY 250000
+#define EXPERT_INIT_DELAY 30000
+
+#define MIN_DELAY 30000
 
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
