@@ -88,7 +88,7 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 {
 	WINDOW *menu_win;
 	int highlight = START;
-	int choice = 0;
+	int choice = -1;
 	int key_pressed;
 
 	int MENU_HEIGHT = 7;
@@ -127,7 +127,7 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 				break;
 		}
 		print_menu(menu_win, highlight, menu_choices, num_menu_choices);
-		if(choice != 0)	/* User did a choice, so come out of the infinite loop */
+		if(choice != -1)	/* User did a choice, so come out of the infinite loop */
 			break;
 	}
 

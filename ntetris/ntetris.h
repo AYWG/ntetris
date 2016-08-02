@@ -198,6 +198,7 @@ extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
 extern int SCORE;
 extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
+extern pthread_mutex_t tetrimino_lock;
 #endif
 
 
