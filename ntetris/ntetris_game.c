@@ -498,8 +498,8 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 			clear_line(i);
 			num_complete_lines++;
 			LINE_COUNT++;
-			if (LINE_COUNT % 10 == 0) 
-			{
+			if (LINE_COUNT % 10 == 0 && GAME_DELAY >= MIN_DELAY) 
+			{ 
 				switch(difficulty)
 				{
 					case CASUAL:

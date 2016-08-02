@@ -21,7 +21,6 @@ int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
 int LINE_COUNT = 0;
 int SCORE = 0;
 
-/* The title of the game represented in ASCII art */
 char *title[] = {
 				"             ______     __       _     ",
 				"   ____     /_  __/__  / /______(_)____",

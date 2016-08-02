@@ -8,8 +8,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
+/* IDs of the color pairs used in ntetris */
 #define TITLE_COLOR_PAIR 1
-#define MAIN_TEXT_COLOR_PAIR 2 
+#define MAIN_TEXT_COLOR_PAIR 2 // Default text color
 #define I_COLOR_PAIR 3
 #define J_COLOR_PAIR 4
 #define L_COLOR_PAIR 5
@@ -20,32 +21,30 @@
 
 #define COLOR_ORANGE 8
 
-#define MENU_HEIGHT 7
-#define MENU_WIDTH 20
-
-
-#define ENTER_KEY 10
-#define QUIT_KEY 113
+/* Decimal value of needed ASCII characters */
+#define ENTER_KEY 10 // 
+#define QUIT_KEY 113 // q
 #define HOLD_KEY 32 // space
 #define ROTATE_CW_KEY 120 // x
 #define ROTATE_CCW_KEY 122 // z
-#define RESTART_KEY 114
+#define RESTART_KEY 114 // r
 
 /* Start menu options */
-#define START 1
-#define CONTROLS 2
-#define EXIT 3
+#define START 0
+#define CONTROLS 1
+#define EXIT 2
 
 /* Difficulty levels */
 #define CASUAL 0
 #define INTERMEDIATE 1
 #define EXPERT 2
 
+/* Game delays (in microseconds) */
 #define CASUAL_INIT_DELAY 1000000
 #define INTERMEDIATE_INIT_DELAY 500000
-#define EXPERT_INIT_DELAY 30000
-
-#define MIN_DELAY 30000
+#define EXPERT_INIT_DELAY 250000
+#define MIN_DELAY 30000 // Game delay cannot go below this amount
+#define SMALL_DELAY 1000
 
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
@@ -57,13 +56,16 @@
 #define TETRIMINO_Z 6
 #define INVALID_ID 7
 
+/* Number of bits that make up each tetrimino */
 #define NUM_BITS 4
 
+/* Directions of movement */
 #define UP 1
 #define DOWN 2
 #define LEFT 3
 #define RIGHT 4
 
+/* Directions of rotation */
 #define CLOCKWISE 0
 #define CNT_CLOCKWISE 1
 
@@ -119,15 +121,15 @@ the WINDOWs used */
 
 #define CONTROLS_INIT_X 15
 
-#define ONE_SEC_DELAY 1000000 // microseconds
-#define SMALL_DELAY 1000
-
+/* The maximum number of times a tetrimino can
+"adjust" itself into a valid position after an invalid rotation */
 #define ADJUST_LIMIT 20
 
+/* Struct to represent a coordinate and its associated value */
 typedef struct 
 {
 	int y, x;
-	chtype value;
+	chtype value; 	// chtype ORs together character value, attributes, and color into a single value
 } COORDINATE_PAIR;
 
 
@@ -145,6 +147,7 @@ typedef struct
 	COORDINATE_PAIR bits[NUM_BITS];
 } TETRIMINO;
 
+/* Struct for use as arguments for periodic_thread and lock_in_thread*/
 typedef struct
 {
 	WINDOW *win[NUM_WINDOWS];

@@ -69,7 +69,7 @@ void print_menu(WINDOW *menu_win, int highlight, char *menu_choices[], int num_m
 
 	for (i = 0; i < num_menu_choices; ++i)
 	{	
-		if (highlight == i + 1) // Highlight the present choice 
+		if (highlight == i) // Highlight the present choice 
 		{	wattron(menu_win, A_REVERSE); 
 			mvwprintw(menu_win, y, x, "%s", menu_choices[i]);
 			wattroff(menu_win, A_REVERSE);
@@ -86,11 +86,13 @@ by calling print_menu. Returns the choice that the user selects. */
 
 int get_menu_choice (char *menu_choices[], int num_menu_choices)
 {
+	WINDOW *menu_win;
 	int highlight = START;
 	int choice = 0;
 	int key_pressed;
-	WINDOW *menu_win;
 
+	int MENU_HEIGHT = 7;
+	int MENU_WIDTH = 20;
 	int MENU_Y = getcury(stdscr) + getmaxy(stdscr) / 4;
 	int MENU_X = (getmaxx(stdscr) / 2) - (MENU_WIDTH / 2) ;
 
@@ -104,15 +106,15 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 		switch(key_pressed)
 		{	
 			case KEY_UP:
-				if(highlight == 1)
-					highlight = num_menu_choices;
+				if(highlight == START) // wrap-around from top
+					highlight = EXIT;
 				else
 					--highlight;
 				break;
 
 			case KEY_DOWN:
-				if(highlight == num_menu_choices)
-					highlight = 1;
+				if(highlight == EXIT) // wrap-around from bottom
+					highlight = START;
 				else 
 					++highlight;
 				break;
@@ -142,7 +144,7 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
 	int locked_in = 1;
-	clear_well(win);
+	clear_well(win); // erase everything before drawing
 
 	copy_bits(tetrimino->bits, shadow_bits, NUM_BITS);
 
@@ -156,26 +158,31 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 	
 	for (i = 0; i < NUM_BITS; i++)
 	{
-		if (!locked_in)
+		/* only decrement y coordinates if they changed previously (prev. while loop executed) */
+		if (!locked_in) 
 			shadow_bits[i].y--;
+
+		/* Only draw shadow bits if they're outside the cover window */
 		if (shadow_bits[i].y >= COVER_B_BNDRY)
 			mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino->bits[i].value | A_DIM);
 	}
 	
 	for (i = 0; i < NUM_BITS; i++)
-		/* Do not draw tetrimino bit if it is currently in the same area as the cover window */
+		/* Only draw tetrimino bits if they're outside the cover window */
 		if (tetrimino->bits[i].y >= COVER_B_BNDRY)
 			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
 		
 	for (i = 0; i < WELL_HEIGHT - 2; i++)
 		for (j = 0; j < WELL_WIDTH - 2; j++)
+			/* Only draw well contents if their corresponding character is an 'o' and they are located
+			outside the cover window */
 			if ((well_contents[i][j].value & A_CHARTEXT) == 'o' && well_contents[i][j].y >= COVER_B_BNDRY)
 				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
 				
 	wrefresh(win);
 }
 
-/* This function "erases" the contents of the well that show up in the terminal
+/* "Erases" the contents of the well that show up in the terminal
 (below the cover window) */
 
 void clear_well(WINDOW *win)
@@ -188,6 +195,11 @@ void clear_well(WINDOW *win)
 
 	wrefresh(win);
 }
+
+/* Updates the hold window by displaying the tetrimino specified by
+tetrimino_id. Returns the ID of the tetrimino that was being shown 
+in the hold window prior to this function being called. If no prior
+tetrimino was being shown, then return INVALID_ID */
 
 int update_hold(WINDOW *win, int tetrimino_id)
 {
@@ -254,6 +266,8 @@ int update_hold(WINDOW *win, int tetrimino_id)
 	return old_id;
 }
 
+/* Updates the UI with the current number of lines cleared */
+
 void update_line_count(WINDOW *win)
 {
 	wmove(win, 2, 0);
@@ -261,6 +275,8 @@ void update_line_count(WINDOW *win)
 	mvwprintw(win, 2, 0, "%05d", LINE_COUNT);
 	wrefresh(win);
 }
+
+/* Updates the UI with the current level */
 
 void update_level(WINDOW *win)
 {
@@ -270,6 +286,8 @@ void update_level(WINDOW *win)
 	wrefresh(win);
 }
 
+/* Updates the UI with the current score */
+
 void update_score(WINDOW *win)
 {
 	wmove(win, 2, 0);
@@ -277,6 +295,8 @@ void update_score(WINDOW *win)
 	mvwprintw(win, 2, 0, "%010d", SCORE);
 	wrefresh(win);
 }
+
+/* Display the controls for playing the game */
 
 void print_controls()
 {
@@ -292,6 +312,8 @@ void print_controls()
 	mvprintw(14, CONTROLS_INIT_X, "Hold tetrimino                        Space");
 	mvprintw(18, CONTROLS_INIT_X, "Press any key to return");
 }
+
+/* Prints a small version of the title in the UI */
 
 void print_title_small(WINDOW *win)
 {
