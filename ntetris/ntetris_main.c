@@ -31,10 +31,31 @@ char *title[] = {
 
 int main(int argc, char **argv)
 {
+	int STATS = 0;
 	if (argc > 2)
 	{
-		printf("Usage: ntetris [--version] [--help]\n");
+		printf("Usage: ntetris [--version] [--help] [--stats]\n");
 		exit(1);
+	}
+
+	if (argc == 2)
+	{
+		if (!strcmp(argv[1],"--version"))
+		{
+			printf("Current Version: ntetris 1.0.0\n");
+			exit(1);
+		}
+
+		if (!strcmp(argv[1],"--help"))
+		{
+			print_help_message();
+			exit(1);
+		}
+
+		if (!strcmp(argv[1],"--stats"))
+		{
+			STATS = 1;
+		}
 	}
 
 	pthread_t game_t;
@@ -73,24 +94,15 @@ int main(int argc, char **argv)
 		refresh();
 		if ((choice = get_menu_choice(start_menu_choices, num_start_menu_choices)) == START)
 		{	
-			if ((difficulty = get_menu_choice(difficulty_menu_choices, num_diff_menu_choices)) == 4)
+			if ((difficulty = get_menu_choice(difficulty_menu_choices, num_diff_menu_choices)) == BACK)
 				continue;
 			else
 			{
 				switch(difficulty)
 				{
-					case 1: 
-						difficulty = CASUAL; 
-						GAME_DELAY = CASUAL_INIT_DELAY;
-						break;
-					case 2: 
-						difficulty = INTERMEDIATE;
-						GAME_DELAY = INTERMEDIATE_INIT_DELAY;
-						break;
-					case 3: 
-						difficulty = EXPERT;
-						GAME_DELAY = EXPERT_INIT_DELAY;
-						break;
+					case CASUAL: GAME_DELAY = CASUAL_INIT_DELAY; break;
+					case INTERMEDIATE: GAME_DELAY = INTERMEDIATE_INIT_DELAY; break;
+					case EXPERT: GAME_DELAY = EXPERT_INIT_DELAY; break;
 				}
 				clear();
 				refresh();
@@ -133,12 +145,19 @@ int main(int argc, char **argv)
 	
 	/* Exit ncurses */
 	endwin();
-
-	printf("\n----------------------\n");
-	printf("Final level : %d\n", LINE_COUNT / 10);
-	printf("Final # of lines cleared: %d\n", LINE_COUNT);
-	printf("Final score : %d\n", SCORE);
-
+	
+	if(STATS)
+	{
+		printf("\n----------------------\n");
+		printf("Final level : %d\n", LINE_COUNT / 10);
+		printf("Final # of lines cleared: %d\n", LINE_COUNT);
+		printf("Final score : %d\n", SCORE);
+	}
 	return 0;
+}
+
+void print_help_message()
+{
+	printf("ntetris: a tetris clone that uses the ncurses API\n");
 }
 

@@ -106,15 +106,15 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 		switch(key_pressed)
 		{	
 			case KEY_UP:
-				if(highlight == START) // wrap-around from top
-					highlight = EXIT;
+				if(highlight == 0) // wrap-around from top
+					highlight = num_menu_choices - 1;
 				else
 					--highlight;
 				break;
 
 			case KEY_DOWN:
-				if(highlight == EXIT) // wrap-around from bottom
-					highlight = START;
+				if(highlight == num_menu_choices - 1) // wrap-around from bottom
+					highlight = 0;
 				else 
 					++highlight;
 				break;

@@ -5,12 +5,15 @@
 int base_pts_for_line_clears[] = {40, 100, 300, 1200};
 
 
-/* Determines whether cp_1 is located at the same coordinates to cp_2. */
+/* Determines whether cp_1 is located at the same coordinates as cp_2. */
 
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2)
 {
 	return (cp_1.x == cp_2.x) && (cp_1.y == cp_2.y);
 }
+
+/* Determines whether each bit in bits_1 has the same coordinates as the corresponding bit
+in bits_2 */
 
 int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits)
 {
@@ -18,14 +21,13 @@ int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits
 	int equal = 1;
 
 	for (i = 0; i < num_bits; i++)
-	{
 		equal &= equal_coords(bits_1[i], bits_2[i]);
-	}
+	
 
 	return equal;
 }
 
-/* Copies the location (not value) of each COORDINATE_PAIR in source_bits into dest_bits*/
+/* Copies the location of each bit in source_bits into dest_bits */
 
 void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits)
 {
@@ -38,15 +40,12 @@ void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int 
 }
 
 /* Determines whether the given coords are outside the boundaries
-of win.
- */
-
-/* Probably don't need the window parameter, should remove it */
+of win (assuming that win has a border) */
 
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords)
 {
-	return (coords.y < WELL_T_BNDRY || coords.y > getmaxy(win) - 2 ||
-			coords.x < WELL_L_BNDRY || coords.x > getmaxx(win) - 2);
+	return (coords.y < 1 || coords.y > getmaxy(win) - 2 ||
+			coords.x < 1 || coords.x > getmaxx(win) - 2);
 }
 
 /* Determines if new_bits is a valid array of bits for the tetrimino within
@@ -70,6 +69,8 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[
 		row = new_bits[i].y - 1;
 		col = new_bits[i].x - 1;
 
+		/* Valid coordinates in the well are those unoccupied or occupied by the 
+		tetrimino's "ghost" */
 		if ((well_contents[row][col].value & A_CHARTEXT != ' ') &&
 			(well_contents[row][col].value & A_ATTRIBUTES) != A_DIM)
 		{
@@ -83,7 +84,9 @@ int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[
 	return TRUE;
 }
 
-/* Updates the coordinates of */
+/* Updates the tetrimino's location based on the given direction, if possible. 
+Allowed directions include: left, right, and down. If the new location is invalid
+(e.g. something is in the way) then nothing happens */
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction) 
 {
@@ -118,16 +121,16 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	if (valid_position(win, tetrimino, new_bits, NUM_BITS))
 	{
 		copy_bits(new_bits, tetrimino->bits, NUM_BITS);
-		if (direction == KEY_DOWN)
+		/* "soft" drops award 1 point */
+		if (direction == KEY_DOWN) 
 			SCORE++;
 	}
 
 }
 
 /* Instantly move the tetrimino to where it would go if 
-   just fell naturally down the well from its current position,
-   then lock it into the well. 
- */
+just fell naturally down the well from its current position,
+then lock it into the well. */
 
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 {
@@ -142,18 +145,25 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 			new_bits[i].y++;
 		distance_traveled++;
 	}
+
 	for (i = 0; i < NUM_BITS; i++)
 			new_bits[i].y--;
 	distance_traveled--;
 
 	copy_bits(new_bits, tetrimino->bits, NUM_BITS);
-
 	lock_tetrimino_into_well(tetrimino);
 	update_lines(win, tetrimino, difficulty);
+
+	/* Player gets more points by dropping tetriminos rather
+	than letting them fall naturally */
 	SCORE += 2 * distance_traveled;
-	init_tetrimino(win, tetrimino, get_rand_num(0, 6));
+
+	init_tetrimino(tetrimino, get_rand_num(0, 6));
 	draw_well(win, tetrimino);
 }
+
+/* Shifts the coordinates of each bit in bits based on the given
+direction */
 
 void adjust_bits (COORDINATE_PAIR bits[], int num_bits, int direction)
 {
@@ -175,39 +185,40 @@ void adjust_bits (COORDINATE_PAIR bits[], int num_bits, int direction)
 	}
 }
 
-void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction)
+/* "Rotates" the coordinates of bits_to_rotate based on the given
+pivot and direction */
+
+void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[], 
+					   int num_bits, int direction)
 {
 	int temp, i;
 	for (i = 0; i < num_bits; i++)
 	{
-		old_bits[i].y -= pivot.y;
-		old_bits[i].x -= pivot.x;
+		bits_to_rotate[i].y -= pivot.y;
+		bits_to_rotate[i].x -= pivot.x;
 
 		if (direction == CLOCKWISE)
 		{
-			temp = old_bits[i].y; 
-			old_bits[i].y =  -old_bits[i].x;
-			old_bits[i].x = temp;
+			temp = bits_to_rotate[i].y; 
+			bits_to_rotate[i].y =  -bits_to_rotate[i].x;
+			bits_to_rotate[i].x = temp;
 		}
 		else // CNT_CLOCKWISE
 		{
-			temp = old_bits[i].x; 
-			old_bits[i].x =  -old_bits[i].y;
-			old_bits[i].y = temp;
+			temp = bits_to_rotate[i].x; 
+			bits_to_rotate[i].x =  -bits_to_rotate[i].y;
+			bits_to_rotate[i].y = temp;
 		}
 
-		old_bits[i].y += pivot.y;
-		old_bits[i].x += pivot.x;
-		
-		new_bits[i].y = old_bits[i].y;
-		new_bits[i].x = old_bits[i].x;
+		bits_to_rotate[i].y += pivot.y;
+		bits_to_rotate[i].x += pivot.x;
 	}
 }
 
-/*
- Rotates the tetrimino about its pivot coordinates
-(the coordinates of one of the four o's that make up the tetrimino)
-*/
+/* Rotates the tetrimino in the specified direction. If the new location
+is invalid (e.g. rotation occurs near an edge), then the tetrimino will 
+attempt to shift itself into a valid position (while still preserving
+the rotation). */
 
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction) 
 {
@@ -215,7 +226,6 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	/* Only rotate if the tetrimino is not an O piece */
 	if (tetrimino->tetrimino_type != TETRIMINO_O)
 	{
-		COORDINATE_PAIR old_bits[NUM_BITS];
 		COORDINATE_PAIR new_bits[NUM_BITS];
 		COORDINATE_PAIR pivot;
 
@@ -227,8 +237,8 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 		pivot.y = tetrimino->bits[tetrimino->pivot_bit].y;
 		pivot.x = tetrimino->bits[tetrimino->pivot_bit].x;
 
-		copy_bits(tetrimino->bits, old_bits, NUM_BITS);
-		get_rotated_bits(pivot, old_bits, new_bits, NUM_BITS, direction);
+		copy_bits(tetrimino->bits, new_bits, NUM_BITS);
+		get_rotated_bits(pivot, new_bits, NUM_BITS, direction);
 
 		while (!valid_position(win, tetrimino, new_bits, NUM_BITS))
 		{
@@ -263,6 +273,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 					adjust_bits(new_bits, NUM_BITS, LEFT);
 			}
 
+			/* True if trying to rotate near another existing piece in the well */
 			if (coords_out_of_y_bounds == 0 && coords_out_of_x_bounds == 0)
 			{
 				if (count_adjust > ADJUST_LIMIT)
@@ -279,36 +290,12 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 	}
 }
 
-/*
-I : oooo - bits: 0 1 2 3  Pivot = 1
+/* Attempts to initialize tetrimino based on tetrimino_id; 
+if this fails (due to the tetrimino's spawning coordinates being occupied)
+then GAME_OVER_FLAG is set */
 
-J : ooo  - bits: 0 1 2    Pivot = 1
-  	  o 			 3
-
-L : ooo  - bits: 0 1 2    Pivot = 1
-	o 			 3
-
-O : oo 	 - bits: 0 1  	  Pivot = 4 (no pivot)
-	oo 			 2 3
-
-S :  oo  - bits:  0 1     Pivot = 3
-	oo 			2 3
-
-T : ooo  - bits: 0 1 2 	  Pivot = 1
-	 o 			   3
-
-Z : oo 	 - bits: 0 1 	  Pivot = 2
-	 oo 		   2 3
-*/
-
-
-void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
+void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id)
 {
-	/* Need to check if tetrimino can actually be initialized (if there's space);
-	If not, then game over */
-
-	/* don't actually need the win parameter */
-
 	int a, b, c, d;
 	int e, f, g, h;
 
@@ -383,6 +370,8 @@ void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id)
 	}
 }
 
+/* Updates well_contents with the value and coordinates of tetrimino's bits */
+
 void lock_tetrimino_into_well(TETRIMINO *tetrimino)
 {
 	int row, col;
@@ -396,16 +385,20 @@ void lock_tetrimino_into_well(TETRIMINO *tetrimino)
 	RECENT_HOLD = 0;
 }
 
-void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino)
+/* Swaps the current tetrimino with the one "inside" the hold window 
+and re-spawns the previous tetrimino - if hold window previously empty, then 
+current tetrimino is held and a random one spawns */
+
+void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino)
 {
 	if (!RECENT_HOLD)
 	{
 		int old_id = update_hold(hold_win, tetrimino->tetrimino_type);
 
 		if (old_id != INVALID_ID)
-			init_tetrimino(well_win, tetrimino, old_id);
+			init_tetrimino(tetrimino, old_id);
 		else
-			init_tetrimino(well_win, tetrimino, get_rand_num(0, 6));
+			init_tetrimino(tetrimino, get_rand_num(0, 6));
 
 		RECENT_HOLD = 1;
 	}
@@ -419,43 +412,46 @@ int get_rand_num (int lower, int upper)
 	return rand() % (upper - lower + 1) + lower;
 }
 
-/* Checks if a line in the window is "complete" - that is,
-all coordinates are occupied by an 'o' that is not one of the current
-tetrimino bits */
+/* Checks if a line is "complete" - that is, all coordinates are occupied
+by an 'o' */
 
 int line_complete (int row)
 {
 	int complete = 1;
 	int j;
 	for (j = 0; j < WELL_R_BNDRY; j++)
-	{
 		complete &= ((well_contents[row][j].value & A_CHARTEXT) == 'o');
-	}
-
+	
 	return complete;
 }
+
+/* Checks if a line is "empty" - that is, all coordinates are occupied
+by a ' ' */
 
 int line_empty (int row)
 {
 	int empty = 1;
 	int j;
 	for (j = 0; j < WELL_R_BNDRY; j++)
-	{
 		empty &= (well_contents[row][j].value == ' ');
-	}
-
+	
 	return empty;
 }
+
+/* Makes a line empty */
 
 void clear_line (int row)
 {
 	int j;
 
 	for (j = 0; j < WELL_R_BNDRY; j++)
-	{
 		well_contents[row][j].value = ' ';	
-	}
 }
+
+/* Handles line clearing every time a tetrimino locks into the well, highlighting all
+complete lines before clearing them, determining the appropriate number of points to be 
+rewarded, and how the rest of the well contents should be adjusted. Also adjusts the game 
+delay every time the player levels up. */
 
 void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 {
@@ -517,9 +513,8 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 			if (i + num_complete_lines != i)
 			{
 				for (j = 0; j < WELL_R_BNDRY; j++)
-				{
 					well_contents[i + num_complete_lines][j].value = well_contents[i][j].value;
-				}
+				
 				clear_line(i);
 			}
 		}

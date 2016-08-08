@@ -39,6 +39,8 @@
 #define INTERMEDIATE 1
 #define EXPERT 2
 
+#define BACK 3
+
 /* Game delays (in microseconds) */
 #define CASUAL_INIT_DELAY 1000000
 #define INTERMEDIATE_INIT_DELAY 500000
@@ -55,6 +57,28 @@
 #define TETRIMINO_T 5
 #define TETRIMINO_Z 6
 #define INVALID_ID 7
+
+/* FOR REFERENCE
+I : oooo - bits: 0 1 2 3  Pivot = 1
+
+J : ooo  - bits: 0 1 2    Pivot = 1
+  	  o 			 3
+
+L : ooo  - bits: 0 1 2    Pivot = 1
+	o 			 3
+
+O : oo 	 - bits: 0 1  	  Pivot = 4 (no pivot)
+	oo 			 2 3
+
+S :  oo  - bits:  0 1     Pivot = 3
+	oo 			2 3
+
+T : ooo  - bits: 0 1 2 	  Pivot = 1
+	 o 			   3
+
+Z : oo 	 - bits: 0 1 	  Pivot = 2
+	 oo 		   2 3
+*/
 
 /* Number of bits that make up each tetrimino */
 #define NUM_BITS 4
@@ -157,6 +181,8 @@ typedef struct
 
 
 /* Function prototypes */
+void print_help_message();
+
 void ntetris_init ();
 void print_title(WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
@@ -171,12 +197,13 @@ void print_controls();
 void print_title_small(WINDOW *win);
 
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], COORDINATE_PAIR new_bits[], int num_bits, int direction);
+void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], 
+					  int num_bits, int direction);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty);
-void init_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int tetrimino_id);
+void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino);
-void hold_tetrimino(WINDOW *well_win, WINDOW *hold_win, TETRIMINO *tetrimino);
+void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino);
 int get_rand_num (int lower, int upper);
 void *play_ntetris (void *difficulty);
 void *periodic_thread(void *arguments);

@@ -1,6 +1,6 @@
 #include "ntetris.h"
 
-/* Thread responsible for moving the tetrimino down at the specified fall rate. */
+/* Thread responsible for moving the tetrimino down one unit at a time with GAME_DELAY pauses. */
 
 void *periodic_thread(void *arguments)
 {
@@ -53,7 +53,7 @@ void *lock_in_thread(void *arguments)
 		update_line_count(args->win[3]);
 		update_score(args->win[4]);
 		update_level(args->win[5]);
-		init_tetrimino(args->win[0], args->tetrimino, get_rand_num(0, 6));
+		init_tetrimino(args->tetrimino, get_rand_num(0, 6));
 		draw_well(args->win[0], args->tetrimino);
 		pthread_mutex_unlock(&tetrimino_lock);
 	}
@@ -134,7 +134,7 @@ void *play_ntetris (void *difficulty)
 	args->tetrimino = tetrimino;
 	args->difficulty = *((int *) difficulty);
 
-	init_tetrimino(well_win, tetrimino, get_rand_num(0, 6));
+	init_tetrimino(tetrimino, get_rand_num(0, 6));
 	draw_well(well_win, tetrimino);
 
 	pthread_t periodic_t;
@@ -179,7 +179,7 @@ void *play_ntetris (void *difficulty)
 					break;
 
 				case HOLD_KEY:
-					hold_tetrimino(well_win, hold_win, tetrimino);
+					hold_tetrimino(hold_win, tetrimino);
 					break;		
 			}
 			draw_well(well_win, tetrimino);
