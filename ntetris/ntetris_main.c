@@ -62,16 +62,28 @@ int main(int argc, char **argv)
 
 	ntetris_init();
 
-	int difficulty;
+	
 	int choice;
+	int difficulty;
 	int row, col;
 	getmaxyx(stdscr, row, col);
 
+	char change_term_dim_msg[] = "Please increase terminal dimensions (minimum: 24x80)";
+
+	while (row < 24 || col < 80)
+	{
+		clear();
+		mvprintw(row/2, (col-strlen(change_term_dim_msg))/2, "%s", change_term_dim_msg);
+		refresh();
+		getmaxyx(stdscr, row, col);
+	}
+
 	char *start_menu_choices[] = {
-									"Start",
+									"Single Player",
+									"Versus (2 Players)",
 									"Controls", 
 							 		"Exit"
-					   		 	 };
+					   		 	 };				   		 	 
 
 	char *difficulty_menu_choices[] = {
 										"Casual",
@@ -92,7 +104,7 @@ int main(int argc, char **argv)
 		clear();
 		print_title(stdscr, title, 5);
 		refresh();
-		if ((choice = get_menu_choice(start_menu_choices, num_start_menu_choices)) == START)
+		if ((choice = get_menu_choice(start_menu_choices, num_start_menu_choices)) == SINGLE)
 		{	
 			if ((difficulty = get_menu_choice(difficulty_menu_choices, num_diff_menu_choices)) == BACK)
 				continue;
@@ -131,6 +143,10 @@ int main(int argc, char **argv)
 				}
 				else break;
 			}
+		}
+		else if (choice == VERSUS)
+		{
+			break; // for now
 		}
 		else if (choice == CONTROLS)
 		{

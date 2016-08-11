@@ -276,9 +276,12 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction)
 			/* True if trying to rotate near another existing piece in the well */
 			if (coords_out_of_y_bounds == 0 && coords_out_of_x_bounds == 0)
 			{
+				/* Have to stop adjusting eventually... */
 				if (count_adjust > ADJUST_LIMIT)
 					return;
 
+				/* Difficult to know exactly which way we should adjust, so just
+				choose a random direction (represented by values ranging from 1 - 4) */
 				adjust_bits(new_bits, NUM_BITS, get_rand_num(1, 4));
 				count_adjust++;
 			}
@@ -469,6 +472,7 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 		{
 			for (j = 0; j < WELL_R_BNDRY; j++)
 				well_contents[i][j].value |= A_REVERSE;
+			
 			complete = 1;
 			consec_complete_lines++;
 		}
@@ -509,7 +513,7 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty)
 		}
 		else
 		{
-			// copy line i to line i + num_complete_lines
+			// copy line (i) to line (i + num_complete_lines)
 			if (i + num_complete_lines != i)
 			{
 				for (j = 0; j < WELL_R_BNDRY; j++)

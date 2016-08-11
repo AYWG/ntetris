@@ -87,12 +87,12 @@ by calling print_menu. Returns the choice that the user selects. */
 int get_menu_choice (char *menu_choices[], int num_menu_choices)
 {
 	WINDOW *menu_win;
-	int highlight = START;
+	int highlight = 0;
 	int choice = -1;
 	int key_pressed;
 
 	int MENU_HEIGHT = 7;
-	int MENU_WIDTH = 20;
+	int MENU_WIDTH = 23;
 	int MENU_Y = getcury(stdscr) + getmaxy(stdscr) / 4;
 	int MENU_X = (getmaxx(stdscr) / 2) - (MENU_WIDTH / 2) ;
 
@@ -317,11 +317,13 @@ void print_controls()
 
 void print_title_small(WINDOW *win)
 {
-	waddch(win, 'N' | A_BOLD | COLOR_PAIR(I_COLOR_PAIR));
-	waddch(win, 'T' | A_BOLD | COLOR_PAIR(J_COLOR_PAIR));
-	waddch(win, 'E' | A_BOLD | COLOR_PAIR(L_COLOR_PAIR));
-	waddch(win, 'T' | A_BOLD | COLOR_PAIR(O_COLOR_PAIR));
-	waddch(win, 'R' | A_BOLD | COLOR_PAIR(S_COLOR_PAIR));
-	waddch(win, 'I' | A_BOLD | COLOR_PAIR(T_COLOR_PAIR));
-	waddch(win, 'S' | A_BOLD | COLOR_PAIR(Z_COLOR_PAIR));
+	mvwaddch(win, 0, 0, 'N' | A_BOLD | COLOR_PAIR(I_COLOR_PAIR));
+	mvwaddch(win, 1, 0,'T' | A_BOLD | COLOR_PAIR(J_COLOR_PAIR));
+	mvwaddch(win, 2, 0,'E' | A_BOLD | COLOR_PAIR(L_COLOR_PAIR));
+	mvwaddch(win, 3, 0,'T' | A_BOLD | COLOR_PAIR(O_COLOR_PAIR));
+	mvwaddch(win, 4, 0,'R' | A_BOLD | COLOR_PAIR(S_COLOR_PAIR));
+	mvwaddch(win, 5, 0,'I' | A_BOLD | COLOR_PAIR(T_COLOR_PAIR));
+	mvwaddch(win, 6, 0,'S' | A_BOLD | COLOR_PAIR(Z_COLOR_PAIR));
+
+	mvwprintw(win, 9, 0, "Press Q to quit");
 }

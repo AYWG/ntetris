@@ -30,15 +30,15 @@
 #define RESTART_KEY 114 // r
 
 /* Start menu options */
-#define START 0
-#define CONTROLS 1
-#define EXIT 2
+#define SINGLE 0
+#define VERSUS 1
+#define CONTROLS 2
+#define EXIT 3
 
 /* Difficulty levels */
 #define CASUAL 0
 #define INTERMEDIATE 1
 #define EXPERT 2
-
 #define BACK 3
 
 /* Game delays (in microseconds) */
@@ -138,8 +138,8 @@ the WINDOWs used */
 #define LEVEL_INIT_Y LINE_COUNT_INIT_Y - 6
 #define LEVEL_INIT_X LINE_COUNT_INIT_X
 
-#define TITLE_SMALL_WIDTH 1
-#define TITLE_SMALL_HEIGHT 7
+#define TITLE_SMALL_WIDTH 15
+#define TITLE_SMALL_HEIGHT 10
 #define TITLE_SMALL_INIT_Y LEVEL_INIT_Y
 #define TITLE_SMALL_INIT_X SCORE_INIT_X
 
