@@ -95,28 +95,49 @@ Z : oo 	 - bits: 0 1 	  Pivot = 2
 
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
-#define NUM_WINDOWS 6
+#define NUM_WINDOWS 7
 
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
 #define WELL_INIT_Y 0
 #define WELL_INIT_X 30
 
+#define WELL_INIT_Y_P1 0
+#define WELL_INIT_X_P1 12
+#define WELL_INIT_Y_P2 0
+#define WELL_INIT_X_P2 46
+
 #define WELL_L_BNDRY 1
 #define WELL_R_BNDRY WELL_WIDTH - 2
 #define WELL_T_BNDRY 1
 #define WELL_B_BNDRY WELL_HEIGHT - 2
 
+#define WELL_CONTENTS_HEIGHT WELL_HEIGHT - 2
+#define WELL_CONTENTS_WIDTH WELL_WIDTH - 2
+
 #define COVER_HEIGHT 3
 #define COVER_WIDTH WELL_WIDTH
 #define COVER_INIT_Y WELL_INIT_Y
 #define COVER_INIT_X WELL_INIT_X
+
+#define COVER_INIT_Y_P1 WELL_INIT_Y_P1
+#define COVER_INIT_X_P1 WELL_INIT_X_P1
+#define COVER_INIT_Y_P2 WELL_INIT_Y_P2
+#define COVER_INIT_X_P2 WELL_INIT_X_P2
+
+
 #define COVER_B_BNDRY COVER_INIT_Y + COVER_HEIGHT
 
 #define HOLD_WIDTH 8
 #define HOLD_HEIGHT 6
 #define HOLD_INIT_Y WELL_INIT_Y + COVER_HEIGHT - 1
 #define HOLD_INIT_X WELL_INIT_X - 10
+
+#define HOLD_INIT_Y_P1 WELL_INIT_Y + COVER_HEIGHT - 1
+#define HOLD_INIT_X_P1 WELL_INIT_X_P1 - 10
+
+#define HOLD_INIT_Y_P2 WELL_INIT_Y + COVER_HEIGHT - 1
+#define HOLD_INIT_X_P2 WELL_INIT_X_P2 - 10
 
 #define HOLD_L_BNDRY 1
 #define HOLD_R_BNDRY HOLD_WIDTH - 2
@@ -176,18 +197,22 @@ typedef struct
 {
 	WINDOW *win[NUM_WINDOWS];
 	TETRIMINO *tetrimino;
+	COORDINATE_PAIR (*well_contents)[WELL_CONTENTS_WIDTH];
 	int difficulty;
+
 } THREAD_ARGS;
 
 
 /* Function prototypes */
 void print_help_message();
 
+/* GUI prototypes */
 void ntetris_init ();
 void print_title(WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
-void draw_well(WINDOW *win, TETRIMINO *tetrimino);
+void draw_well(WINDOW *win, TETRIMINO *tetrimino, 
+			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void clear_well(WINDOW *win);
 int update_hold(WINDOW *win, int tetrimino_id);
 void update_line_count(WINDOW *win);
@@ -196,27 +221,38 @@ void update_score(WINDOW *win);
 void print_controls();
 void print_title_small(WINDOW *win);
 
-void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-void get_rotated_bits(COORDINATE_PAIR pivot, COORDINATE_PAIR old_bits[], 
-					  int num_bits, int direction);
-void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction);
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty);
-void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id);
-void lock_tetrimino_into_well(TETRIMINO *tetrimino);
-void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino);
+/* Game prototypes*/
+void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void adjust_bits (COORDINATE_PAIR bits[NUM_BITS], int direction);
+void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM_BITS],
+					  int direction);
+void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction, 
+					  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id, 
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void lock_tetrimino_into_well(TETRIMINO *tetrimino, 
+							  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int get_rand_num (int lower, int upper);
-void *play_ntetris (void *difficulty);
+void *play_ntetris_single (void *difficulty);
+void *play_ntetris_versus(void *unused);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
-int equal_bits (COORDINATE_PAIR bits_1[], COORDINATE_PAIR bits_2[], int num_bits);
-void copy_bits (COORDINATE_PAIR source_bits[], COORDINATE_PAIR dest_bits[], int num_bits);
+int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS]);
+void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
-int valid_position (WINDOW *win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[], int num_bits);
-int line_complete (int row);
-int line_empty (int row);
-void clear_line (int row);
-void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty);
+int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+int line_complete (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
+				  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 
 extern int GAME_DELAY;
 extern int GAME_OVER_FLAG;
@@ -224,7 +260,6 @@ extern int RECENT_HOLD;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
 extern int SCORE;
-extern COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 extern pthread_mutex_t tetrimino_lock;
 #endif
 

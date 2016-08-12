@@ -139,16 +139,17 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 /* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates
 where it will land in the well */
 
-void draw_well(WINDOW *win, TETRIMINO *tetrimino)
+void draw_well(WINDOW *win, TETRIMINO *tetrimino, 
+			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
 	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
 	int locked_in = 1;
 	clear_well(win); // erase everything before drawing
 
-	copy_bits(tetrimino->bits, shadow_bits, NUM_BITS);
+	copy_bits(tetrimino->bits, shadow_bits);
 
-	while (valid_position(win, tetrimino, shadow_bits, NUM_BITS)) 
+	while (valid_position(win, tetrimino, shadow_bits, well_contents)) 
 	{
 		for (i = 0; i < NUM_BITS; i++)
 			shadow_bits[i].y++;
@@ -172,8 +173,8 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino)
 		if (tetrimino->bits[i].y >= COVER_B_BNDRY)
 			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
 		
-	for (i = 0; i < WELL_HEIGHT - 2; i++)
-		for (j = 0; j < WELL_WIDTH - 2; j++)
+	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
+		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 			/* Only draw well contents if their corresponding character is an 'o' and they are located
 			outside the cover window */
 			if ((well_contents[i][j].value & A_CHARTEXT) == 'o' && well_contents[i][j].y >= COVER_B_BNDRY)

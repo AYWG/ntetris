@@ -12,7 +12,6 @@
 
 pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
 
-COORDINATE_PAIR well_contents[WELL_HEIGHT - 2][WELL_WIDTH - 2];
 
 int GAME_DELAY;
 int GAME_OVER_FLAG = 0;
@@ -118,7 +117,7 @@ int main(int argc, char **argv)
 				}
 				clear();
 				refresh();
-				if (pthread_create(&game_t, NULL, &play_ntetris, &difficulty))
+				if (pthread_create(&game_t, NULL, &play_ntetris_single, &difficulty))
 					printf("Could not run main phase of game\n");	
 
 				if (pthread_join(game_t, NULL))
@@ -146,7 +145,16 @@ int main(int argc, char **argv)
 		}
 		else if (choice == VERSUS)
 		{
-			break; // for now
+			GAME_DELAY = CASUAL_INIT_DELAY;
+			// spawn versus thread
+			clear();
+			refresh();
+			if (pthread_create(&game_t, NULL, &play_ntetris_versus, NULL))
+				printf("Could not run versus phase of game\n");
+
+			if (pthread_join(game_t, NULL))
+				printf("Could not properly terminate versus phase of game\n");
+			break; 
 		}
 		else if (choice == CONTROLS)
 		{

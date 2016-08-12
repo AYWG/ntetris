@@ -11,9 +11,9 @@ void *periodic_thread(void *arguments)
 		if (GAME_OVER_FLAG) break;
 		usleep(GAME_DELAY / 2);
 		pthread_mutex_lock(&tetrimino_lock);
-		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN);
+		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN, args->well_contents);
 		update_score(args->win[4]);
-		draw_well(args->win[0], args->tetrimino);
+		draw_well(args->win[0], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
 		if (GAME_OVER_FLAG) break;
@@ -32,36 +32,36 @@ void *lock_in_thread(void *arguments)
 	{
 		if (GAME_OVER_FLAG) break;
 
-		copy_bits(args->tetrimino->bits, current_bits, NUM_BITS);
+		copy_bits(args->tetrimino->bits, current_bits);
 
 		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+		if (!equal_bits(args->tetrimino->bits, current_bits))
 			continue;
 		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+		if (!equal_bits(args->tetrimino->bits, current_bits))
 			continue;
 		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+		if (!equal_bits(args->tetrimino->bits, current_bits))
 			continue;
 		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits, NUM_BITS))
+		if (!equal_bits(args->tetrimino->bits, current_bits))
 			continue;
 
 		pthread_mutex_lock(&tetrimino_lock);
-		lock_tetrimino_into_well(args->tetrimino);
-		update_lines(args->win[0], args->tetrimino, args->difficulty);
+		lock_tetrimino_into_well(args->tetrimino, args->well_contents);
+		update_lines(args->win[0], args->tetrimino, args->difficulty, args->well_contents);
 		update_line_count(args->win[3]);
 		update_score(args->win[4]);
 		update_level(args->win[5]);
-		init_tetrimino(args->tetrimino, get_rand_num(0, 6));
-		draw_well(args->win[0], args->tetrimino);
+		init_tetrimino(args->tetrimino, get_rand_num(0, 6), args->well_contents);
+		draw_well(args->win[0], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&tetrimino_lock);
 	}
 }
 
 /* Top-level thread for running the game. */
 
-void *play_ntetris (void *difficulty) 
+void *play_ntetris_single (void *difficulty) 
 {
 	/* Allocate memory for tetrimino and necessary windows */
 
@@ -106,11 +106,13 @@ void *play_ntetris (void *difficulty)
 	wnoutrefresh(title_small_win);
 	doupdate();
 
+	COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+
 	/* Initialize well_contents to be empty */
 	int i, j;
-	for (i = 0; i < WELL_HEIGHT - 2; i++)
+	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
 	{
-		for (j = 0; j < WELL_WIDTH - 2; j++)
+		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 		{
 			well_contents[i][j].y = i + 1;
 			well_contents[i][j].x = j + 1;
@@ -131,11 +133,13 @@ void *play_ntetris (void *difficulty)
 	args->win[3] = line_count_win;
 	args->win[4] = score_win;
 	args->win[5] = level_win;
+	args->win[6] = title_small_win;
 	args->tetrimino = tetrimino;
+	args->well_contents = well_contents;
 	args->difficulty = *((int *) difficulty);
 
-	init_tetrimino(tetrimino, get_rand_num(0, 6));
-	draw_well(well_win, tetrimino);
+	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
+	draw_well(well_win, tetrimino, well_contents);
 
 	pthread_t periodic_t;
 	pthread_t lock_in_t;
@@ -155,34 +159,34 @@ void *play_ntetris (void *difficulty)
 			switch(ch)
 			{
 				case KEY_LEFT:
-					move_tetrimino(well_win, tetrimino, KEY_LEFT);
+					move_tetrimino(well_win, tetrimino, KEY_LEFT, well_contents);
 					break;
 
 				case KEY_RIGHT:
-					move_tetrimino(well_win, tetrimino, KEY_RIGHT);
+					move_tetrimino(well_win, tetrimino, KEY_RIGHT, well_contents);
 					break;
 
 				case KEY_DOWN:
-					move_tetrimino(well_win, tetrimino, KEY_DOWN);
+					move_tetrimino(well_win, tetrimino, KEY_DOWN, well_contents);
 					break;
 
 				case KEY_UP:
-					drop_tetrimino(well_win, tetrimino, args->difficulty);
+					drop_tetrimino(well_win, tetrimino, args->difficulty, well_contents);
 					break;
 
 				case ROTATE_CW_KEY:
-					rotate_tetrimino(well_win, tetrimino, CLOCKWISE);
+					rotate_tetrimino(well_win, tetrimino, CLOCKWISE, well_contents);
 					break;
 
 				case ROTATE_CCW_KEY:
-					rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE);
+					rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE, well_contents);
 					break;
 
 				case HOLD_KEY:
-					hold_tetrimino(hold_win, tetrimino);
+					hold_tetrimino(hold_win, tetrimino, well_contents);
 					break;		
 			}
-			draw_well(well_win, tetrimino);
+			draw_well(well_win, tetrimino, well_contents);
 			update_line_count(line_count_win);
 			update_score(score_win);
 			update_level(level_win);
@@ -215,4 +219,36 @@ void *play_ntetris (void *difficulty)
 	delwin(score_win);
 	delwin(level_win);
 	delwin(title_small_win);
+}
+
+void *play_ntetris_versus(void *unused)
+{
+	WINDOW *well_win_p1 = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y_P1, WELL_INIT_X_P1);
+	WINDOW *well_win_p2 = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y_P2, WELL_INIT_X_P2);
+	WINDOW *cover_win_p1 = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y_P1, COVER_INIT_X_P1);
+	WINDOW *cover_win_p2 = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y_P2, COVER_INIT_X_P2);
+	WINDOW *hold_win_p1 = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y_P1, HOLD_INIT_X_P1);
+	WINDOW *hold_win_p2 = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y_P2, HOLD_INIT_X_P2);
+	TETRIMINO *tetrimino_p1 = malloc(sizeof(TETRIMINO));
+	TETRIMINO *tetrimino_p2 = malloc(sizeof(TETRIMINO));
+
+	box(well_win_p1, 0, 0);
+	box(well_win_p2, 0, 0);
+	wborder(cover_win_p1, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
+	wborder(cover_win_p2, ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
+	box(hold_win_p1, 0, 0);
+	box(hold_win_p2, 0, 0);
+
+	wnoutrefresh(well_win_p1);
+	wnoutrefresh(well_win_p2);
+	wnoutrefresh(cover_win_p1);
+	wnoutrefresh(cover_win_p2);
+	wnoutrefresh(hold_win_p1);
+	wnoutrefresh(hold_win_p2);
+	doupdate();
+	getch();
+
+	COORDINATE_PAIR well_contents_p1[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+	COORDINATE_PAIR well_contents_p2[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+
 }
