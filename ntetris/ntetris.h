@@ -97,6 +97,8 @@ Z : oo 	 - bits: 0 1 	  Pivot = 2
 the WINDOWs used */
 #define NUM_WINDOWS 7
 
+#define WELL_ID 0
+
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
 #define WELL_INIT_Y 0
@@ -115,6 +117,8 @@ the WINDOWs used */
 #define WELL_CONTENTS_HEIGHT WELL_HEIGHT - 2
 #define WELL_CONTENTS_WIDTH WELL_WIDTH - 2
 
+#define COVER_ID 1
+
 #define COVER_HEIGHT 3
 #define COVER_WIDTH WELL_WIDTH
 #define COVER_INIT_Y WELL_INIT_Y
@@ -125,8 +129,9 @@ the WINDOWs used */
 #define COVER_INIT_Y_P2 WELL_INIT_Y_P2
 #define COVER_INIT_X_P2 WELL_INIT_X_P2
 
-
 #define COVER_B_BNDRY COVER_INIT_Y + COVER_HEIGHT
+
+#define HOLD_ID 2
 
 #define HOLD_WIDTH 8
 #define HOLD_HEIGHT 6
@@ -144,20 +149,28 @@ the WINDOWs used */
 #define HOLD_T_BNDRY 1
 #define HOLD_B_BNDRY HOLD_HEIGHT - 2
 
+#define LINE_COUNT_ID 3
+
 #define LINE_COUNT_WIDTH 15
 #define LINE_COUNT_HEIGHT 3
 #define LINE_COUNT_INIT_Y WELL_HEIGHT - 5
 #define LINE_COUNT_INIT_X HOLD_INIT_X - 6
+
+#define SCORE_ID 4
 
 #define SCORE_WIDTH 10
 #define SCORE_HEIGHT 3
 #define SCORE_INIT_Y HOLD_INIT_Y
 #define SCORE_INIT_X WELL_INIT_X + WELL_WIDTH + 5
 
+#define LEVEL_ID 5
+
 #define LEVEL_WIDTH 10
 #define LEVEL_HEIGHT 3
 #define LEVEL_INIT_Y LINE_COUNT_INIT_Y - 6
 #define LEVEL_INIT_X LINE_COUNT_INIT_X
+
+#define TITLE_SMALL_ID 6
 
 #define TITLE_SMALL_WIDTH 15
 #define TITLE_SMALL_HEIGHT 10
@@ -199,6 +212,7 @@ typedef struct
 	TETRIMINO *tetrimino;
 	COORDINATE_PAIR (*well_contents)[WELL_CONTENTS_WIDTH];
 	int difficulty;
+	int mode;
 
 } THREAD_ARGS;
 

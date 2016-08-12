@@ -1,5 +1,66 @@
 #include "ntetris.h"
 
+/* Thread responsible for getting input from the user */
+
+void *get_user_input_thread(void *arguments)
+{
+	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
+
+	int ch;
+	halfdelay(1);
+
+	while ((ch = wgetch(args->win[WELL_ID])) != QUIT_KEY)
+	{
+		if (ch != ERR)
+		{
+			pthread_mutex_lock(&tetrimino_lock);
+			switch(ch)
+			{
+				case KEY_LEFT:
+					move_tetrimino(args->win[WELL_ID], args->tetrimino, KEY_LEFT, args->well_contents);
+					break;
+
+				case KEY_RIGHT:
+					move_tetrimino(args->win[WELL_ID], args->tetrimino, KEY_RIGHT, args->well_contents);
+					break;
+
+				case KEY_DOWN:
+					move_tetrimino(args->win[WELL_ID], args->tetrimino, KEY_DOWN, args->well_contents);
+					break;
+
+				case KEY_UP:
+					drop_tetrimino(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents);
+					break;
+
+				case ROTATE_CW_KEY:
+					rotate_tetrimino(args->win[WELL_ID], args->tetrimino, CLOCKWISE, args->well_contents);
+					break;
+
+				case ROTATE_CCW_KEY:
+					rotate_tetrimino(args->win[WELL_ID], args->tetrimino, CNT_CLOCKWISE, args->well_contents);
+					break;
+
+				case HOLD_KEY:
+					hold_tetrimino(args->win[HOLD_ID], args->tetrimino, args->well_contents);
+					break;		
+			}
+			draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
+			update_line_count(args->win[LINE_COUNT_ID]);
+			update_score(args->win[SCORE_ID]);
+			update_level(args->win[LEVEL_ID]);
+			pthread_mutex_unlock(&tetrimino_lock);
+			usleep(SMALL_DELAY);
+		}
+		else 
+		{
+			if (GAME_OVER_FLAG) break;
+		}
+	}
+
+	nocbreak();
+	cbreak();
+}
+
 /* Thread responsible for moving the tetrimino down one unit at a time with GAME_DELAY pauses. */
 
 void *periodic_thread(void *arguments)
@@ -11,9 +72,9 @@ void *periodic_thread(void *arguments)
 		if (GAME_OVER_FLAG) break;
 		usleep(GAME_DELAY / 2);
 		pthread_mutex_lock(&tetrimino_lock);
-		move_tetrimino(args->win[0], args->tetrimino, KEY_DOWN, args->well_contents);
-		update_score(args->win[4]);
-		draw_well(args->win[0], args->tetrimino, args->well_contents);
+		move_tetrimino(args->win[WELL_ID], args->tetrimino, KEY_DOWN, args->well_contents);
+		update_score(args->win[SCORE_ID]);
+		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&tetrimino_lock);
 		
 		if (GAME_OVER_FLAG) break;
@@ -127,28 +188,32 @@ void *play_ntetris_single (void *difficulty)
 	keypad(well_win, TRUE);
 
 	THREAD_ARGS *args = malloc(sizeof(THREAD_ARGS));
-	args->win[0] = well_win;
-	args->win[1] = cover_win;
-	args->win[2] = hold_win;
-	args->win[3] = line_count_win;
-	args->win[4] = score_win;
-	args->win[5] = level_win;
-	args->win[6] = title_small_win;
+	args->win[WELL_ID] = well_win;
+	args->win[COVER_ID] = cover_win;
+	args->win[HOLD_ID] = hold_win;
+	args->win[LINE_COUNT_ID] = line_count_win;
+	args->win[SCORE_ID] = score_win;
+	args->win[LEVEL_ID] = level_win;
+	args->win[TITLE_SMALL_ID] = title_small_win;
 	args->tetrimino = tetrimino;
 	args->well_contents = well_contents;
 	args->difficulty = *((int *) difficulty);
+	args->mode = SINGLE;
 
 	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
 	draw_well(well_win, tetrimino, well_contents);
 
 	pthread_t periodic_t;
 	pthread_t lock_in_t;
+	pthread_t get_user_input_t;
 	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t, NULL, &lock_in_thread, args))
 		printf("Could not run lock in thread\n");
-
+	if (pthread_create(&get_user_input_t, NULL, &get_user_input_thread, args))
+		printf("Could not run lock in thread\n");
+	/*
 	int ch;
 	halfdelay(1);
 	while ((ch = wgetch(well_win)) != QUIT_KEY)
@@ -200,6 +265,9 @@ void *play_ntetris_single (void *difficulty)
 	}
 	nocbreak();
 	cbreak();
+	*/
+	if (pthread_join(get_user_input_t, NULL))
+		printf("Could not properly terminate user input thread\n");
 
 	pthread_cancel(periodic_t);
 	pthread_cancel(lock_in_t);
@@ -246,9 +314,43 @@ void *play_ntetris_versus(void *unused)
 	wnoutrefresh(hold_win_p1);
 	wnoutrefresh(hold_win_p2);
 	doupdate();
-	getch();
 
 	COORDINATE_PAIR well_contents_p1[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
 	COORDINATE_PAIR well_contents_p2[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+
+	int i, j;
+	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
+	{
+		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
+		{
+			well_contents_p1[i][j].y = i + 1;
+			well_contents_p2[i][j].y = i + 1;
+			well_contents_p1[i][j].x = j + 1;
+			well_contents_p2[i][j].x = j + 1;
+			well_contents_p1[i][j].value = ' ';
+			well_contents_p2[i][j].value = ' ';
+		}
+	}
+
+	srand((unsigned) time(NULL));
+
+	keypad(well_win_p1, TRUE);
+	keypad(well_win_p2, TRUE);
+
+	THREAD_ARGS *args_p1 = malloc(sizeof(THREAD_ARGS));
+	THREAD_ARGS *args_p2 = malloc(sizeof(THREAD_ARGS));
+
+	args_p1->win[0] = well_win_p1;
+	args_p1->win[1] = cover_win_p1;
+	args_p1->win[2] = hold_win_p1;
+	args_p1->tetrimino = tetrimino_p1;
+	args_p1->well_contents = well_contents_p1;
+
+	args_p2->win[0] = well_win_p2;
+	args_p2->win[1] = cover_win_p2;
+	args_p2->win[2] = hold_win_p2;
+	args_p2->tetrimino = tetrimino_p2;
+	args_p2->well_contents = well_contents_p2;
+
 
 }
