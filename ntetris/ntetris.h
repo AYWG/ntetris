@@ -21,14 +21,6 @@
 
 #define COLOR_ORANGE 8
 
-/* Decimal value of needed ASCII characters */
-#define ENTER_KEY 10 // 
-#define QUIT_KEY 113 // q
-#define HOLD_KEY 32 // space
-#define ROTATE_CW_KEY 120 // x
-#define ROTATE_CCW_KEY 122 // z
-#define RESTART_KEY 114 // r
-
 /* Start menu options */
 #define SINGLE 0
 #define VERSUS 1
@@ -84,14 +76,14 @@ Z : oo 	 - bits: 0 1 	  Pivot = 2
 #define NUM_BITS 4
 
 /* Directions of movement */
-#define UP 1
-#define DOWN 2
-#define LEFT 3
-#define RIGHT 4
+#define UP 0
+#define DOWN 1
+#define LEFT 2
+#define RIGHT 3
 
 /* Directions of rotation */
-#define CLOCKWISE 0
-#define CNT_CLOCKWISE 1
+#define CLOCKWISE 4
+#define CNT_CLOCKWISE 5
 
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
@@ -177,7 +169,34 @@ the WINDOWs used */
 #define TITLE_SMALL_INIT_Y LEVEL_INIT_Y
 #define TITLE_SMALL_INIT_X SCORE_INIT_X
 
-#define CONTROLS_INIT_X 15
+#define CONTROLS_INIT_X 8
+
+#define NUM_CONTROLS 7
+
+#define MOVE_LEFT 0
+#define MOVE_RIGHT 1
+#define MOVE_DOWN 2
+#define DROP 3
+#define ROTATE_CW 4
+#define ROTATE_CCW 5
+#define HOLD 6
+
+/* Decimal value of needed ASCII characters */
+
+#define QUIT_KEY 113 // q
+#define RESTART_KEY 114 // r
+
+#define P_KEY 112
+#define O_KEY 111
+#define ENTER_KEY 10 
+
+#define A_KEY 97
+#define D_KEY 100
+#define S_KEY 115
+#define W_KEY 119
+#define G_KEY 103
+#define F_KEY 102
+#define SPACE_KEY 32
 
 /* The maximum number of times a tetrimino can
 "adjust" itself into a valid position after an invalid rotation */
@@ -211,6 +230,7 @@ typedef struct
 	WINDOW *win[NUM_WINDOWS];
 	TETRIMINO *tetrimino;
 	COORDINATE_PAIR (*well_contents)[WELL_CONTENTS_WIDTH];
+	int controls[NUM_CONTROLS];
 	int difficulty;
 	int mode;
 
@@ -222,13 +242,13 @@ void print_help_message();
 
 /* GUI prototypes */
 void ntetris_init ();
-void print_title(WINDOW *win, char *title[], int title_size);
+void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
-void draw_well(WINDOW *win, TETRIMINO *tetrimino, 
+void draw_well (WINDOW *win, TETRIMINO *tetrimino, 
 			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void clear_well(WINDOW *win);
-int update_hold(WINDOW *win, int tetrimino_id);
+void clear_well (WINDOW *win);
+int update_hold (WINDOW *win, int tetrimino_id);
 void update_line_count(WINDOW *win);
 void update_level(WINDOW *win);
 void update_score(WINDOW *win);

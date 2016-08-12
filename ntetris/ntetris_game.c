@@ -99,15 +99,15 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 
 	switch(direction)
 	{
-		case KEY_LEFT:
+		case LEFT:
 			delta_x = -1;
 			break;
 
-		case KEY_RIGHT:
+		case RIGHT:
 			delta_x = 1;
 			break;
 
-		case KEY_DOWN:
+		case DOWN:
 			delta_y = 1;
 			break;
 	}
@@ -124,7 +124,7 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 	{
 		copy_bits(new_bits, tetrimino->bits);
 		/* "soft" drops award 1 point */
-		if (direction == KEY_DOWN) 
+		if (direction == DOWN) 
 			SCORE++;
 	}
 

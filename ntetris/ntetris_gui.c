@@ -304,13 +304,15 @@ void print_controls()
 	attron(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
 	mvprintw(4, CONTROLS_INIT_X, "NTETRIS CONTROLS");
 	attroff(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
-	mvprintw(6, CONTROLS_INIT_X, "Move tetrimino left                   Left arrow key");
-	mvprintw(7, CONTROLS_INIT_X, "Move tetrimino right                  Right arrow key");
-	mvprintw(8, CONTROLS_INIT_X, "Move tetrimino down                   Down arrow key");
-	mvprintw(10, CONTROLS_INIT_X, "Drop tetrimino                        Up arrow key");
-	mvprintw(12, CONTROLS_INIT_X, "Rotate tetrimino clockwise            X");
-	mvprintw(13, CONTROLS_INIT_X, "Rotate tetrimino counterclockwise     Z");
-	mvprintw(14, CONTROLS_INIT_X, "Hold tetrimino                        Space");
+	mvprintw(4, 46, "Single/Player 1");
+	mvprintw(4, 67, "Player 2");
+	mvprintw(6, CONTROLS_INIT_X, "Move tetrimino left                   Left arrow key       A");
+	mvprintw(7, CONTROLS_INIT_X, "Move tetrimino right                  Right arrow key      D");
+	mvprintw(8, CONTROLS_INIT_X, "Move tetrimino down                   Down arrow key       S");
+	mvprintw(10, CONTROLS_INIT_X, "Drop tetrimino                        Up arrow key         W");
+	mvprintw(12, CONTROLS_INIT_X, "Rotate tetrimino clockwise            P                    G");
+	mvprintw(13, CONTROLS_INIT_X, "Rotate tetrimino counterclockwise     O                    F");
+	mvprintw(14, CONTROLS_INIT_X, "Hold tetrimino                        Enter                Space");
 	mvprintw(18, CONTROLS_INIT_X, "Press any key to return");
 }
 
