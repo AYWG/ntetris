@@ -233,6 +233,7 @@ typedef struct
 	int controls[NUM_CONTROLS];
 	int difficulty;
 	int mode;
+	int lock_num;
 
 } THREAD_ARGS;
 
@@ -294,7 +295,7 @@ extern int RECENT_HOLD;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
 extern int SCORE;
-extern pthread_mutex_t tetrimino_lock;
+//extern pthread_mutex_t tetrimino_lock;
 #endif
 
 

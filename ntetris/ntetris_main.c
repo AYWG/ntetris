@@ -10,8 +10,6 @@
 
 #include "ntetris.h"
 
-pthread_mutex_t tetrimino_lock = PTHREAD_MUTEX_INITIALIZER;
-
 int GAME_DELAY;
 int GAME_OVER_FLAG = 0;
 int RECENT_HOLD = 0;

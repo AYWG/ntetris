@@ -1,5 +1,7 @@
 #include "ntetris.h"
 
+pthread_mutex_t tetrimino_lock[] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
+
 /* Thread responsible for getting input from the user */
 
 void *get_user_input_thread (void *arguments)
@@ -13,7 +15,7 @@ void *get_user_input_thread (void *arguments)
 	{
 		if (ch != ERR)
 		{
-			pthread_mutex_lock(&tetrimino_lock);
+			pthread_mutex_lock(&tetrimino_lock[args->lock_num]);
 
 			if (ch == args->controls[MOVE_LEFT])
 				move_tetrimino(args->win[WELL_ID], args->tetrimino, LEFT, args->well_contents);
@@ -37,7 +39,7 @@ void *get_user_input_thread (void *arguments)
 				update_score(args->win[SCORE_ID]);
 				update_level(args->win[LEVEL_ID]);
 			}
-			pthread_mutex_unlock(&tetrimino_lock);
+			pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
 			usleep(SMALL_DELAY);
 		}
 		else 
@@ -60,11 +62,13 @@ void *periodic_thread (void *arguments)
 		usleep(GAME_DELAY / 2); 
 		if (GAME_OVER_FLAG) break;
 		usleep(GAME_DELAY / 2);
-		pthread_mutex_lock(&tetrimino_lock);
+
+		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
 		move_tetrimino(args->win[WELL_ID], args->tetrimino, DOWN, args->well_contents);
-		update_score(args->win[SCORE_ID]);
+		if (args->mode == SINGLE)
+			update_score(args->win[SCORE_ID]);
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
-		pthread_mutex_unlock(&tetrimino_lock);
+		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
 		
 		if (GAME_OVER_FLAG) break;
 	}
@@ -97,7 +101,7 @@ void *lock_in_thread (void *arguments)
 		if (!equal_bits(args->tetrimino->bits, current_bits))
 			continue;
 
-		pthread_mutex_lock(&tetrimino_lock);
+		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
 		lock_tetrimino_into_well(args->tetrimino, args->well_contents);
 		update_lines(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents);
 		update_line_count(args->win[LINE_COUNT_ID]);
@@ -105,7 +109,7 @@ void *lock_in_thread (void *arguments)
 		update_level(args->win[LEVEL_ID]);
 		init_tetrimino(args->tetrimino, get_rand_num(0, 6), args->well_contents);
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
-		pthread_mutex_unlock(&tetrimino_lock);
+		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
 	}
 }
 
@@ -194,6 +198,7 @@ void *play_ntetris_single (void *difficulty)
 
 	args->difficulty = *((int *) difficulty);
 	args->mode = SINGLE;
+	args->lock_num = 0;
 
 	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
 	draw_well(well_win, tetrimino, well_contents);
@@ -281,17 +286,73 @@ void *play_ntetris_versus (void *unused)
 	THREAD_ARGS *args_p1 = malloc(sizeof(THREAD_ARGS));
 	THREAD_ARGS *args_p2 = malloc(sizeof(THREAD_ARGS));
 
-	args_p1->win[0] = well_win_p1;
-	args_p1->win[1] = cover_win_p1;
-	args_p1->win[2] = hold_win_p1;
+	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
+	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
+
+	args_p1->win[WELL_ID] = well_win_p1;
+	args_p1->win[COVER_ID] = cover_win_p1;
+	args_p1->win[HOLD_ID] = hold_win_p1;
 	args_p1->tetrimino = tetrimino_p1;
 	args_p1->well_contents = well_contents_p1;
 
-	args_p2->win[0] = well_win_p2;
-	args_p2->win[1] = cover_win_p2;
-	args_p2->win[2] = hold_win_p2;
+	args_p2->win[WELL_ID] = well_win_p2;
+	args_p2->win[COVER_ID] = cover_win_p2;
+	args_p2->win[HOLD_ID] = hold_win_p2;
 	args_p2->tetrimino = tetrimino_p2;
 	args_p2->well_contents = well_contents_p2;
 
-	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
+	for (i = 0; i < NUM_CONTROLS; i++)
+	{
+		args_p1->controls[i] = controls_p1[i];
+		args_p2->controls[i] = controls_p2[i];
+	}
+
+	args_p1->mode = VERSUS;
+	args_p2->mode = VERSUS;
+	args_p1->lock_num = 0;
+	args_p2->lock_num = 1;
+
+	init_tetrimino(tetrimino_p1, get_rand_num(0, 6), well_contents_p1);
+	draw_well(well_win_p1, tetrimino_p1, well_contents_p1);
+
+	init_tetrimino(tetrimino_p2, get_rand_num(0, 6), well_contents_p2);
+	draw_well(well_win_p2, tetrimino_p2, well_contents_p2);
+
+	
+	pthread_t periodic_t_p1, periodic_t_p2;
+	pthread_t lock_in_t_p1, lock_in_t_p2;
+	pthread_t get_user_input_t_p1, get_user_input_t_p2;
+
+	if (pthread_create(&periodic_t_p1, NULL, &periodic_thread, args_p1))
+		printf("Could not run periodic thread\n");
+	if (pthread_create(&lock_in_t_p1, NULL, &lock_in_thread, args_p1))
+		printf("Could not run lock in thread\n");
+	if (pthread_create(&get_user_input_t_p1, NULL, &get_user_input_thread, args_p1))
+		printf("Could not run lock in thread\n");
+
+	if (pthread_create(&periodic_t_p2, NULL, &periodic_thread, args_p2))
+		printf("Could not run periodic thread\n");
+	if (pthread_create(&lock_in_t_p2, NULL, &lock_in_thread, args_p2))
+		printf("Could not run lock in thread\n");
+	if (pthread_create(&get_user_input_t_p2, NULL, &get_user_input_thread, args_p2))
+		printf("Could not run lock in thread\n");
+	
+	if (pthread_join(get_user_input_t_p1, NULL))
+		printf("Could not properly terminate user input thread\n");
+	if (pthread_join(get_user_input_t_p2, NULL))
+		printf("Could not properly terminate user input thread\n");
+
+	pthread_cancel(periodic_t_p1);
+	pthread_cancel(lock_in_t_p1);
+
+	pthread_cancel(periodic_t_p2);
+	pthread_cancel(lock_in_t_p2);
+	if (pthread_join(periodic_t_p1, NULL))
+		printf("Could not properly terminate periodic thread\n");
+	if (pthread_join(lock_in_t_p1, NULL))
+		printf("Could not properly terminate lock in thread\n");
+	if (pthread_join(periodic_t_p2, NULL))
+		printf("Could not properly terminate periodic thread\n");
+	if (pthread_join(lock_in_t_p2, NULL))
+		printf("Could not properly terminate lock in thread\n");
 }
