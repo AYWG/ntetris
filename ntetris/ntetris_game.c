@@ -32,11 +32,26 @@ int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BIT
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS])
 {
 	int i;
+
 	for (i = 0; i < NUM_BITS; i++)
 	{
 		dest_bits[i].y = source_bits[i].y;
 		dest_bits[i].x = source_bits[i].x;
 	}
+}
+
+int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS])
+{
+	int highest_y_coord = 0;
+	int i;
+
+	for (i = 0; i < NUM_BITS; i++)
+	{
+		if (bits[i].y > highest_y_coord)
+			highest_y_coord = bits[i].y;
+	}
+
+	return highest_y_coord + 1;
 }
 
 /* Determines whether the given coords are outside the boundaries
@@ -162,6 +177,7 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 	SCORE += 2 * distance_traveled;
 
 	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
+	CURRENT_Y_CHECKPOINT = 0;
 	draw_well(win, tetrimino, well_contents);
 }
 

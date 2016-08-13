@@ -269,32 +269,32 @@ int update_hold(WINDOW *win, int tetrimino_id)
 
 /* Updates the UI with the current number of lines cleared */
 
-void update_line_count(WINDOW *win)
+void update_line_count(WINDOW *line_count_win)
 {
-	wmove(win, 2, 0);
-	wclrtoeol(win);
-	mvwprintw(win, 2, 0, "%05d", LINE_COUNT);
-	wrefresh(win);
+	wmove(line_count_win, 2, 0);
+	wclrtoeol(line_count_win);
+	mvwprintw(line_count_win, 2, 0, "%05d", LINE_COUNT);
+	wrefresh(line_count_win);
 }
 
 /* Updates the UI with the current level */
 
-void update_level(WINDOW *win)
+void update_level(WINDOW *level_win)
 {
-	wmove(win, 2, 0);
-	wclrtoeol(win);
-	mvwprintw(win, 2, 0, "%03d", LINE_COUNT / 10);
-	wrefresh(win);
+	wmove(level_win, 2, 0);
+	wclrtoeol(level_win);
+	mvwprintw(level_win, 2, 0, "%03d", LINE_COUNT / 10);
+	wrefresh(level_win);
 }
 
 /* Updates the UI with the current score */
 
-void update_score(WINDOW *win)
+void update_score(WINDOW *score_win)
 {
-	wmove(win, 2, 0);
-	wclrtoeol(win);
-	mvwprintw(win, 2, 0, "%010d", SCORE);
-	wrefresh(win);
+	wmove(score_win, 2, 0);
+	wclrtoeol(score_win);
+	mvwprintw(score_win, 2, 0, "%010d", SCORE);
+	wrefresh(score_win);
 }
 
 /* Display the controls for playing the game */

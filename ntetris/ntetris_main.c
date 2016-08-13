@@ -16,6 +16,7 @@ int RECENT_HOLD = 0;
 int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
 int LINE_COUNT = 0;
 int SCORE = 0;
+int CURRENT_Y_CHECKPOINT = 0;
 
 char *title[] = {
 				"             ______     __       _     ",

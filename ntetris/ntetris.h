@@ -125,13 +125,13 @@ the WINDOWs used */
 
 #define HOLD_ID 2
 
-#define HOLD_WIDTH 8
 #define HOLD_HEIGHT 6
+#define HOLD_WIDTH 8
 #define HOLD_INIT_Y WELL_INIT_Y + COVER_HEIGHT - 1
 #define HOLD_INIT_X WELL_INIT_X - 10
 
 #define HOLD_INIT_Y_P1 WELL_INIT_Y + COVER_HEIGHT - 1
-#define HOLD_INIT_X_P1 WELL_INIT_X_P1 - 10
+#define HOLD_INIT_X_P1 WELL_INIT_X_P1 + 24
 
 #define HOLD_INIT_Y_P2 WELL_INIT_Y + COVER_HEIGHT - 1
 #define HOLD_INIT_X_P2 WELL_INIT_X_P2 - 10
@@ -143,29 +143,29 @@ the WINDOWs used */
 
 #define LINE_COUNT_ID 3
 
-#define LINE_COUNT_WIDTH 15
 #define LINE_COUNT_HEIGHT 3
+#define LINE_COUNT_WIDTH 15
 #define LINE_COUNT_INIT_Y WELL_HEIGHT - 5
 #define LINE_COUNT_INIT_X HOLD_INIT_X - 6
 
 #define SCORE_ID 4
 
-#define SCORE_WIDTH 10
 #define SCORE_HEIGHT 3
+#define SCORE_WIDTH 10
 #define SCORE_INIT_Y HOLD_INIT_Y
 #define SCORE_INIT_X WELL_INIT_X + WELL_WIDTH + 5
 
 #define LEVEL_ID 5
 
-#define LEVEL_WIDTH 10
 #define LEVEL_HEIGHT 3
+#define LEVEL_WIDTH 10
 #define LEVEL_INIT_Y LINE_COUNT_INIT_Y - 6
 #define LEVEL_INIT_X LINE_COUNT_INIT_X
 
 #define TITLE_SMALL_ID 6
 
-#define TITLE_SMALL_WIDTH 15
 #define TITLE_SMALL_HEIGHT 10
+#define TITLE_SMALL_WIDTH 15
 #define TITLE_SMALL_INIT_Y LEVEL_INIT_Y
 #define TITLE_SMALL_INIT_X SCORE_INIT_X
 
@@ -251,9 +251,9 @@ void draw_well (WINDOW *win, TETRIMINO *tetrimino,
 			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void clear_well (WINDOW *win);
 int update_hold (WINDOW *win, int tetrimino_id);
-void update_line_count(WINDOW *win);
-void update_level(WINDOW *win);
-void update_score(WINDOW *win);
+void update_line_count(WINDOW *line_count_win);
+void update_level(WINDOW *level_win);
+void update_score(WINDOW *score_win);
 void print_controls();
 void print_title_small(WINDOW *win);
 
@@ -281,6 +281,7 @@ void *lock_in_thread(void *arguments);
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
 int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS]);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
+int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
 int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
@@ -296,7 +297,7 @@ extern int RECENT_HOLD;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
 extern int SCORE;
-//extern pthread_mutex_t tetrimino_lock;
+extern int CURRENT_Y_CHECKPOINT;
 #endif
 
 

@@ -81,7 +81,7 @@ void *periodic_thread (void *arguments)
 
 		if (args->mode == SINGLE)
 			update_score(args->win[SCORE_ID]);
-		
+
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
 		
@@ -96,25 +96,45 @@ void *lock_in_thread (void *arguments)
 	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
 
 	COORDINATE_PAIR current_bits[NUM_BITS];
+	int pivot_bit = args->tetrimino->pivot_bit;
 
 	while(!GAME_OVER_FLAG)
 	{
 		if (GAME_OVER_FLAG) break;
 
-		copy_bits(args->tetrimino->bits, current_bits);
+		/*
+		usleep((GAME_DELAY) / 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits))
+			continue;
+		usleep((GAME_DELAY) / 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits))
+			continue;
+		usleep((GAME_DELAY) / 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits))
+			continue;
+		usleep((GAME_DELAY) / 2);
+		if (!equal_bits(args->tetrimino->bits, current_bits))
+			continue;
+		*/
 
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
+		usleep((GAME_DELAY));
+		if (get_y_checkpoint(args->tetrimino->bits) > CURRENT_Y_CHECKPOINT)
+		{
+			CURRENT_Y_CHECKPOINT = get_y_checkpoint(args->tetrimino->bits);
 			continue;
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
+		}
+		usleep((GAME_DELAY));
+		if (get_y_checkpoint(args->tetrimino->bits) > CURRENT_Y_CHECKPOINT)
+		{
+			CURRENT_Y_CHECKPOINT = get_y_checkpoint(args->tetrimino->bits);
 			continue;
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
+		}
+		usleep((GAME_DELAY));
+		if (get_y_checkpoint(args->tetrimino->bits) > CURRENT_Y_CHECKPOINT)
+		{
+			CURRENT_Y_CHECKPOINT = get_y_checkpoint(args->tetrimino->bits);
 			continue;
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
-			continue;
+		}
 
 		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
 		lock_tetrimino_into_well(args->tetrimino, args->well_contents);
@@ -130,6 +150,7 @@ void *lock_in_thread (void *arguments)
 		init_tetrimino(args->tetrimino, get_rand_num(0, 6), args->well_contents);
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
+		CURRENT_Y_CHECKPOINT = 0;
 	}
 }
 
