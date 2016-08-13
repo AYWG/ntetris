@@ -97,9 +97,9 @@ the WINDOWs used */
 #define WELL_INIT_X 30
 
 #define WELL_INIT_Y_P1 0
-#define WELL_INIT_X_P1 12
+#define WELL_INIT_X_P1 46
 #define WELL_INIT_Y_P2 0
-#define WELL_INIT_X_P2 46
+#define WELL_INIT_X_P2 12
 
 #define WELL_L_BNDRY 1
 #define WELL_R_BNDRY WELL_WIDTH - 2
@@ -200,7 +200,7 @@ the WINDOWs used */
 
 /* The maximum number of times a tetrimino can
 "adjust" itself into a valid position after an invalid rotation */
-#define ADJUST_LIMIT 20
+//#define ADJUST_LIMIT 3
 
 /* Struct to represent a coordinate and its associated value */
 typedef struct 
@@ -240,6 +240,7 @@ typedef struct
 
 /* Function prototypes */
 void print_help_message();
+int is_input_useful(int input, int controls[NUM_CONTROLS]);
 
 /* GUI prototypes */
 void ntetris_init ();

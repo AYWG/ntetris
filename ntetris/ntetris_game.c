@@ -279,13 +279,26 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 			if (coords_out_of_y_bounds == 0 && coords_out_of_x_bounds == 0)
 			{
 				/* Have to stop adjusting eventually... */
-				if (count_adjust > ADJUST_LIMIT)
-					return;
+				//if (count_adjust > ADJUST_LIMIT)
+				//	return;
 
 				/* Difficult to know exactly which way we should adjust, so just
 				choose a random direction (represented by values ranging from 1 - 4) */
-				adjust_bits(new_bits, get_rand_num(1, 4));
-				count_adjust++;
+				//adjust_bits(new_bits, get_rand_num(1, 4));
+				//count_adjust++;
+
+				/* Attempt to move once in each direction from invalid position; 
+				If all new positions are still invalid, don't rotate at all */
+
+				adjust_bits(new_bits, LEFT);
+				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
+				adjust_bits(new_bits, RIGHT); adjust_bits(new_bits, RIGHT);
+				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
+				adjust_bits(new_bits, LEFT); adjust_bits(new_bits, UP);
+				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
+				adjust_bits(new_bits, DOWN); adjust_bits(new_bits, DOWN);
+				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
+				return;
 			}
 
 		}

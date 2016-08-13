@@ -2,6 +2,18 @@
 
 pthread_mutex_t tetrimino_lock[] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 
+int is_input_useful(int input, int controls[NUM_CONTROLS])
+{
+	int i;
+	for (i = 0; i < NUM_CONTROLS; i++)
+	{
+		if (controls[i] == input)
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
 /* Thread responsible for getting input from the user */
 
 void *get_user_input_thread (void *arguments)
@@ -13,8 +25,9 @@ void *get_user_input_thread (void *arguments)
 
 	while ((ch = wgetch(args->win[WELL_ID])) != QUIT_KEY)
 	{
+		/*
 		if (ch != ERR)
-		{
+		{*/
 			pthread_mutex_lock(&tetrimino_lock[args->lock_num]);
 
 			if (ch == args->controls[MOVE_LEFT])
@@ -41,11 +54,11 @@ void *get_user_input_thread (void *arguments)
 			}
 			pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
 			usleep(SMALL_DELAY);
-		}
+		/*}
 		else 
 		{
 			if (GAME_OVER_FLAG) break;
-		}
+		}*/
 	}
 
 	nocbreak();
@@ -65,8 +78,10 @@ void *periodic_thread (void *arguments)
 
 		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
 		move_tetrimino(args->win[WELL_ID], args->tetrimino, DOWN, args->well_contents);
+
 		if (args->mode == SINGLE)
 			update_score(args->win[SCORE_ID]);
+		
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
 		
@@ -104,9 +119,14 @@ void *lock_in_thread (void *arguments)
 		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
 		lock_tetrimino_into_well(args->tetrimino, args->well_contents);
 		update_lines(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents);
-		update_line_count(args->win[LINE_COUNT_ID]);
-		update_score(args->win[SCORE_ID]);
-		update_level(args->win[LEVEL_ID]);
+
+		if (args->mode == SINGLE)
+		{
+			update_line_count(args->win[LINE_COUNT_ID]);
+			update_score(args->win[SCORE_ID]);
+			update_level(args->win[LEVEL_ID]);
+		}
+		
 		init_tetrimino(args->tetrimino, get_rand_num(0, 6), args->well_contents);
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
@@ -329,7 +349,7 @@ void *play_ntetris_versus (void *unused)
 		printf("Could not run lock in thread\n");
 	if (pthread_create(&get_user_input_t_p1, NULL, &get_user_input_thread, args_p1))
 		printf("Could not run lock in thread\n");
-
+	
 	if (pthread_create(&periodic_t_p2, NULL, &periodic_thread, args_p2))
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t_p2, NULL, &lock_in_thread, args_p2))
@@ -339,14 +359,17 @@ void *play_ntetris_versus (void *unused)
 	
 	if (pthread_join(get_user_input_t_p1, NULL))
 		printf("Could not properly terminate user input thread\n");
+	
 	if (pthread_join(get_user_input_t_p2, NULL))
 		printf("Could not properly terminate user input thread\n");
-
+	
 	pthread_cancel(periodic_t_p1);
 	pthread_cancel(lock_in_t_p1);
 
+	
 	pthread_cancel(periodic_t_p2);
 	pthread_cancel(lock_in_t_p2);
+	
 	if (pthread_join(periodic_t_p1, NULL))
 		printf("Could not properly terminate periodic thread\n");
 	if (pthread_join(lock_in_t_p1, NULL))
@@ -355,4 +378,5 @@ void *play_ntetris_versus (void *unused)
 		printf("Could not properly terminate periodic thread\n");
 	if (pthread_join(lock_in_t_p2, NULL))
 		printf("Could not properly terminate lock in thread\n");
+	
 }
