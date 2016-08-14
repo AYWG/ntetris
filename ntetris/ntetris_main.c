@@ -17,6 +17,7 @@ int CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
 int LINE_COUNT = 0;
 int SCORE = 0;
 int CURRENT_Y_CHECKPOINT = 0;
+int CURRENT_Y_CHECKPOINT_2 = 0;
 
 char *title[] = {
 				"             ______     __       _     ",
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 		}
 		else if (choice == VERSUS)
 		{
-			GAME_DELAY = CASUAL_INIT_DELAY;
+			GAME_DELAY = EXPERT_INIT_DELAY;
 			// spawn versus thread
 			clear();
 			refresh();

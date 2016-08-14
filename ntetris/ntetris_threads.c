@@ -21,13 +21,14 @@ void *get_user_input_thread (void *arguments)
 	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
 
 	int ch;
+	//nodelay(args->win[WELL_ID], TRUE);
 	halfdelay(1);
 
 	while ((ch = wgetch(args->win[WELL_ID])) != QUIT_KEY)
 	{
-		/*
+		
 		if (ch != ERR)
-		{*/
+		{
 			pthread_mutex_lock(&tetrimino_lock[args->lock_num]);
 
 			if (ch == args->controls[MOVE_LEFT])
@@ -37,13 +38,13 @@ void *get_user_input_thread (void *arguments)
 			else if (ch == args->controls[MOVE_DOWN])
 				move_tetrimino(args->win[WELL_ID], args->tetrimino, DOWN, args->well_contents);
 			else if (ch == args->controls[DROP])
-				drop_tetrimino(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents);
+				drop_tetrimino(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents, args->current_y_checkpoint);
 			else if (ch == args->controls[ROTATE_CW])
 				rotate_tetrimino(args->win[WELL_ID], args->tetrimino, CLOCKWISE, args->well_contents);
 			else if (ch == args->controls[ROTATE_CCW])
 				rotate_tetrimino(args->win[WELL_ID], args->tetrimino, CNT_CLOCKWISE, args->well_contents);
 			else if (ch == args->controls[HOLD])
-				hold_tetrimino(args->win[HOLD_ID], args->tetrimino, args->well_contents);
+				hold_tetrimino(args->win[HOLD_ID], args->tetrimino, args->well_contents, args->current_y_checkpoint);
 			
 			draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 			if (args->mode == SINGLE)
@@ -53,12 +54,13 @@ void *get_user_input_thread (void *arguments)
 				update_level(args->win[LEVEL_ID]);
 			}
 			pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
-			usleep(SMALL_DELAY);
-		/*}
+			usleep(random() % STALL);
+		}
 		else 
 		{
 			if (GAME_OVER_FLAG) break;
-		}*/
+			usleep(random() % STALL);
+		}
 	}
 
 	nocbreak();
@@ -102,37 +104,22 @@ void *lock_in_thread (void *arguments)
 	{
 		if (GAME_OVER_FLAG) break;
 
-		/*
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
-			continue;
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
-			continue;
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
-			continue;
-		usleep((GAME_DELAY) / 2);
-		if (!equal_bits(args->tetrimino->bits, current_bits))
-			continue;
-		*/
-
 		usleep((GAME_DELAY));
-		if (get_y_checkpoint(args->tetrimino->bits) > CURRENT_Y_CHECKPOINT)
+		if (get_y_checkpoint(args->tetrimino->bits) > *(args->current_y_checkpoint))
 		{
-			CURRENT_Y_CHECKPOINT = get_y_checkpoint(args->tetrimino->bits);
+			*(args->current_y_checkpoint) = get_y_checkpoint(args->tetrimino->bits);
 			continue;
 		}
 		usleep((GAME_DELAY));
-		if (get_y_checkpoint(args->tetrimino->bits) > CURRENT_Y_CHECKPOINT)
+		if (get_y_checkpoint(args->tetrimino->bits) > *(args->current_y_checkpoint))
 		{
-			CURRENT_Y_CHECKPOINT = get_y_checkpoint(args->tetrimino->bits);
+			*(args->current_y_checkpoint) = get_y_checkpoint(args->tetrimino->bits);
 			continue;
 		}
 		usleep((GAME_DELAY));
-		if (get_y_checkpoint(args->tetrimino->bits) > CURRENT_Y_CHECKPOINT)
+		if (get_y_checkpoint(args->tetrimino->bits) > *(args->current_y_checkpoint))
 		{
-			CURRENT_Y_CHECKPOINT = get_y_checkpoint(args->tetrimino->bits);
+			*(args->current_y_checkpoint) = get_y_checkpoint(args->tetrimino->bits);
 			continue;
 		}
 
@@ -147,10 +134,9 @@ void *lock_in_thread (void *arguments)
 			update_level(args->win[LEVEL_ID]);
 		}
 		
-		init_tetrimino(args->tetrimino, get_rand_num(0, 6), args->well_contents);
+		init_tetrimino(args->tetrimino, get_rand_num(0, 6), args->well_contents, args->current_y_checkpoint);
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
 		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
-		CURRENT_Y_CHECKPOINT = 0;
 	}
 }
 
@@ -240,8 +226,9 @@ void *play_ntetris_single (void *difficulty)
 	args->difficulty = *((int *) difficulty);
 	args->mode = SINGLE;
 	args->lock_num = 0;
+	args->current_y_checkpoint = &CURRENT_Y_CHECKPOINT;
 
-	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
+	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents, &CURRENT_Y_CHECKPOINT);
 	draw_well(well_win, tetrimino, well_contents);
 
 	pthread_t periodic_t;
@@ -347,16 +334,19 @@ void *play_ntetris_versus (void *unused)
 		args_p1->controls[i] = controls_p1[i];
 		args_p2->controls[i] = controls_p2[i];
 	}
-
+	args_p1->difficulty = INVALID_DIFF;
+	args_p2->difficulty = INVALID_DIFF;
 	args_p1->mode = VERSUS;
 	args_p2->mode = VERSUS;
 	args_p1->lock_num = 0;
 	args_p2->lock_num = 1;
+	args_p1->current_y_checkpoint = &CURRENT_Y_CHECKPOINT;
+	args_p2->current_y_checkpoint = &CURRENT_Y_CHECKPOINT_2;
 
-	init_tetrimino(tetrimino_p1, get_rand_num(0, 6), well_contents_p1);
+	init_tetrimino(tetrimino_p1, get_rand_num(0, 6), well_contents_p1, &CURRENT_Y_CHECKPOINT);
 	draw_well(well_win_p1, tetrimino_p1, well_contents_p1);
 
-	init_tetrimino(tetrimino_p2, get_rand_num(0, 6), well_contents_p2);
+	init_tetrimino(tetrimino_p2, get_rand_num(0, 6), well_contents_p2, &CURRENT_Y_CHECKPOINT_2);
 	draw_well(well_win_p2, tetrimino_p2, well_contents_p2);
 
 	

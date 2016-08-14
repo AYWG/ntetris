@@ -150,7 +150,8 @@ just fell naturally down the well from its current position,
 then lock it into the well.*/
 
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+					int *current_y_checkpoint)
 {
 	COORDINATE_PAIR new_bits[NUM_BITS];
 	int i;
@@ -170,14 +171,14 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 
 	copy_bits(new_bits, tetrimino->bits);
 	lock_tetrimino_into_well(tetrimino, well_contents);
+	
 	update_lines(win, tetrimino, difficulty, well_contents);
 
 	/* Player gets more points by dropping tetriminos rather
 	than letting them fall naturally */
 	SCORE += 2 * distance_traveled;
 
-	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
-	CURRENT_Y_CHECKPOINT = 0;
+	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents, current_y_checkpoint);
 	draw_well(win, tetrimino, well_contents);
 }
 
@@ -329,7 +330,8 @@ if this fails (due to the tetrimino's spawning coordinates being occupied)
 then GAME_OVER_FLAG is set */
 
 void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id, 
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+					int *current_y_checkpoint)
 {
 	int a, b, c, d;
 	int e, f, g, h;
@@ -403,6 +405,8 @@ void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id,
 		/* Offset of 3 between ID number and COLOUR_PAIR number*/
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
 	}
+
+	*current_y_checkpoint = 0;
 }
 
 /* Updates well_contents with the value and coordinates of tetrimino's bits */
@@ -425,16 +429,18 @@ and re-spawns the previous tetrimino - if hold window previously empty, then
 current tetrimino is held and a random one spawns */
 
 void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+					int *current_y_checkpoint)
 {
 	if (!RECENT_HOLD)
 	{
 		int old_id = update_hold(hold_win, tetrimino->tetrimino_type);
 
 		if (old_id != INVALID_ID)
-			init_tetrimino(tetrimino, old_id, well_contents);
+			init_tetrimino(tetrimino, old_id, well_contents, current_y_checkpoint);
 		else
-			init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents);
+			init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents, current_y_checkpoint);
+
 
 		RECENT_HOLD = 1;
 	}
@@ -453,12 +459,12 @@ by an 'o' */
 
 int line_complete (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
-	int complete = 1;
 	int j;
 	for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
-		complete &= ((well_contents[row][j].value & A_CHARTEXT) == 'o');
+		if ((well_contents[row][j].value & A_CHARTEXT) != 'o')
+			return FALSE;
 	
-	return complete;
+	return TRUE;
 }
 
 /* Checks if a line is "empty" - that is, all coordinates are occupied
@@ -466,12 +472,12 @@ by a ' ' */
 
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
-	int empty = 1;
 	int j;
 	for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
-		empty &= (well_contents[row][j].value == ' ');
+		if (well_contents[row][j].value != ' ')
+			return FALSE;
 	
-	return empty;
+	return TRUE;
 }
 
 /* Makes a line empty */
@@ -532,7 +538,7 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 			clear_line(i, well_contents);
 			num_complete_lines++;
 			LINE_COUNT++;
-			if (LINE_COUNT % 10 == 0 && GAME_DELAY >= MIN_DELAY) 
+			if (LINE_COUNT % 10 == 0 && GAME_DELAY >= MIN_DELAY && difficulty != INVALID_DIFF) 
 			{ 
 				switch(difficulty)
 				{

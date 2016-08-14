@@ -32,13 +32,14 @@
 #define INTERMEDIATE 1
 #define EXPERT 2
 #define BACK 3
+#define INVALID_DIFF 4
 
 /* Game delays (in microseconds) */
 #define CASUAL_INIT_DELAY 1000000
 #define INTERMEDIATE_INIT_DELAY 500000
 #define EXPERT_INIT_DELAY 250000
 #define MIN_DELAY 30000 // Game delay cannot go below this amount
-#define SMALL_DELAY 1000
+#define STALL 1000
 
 /* IDs of the different game pieces */
 #define TETRIMINO_I 0
@@ -234,7 +235,7 @@ typedef struct
 	int difficulty;
 	int mode;
 	int lock_num;
-
+	int *current_y_checkpoint;
 } THREAD_ARGS;
 
 
@@ -266,13 +267,16 @@ void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction, 
 					  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+					int *current_y_checkpoint);
 void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id, 
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+					int *current_y_checkpoint);
 void lock_tetrimino_into_well(TETRIMINO *tetrimino, 
 							  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+					int *current_y_checkpoint);
 int get_rand_num (int lower, int upper);
 void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
@@ -298,6 +302,7 @@ extern int CURRENTLY_HELD_TETRIMINO_ID;
 extern int LINE_COUNT;
 extern int SCORE;
 extern int CURRENT_Y_CHECKPOINT;
+extern int CURRENT_Y_CHECKPOINT_2;
 #endif
 
 
