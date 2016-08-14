@@ -231,28 +231,12 @@ typedef struct
 	WINDOW *win[NUM_WINDOWS];
 	TETRIMINO *tetrimino;
 	COORDINATE_PAIR (*well_contents)[WELL_CONTENTS_WIDTH];
-	int controls[NUM_CONTROLS];
 	int difficulty;
 	int mode;
 	int lock_num;
 	int *current_y_checkpoint;
+	int *recent_hold;
 } THREAD_ARGS;
-
-/* EXPERIMENTAL PURPOSES */
-typedef struct 
-{
-	WINDOW *win[NUM_WINDOWS];
-	TETRIMINO *tetrimino_1;
-	TETRIMINO *tetrimino_2;
-	COORDINATE_PAIR (*well_contents_1)[WELL_CONTENTS_WIDTH];
-	COORDINATE_PAIR (*well_contents_2)[WELL_CONTENTS_WIDTH];
-	int controls_1[NUM_CONTROLS];
-	int controls_2[NUM_CONTROLS];
-	int mode;
-	int *current_y_checkpoint_1;
-	int *current_y_checkpoint_2;
-
-} VERSUS_THREAD_ARGS;
 
 /* Function prototypes */
 void print_help_message();
@@ -266,7 +250,7 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void draw_well (WINDOW *win, TETRIMINO *tetrimino, 
 			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void clear_well (WINDOW *win);
-int update_hold (WINDOW *win, int tetrimino_id);
+int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id);
 void update_line_count(WINDOW *line_count_win);
 void update_level(WINDOW *level_win);
 void update_score(WINDOW *score_win);
@@ -283,15 +267,15 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 					  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint);
+					int *current_y_checkpoint, int *recent_hold);
 void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id, 
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
 					int *current_y_checkpoint);
-void lock_tetrimino_into_well(TETRIMINO *tetrimino, 
-							  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void lock_tetrimino_into_well(TETRIMINO *tetrimino, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+							 int *recent_hold);
 void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint);
+					int *current_y_checkpoint, int *recent_hold, int *currently_held_tetrimino_id);
 int get_rand_num (int lower, int upper);
 void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
@@ -315,7 +299,9 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 extern int GAME_DELAY;
 extern int GAME_OVER_FLAG;
 extern int RECENT_HOLD;
+extern int RECENT_HOLD_2;
 extern int CURRENTLY_HELD_TETRIMINO_ID;
+extern int CURRENTLY_HELD_TETRIMINO_ID_2;
 extern int LINE_COUNT;
 extern int SCORE;
 extern int CURRENT_Y_CHECKPOINT;

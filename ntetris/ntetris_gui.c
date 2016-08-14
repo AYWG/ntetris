@@ -202,11 +202,11 @@ tetrimino_id. Returns the ID of the tetrimino that was being shown
 in the hold window prior to this function being called. If no prior
 tetrimino was being shown, then return INVALID_ID */
 
-int update_hold(WINDOW *win, int tetrimino_id)
+int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id)
 {
 	int i, j;
-	int old_id = CURRENTLY_HELD_TETRIMINO_ID;
-	CURRENTLY_HELD_TETRIMINO_ID = tetrimino_id;
+	int old_id = *currently_held_tetrimino_id;
+	*currently_held_tetrimino_id = tetrimino_id;
 
 	/* First, clear the window contents */
 	for (i = HOLD_T_BNDRY; i <= HOLD_B_BNDRY; i++)

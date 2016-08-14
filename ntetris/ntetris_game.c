@@ -151,7 +151,7 @@ then lock it into the well.*/
 
 void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint)
+					int *current_y_checkpoint, int *recent_hold)
 {
 	COORDINATE_PAIR new_bits[NUM_BITS];
 	int i;
@@ -170,7 +170,7 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 	distance_traveled--;
 
 	copy_bits(new_bits, tetrimino->bits);
-	lock_tetrimino_into_well(tetrimino, well_contents);
+	lock_tetrimino_into_well(tetrimino, well_contents, recent_hold);
 	
 	update_lines(win, tetrimino, difficulty, well_contents);
 
@@ -411,7 +411,8 @@ void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id,
 
 /* Updates well_contents with the value and coordinates of tetrimino's bits */
 
-void lock_tetrimino_into_well(TETRIMINO *tetrimino, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
+void lock_tetrimino_into_well(TETRIMINO *tetrimino, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
+							 int *recent_hold)
 {
 	int row, col;
 	int i;
@@ -421,7 +422,7 @@ void lock_tetrimino_into_well(TETRIMINO *tetrimino, COORDINATE_PAIR well_content
 		col = tetrimino->bits[i].x - 1;
 		well_contents[row][col].value = tetrimino->bits[i].value;
 	}
-	RECENT_HOLD = 0;
+	*recent_hold = 0;
 }
 
 /* Swaps the current tetrimino with the one "inside" the hold window 
@@ -430,19 +431,18 @@ current tetrimino is held and a random one spawns */
 
 void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint)
+					int *current_y_checkpoint, int *recent_hold, int *currently_held_tetrimino_id)
 {
-	if (!RECENT_HOLD)
+	if (!(*recent_hold))
 	{
-		int old_id = update_hold(hold_win, tetrimino->tetrimino_type);
+		int old_id = update_hold(hold_win, tetrimino->tetrimino_type, currently_held_tetrimino_id);
 
 		if (old_id != INVALID_ID)
 			init_tetrimino(tetrimino, old_id, well_contents, current_y_checkpoint);
 		else
 			init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents, current_y_checkpoint);
 
-
-		RECENT_HOLD = 1;
+		*recent_hold = 1;
 	}
 }
 

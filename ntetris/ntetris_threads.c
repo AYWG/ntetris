@@ -71,7 +71,7 @@ void *lock_in_thread (void *arguments)
 		}
 
 		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
-		lock_tetrimino_into_well(args->tetrimino, args->well_contents);
+		lock_tetrimino_into_well(args->tetrimino, args->well_contents, args->recent_hold);
 		update_lines(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents);
 
 		if (args->mode == SINGLE)
@@ -170,6 +170,7 @@ void *play_ntetris_single (void *difficulty)
 	args->mode = SINGLE;
 	args->lock_num = 0;
 	args->current_y_checkpoint = &CURRENT_Y_CHECKPOINT;
+	args->recent_hold = &RECENT_HOLD;
 
 	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents, &CURRENT_Y_CHECKPOINT);
 	draw_well(well_win, tetrimino, well_contents);
@@ -200,13 +201,15 @@ void *play_ntetris_single (void *difficulty)
 				case KEY_DOWN:
 					move_tetrimino(well_win, tetrimino, DOWN, well_contents); break;
 				case KEY_UP:
-					drop_tetrimino(well_win, tetrimino, args->difficulty, well_contents, &CURRENT_Y_CHECKPOINT); break;
+					drop_tetrimino(well_win, tetrimino, args->difficulty, well_contents, 
+								  &CURRENT_Y_CHECKPOINT, &RECENT_HOLD); break;
 				case P_KEY:
 					rotate_tetrimino(well_win, tetrimino, CLOCKWISE, well_contents); break;
 				case O_KEY:
 					rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE, well_contents); break;
 				case ENTER_KEY:
-					hold_tetrimino(hold_win, tetrimino, well_contents, &CURRENT_Y_CHECKPOINT); break;
+					hold_tetrimino(hold_win, tetrimino, well_contents, &CURRENT_Y_CHECKPOINT,
+								  &RECENT_HOLD, &CURRENTLY_HELD_TETRIMINO_ID); break;
 			}
 			
 			draw_well(well_win, tetrimino, well_contents);
@@ -294,8 +297,6 @@ void *play_ntetris_versus (void *unused)
 
 	THREAD_ARGS *args_p1 = malloc(sizeof(THREAD_ARGS));
 	THREAD_ARGS *args_p2 = malloc(sizeof(THREAD_ARGS));
-	// EXPERIMENTING
-	VERSUS_THREAD_ARGS *args = malloc(sizeof(VERSUS_THREAD_ARGS));
 
 	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
 	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
@@ -310,13 +311,7 @@ void *play_ntetris_versus (void *unused)
 	args_p2->win[COVER_ID] = cover_win_p2;
 	args_p2->win[HOLD_ID] = hold_win_p2;
 	args_p2->tetrimino = tetrimino_p2;
-	args_p2->well_contents = well_contents_p2;
-
-	for (i = 0; i < NUM_CONTROLS; i++)
-	{
-		args_p1->controls[i] = controls_p1[i];
-		args_p2->controls[i] = controls_p2[i];
-	}
+	args_p2->well_contents = well_contents_p2;	
 	args_p1->difficulty = INVALID_DIFF;
 	args_p2->difficulty = INVALID_DIFF;
 	args_p1->mode = VERSUS;
@@ -325,23 +320,8 @@ void *play_ntetris_versus (void *unused)
 	args_p2->lock_num = 1;
 	args_p1->current_y_checkpoint = &CURRENT_Y_CHECKPOINT;
 	args_p2->current_y_checkpoint = &CURRENT_Y_CHECKPOINT_2;
-
-	// EXPERIMENTING - START
-	args->win[0] = well_win_p1;
-	args->win[1] = cover_win_p1;
-	args->win[2] = hold_win_p1;
-	args->win[3] = well_win_p2;
-	args->win[4] = cover_win_p2;
-	args->win[5] = hold_win_p2;
-	args->tetrimino_1 = tetrimino_p1;
-	args->tetrimino_2 = tetrimino_p2;
-	args->well_contents_1 = well_contents_p1;
-	args->well_contents_2 = well_contents_p2;
-
-	args->mode = VERSUS;
-	args->current_y_checkpoint_1 = &CURRENT_Y_CHECKPOINT;
-	args->current_y_checkpoint_2 = &CURRENT_Y_CHECKPOINT_2;
-	// EXPERIMENTING - END
+	args_p1->recent_hold = &RECENT_HOLD;
+	args_p2->recent_hold = &RECENT_HOLD_2;
 
 	init_tetrimino(tetrimino_p1, get_rand_num(0, 6), well_contents_p1, &CURRENT_Y_CHECKPOINT);
 	draw_well(well_win_p1, tetrimino_p1, well_contents_p1);
@@ -351,7 +331,6 @@ void *play_ntetris_versus (void *unused)
 
 	pthread_t periodic_t_p1, periodic_t_p2;
 	pthread_t lock_in_t_p1, lock_in_t_p2;
-	//pthread_t get_user_input_t_p1, get_user_input_t_p2;
 	pthread_t get_user_input_versus_t;
 
 	if (pthread_create(&periodic_t_p1, NULL, &periodic_thread, args_p1))
@@ -365,7 +344,6 @@ void *play_ntetris_versus (void *unused)
 		printf("Could not run lock in thread\n");
 
 	int ch;
-
 	halfdelay(1);
 
 	while ((ch = getch()) != QUIT_KEY)
@@ -385,13 +363,15 @@ void *play_ntetris_versus (void *unused)
 					case KEY_DOWN:
 						move_tetrimino(well_win_p1, tetrimino_p1, DOWN, well_contents_p1); break;
 					case KEY_UP:
-						drop_tetrimino(well_win_p1, tetrimino_p1, args_p1->difficulty, well_contents_p1, &CURRENT_Y_CHECKPOINT); break;
+						drop_tetrimino(well_win_p1, tetrimino_p1, args_p1->difficulty, well_contents_p1, 
+									  &CURRENT_Y_CHECKPOINT, &RECENT_HOLD); break;
 					case P_KEY:
 						rotate_tetrimino(well_win_p1, tetrimino_p1, CLOCKWISE, well_contents_p1); break;
 					case O_KEY:
 						rotate_tetrimino(well_win_p1, tetrimino_p1, CNT_CLOCKWISE, well_contents_p1); break;
 					case ENTER_KEY:
-						hold_tetrimino(hold_win_p1, tetrimino_p1, well_contents_p1, &CURRENT_Y_CHECKPOINT); break;
+						hold_tetrimino(hold_win_p1, tetrimino_p1, well_contents_p1, &CURRENT_Y_CHECKPOINT,
+									  &RECENT_HOLD, &CURRENTLY_HELD_TETRIMINO_ID); break;
 				}
 				
 				draw_well(well_win_p1, tetrimino_p1, well_contents_p1);
@@ -412,13 +392,15 @@ void *play_ntetris_versus (void *unused)
 					case S_KEY:
 						move_tetrimino(well_win_p2, tetrimino_p2, DOWN, well_contents_p2); break;
 					case W_KEY:
-						drop_tetrimino(well_win_p2, tetrimino_p2, args_p2->difficulty, well_contents_p2, &CURRENT_Y_CHECKPOINT_2); break;
+						drop_tetrimino(well_win_p2, tetrimino_p2, args_p2->difficulty, well_contents_p2, 
+									  &CURRENT_Y_CHECKPOINT_2, &RECENT_HOLD_2); break;
 					case G_KEY:
 						rotate_tetrimino(well_win_p2, tetrimino_p2, CLOCKWISE, well_contents_p2); break;
 					case F_KEY:
 						rotate_tetrimino(well_win_p2, tetrimino_p2, CNT_CLOCKWISE, well_contents_p2); break;
 					case SPACE_KEY:
-						hold_tetrimino(hold_win_p2, tetrimino_p2, well_contents_p2, &CURRENT_Y_CHECKPOINT_2); break;
+						hold_tetrimino(hold_win_p2, tetrimino_p2, well_contents_p2, &CURRENT_Y_CHECKPOINT_2,
+									  &RECENT_HOLD_2, &CURRENTLY_HELD_TETRIMINO_ID_2); break;
 				}
 				
 				draw_well(well_win_p2, tetrimino_p2, well_contents_p2);
