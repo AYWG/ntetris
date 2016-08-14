@@ -14,134 +14,6 @@ int is_input_useful(int input, int controls[NUM_CONTROLS])
 	return FALSE;
 }
 
-/* Thread responsible for getting input from the user */
-
-void *get_user_input_thread (void *arguments)
-{
-	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
-
-	int ch;
-	//nodelay(args->win[WELL_ID], TRUE);
-	halfdelay(1);
-
-	//while ((ch = wgetch(args->win[WELL_ID])) != QUIT_KEY)
-	while ((ch = getch()) != QUIT_KEY)
-	{
-		
-		if (ch != ERR)
-		{
-			pthread_mutex_lock(&tetrimino_lock[args->lock_num]);
-
-			if (ch == args->controls[MOVE_LEFT])
-				move_tetrimino(args->win[WELL_ID], args->tetrimino, LEFT, args->well_contents);
-			else if (ch == args->controls[MOVE_RIGHT])
-				move_tetrimino(args->win[WELL_ID], args->tetrimino, RIGHT, args->well_contents);
-			else if (ch == args->controls[MOVE_DOWN])
-				move_tetrimino(args->win[WELL_ID], args->tetrimino, DOWN, args->well_contents);
-			else if (ch == args->controls[DROP])
-				drop_tetrimino(args->win[WELL_ID], args->tetrimino, args->difficulty, args->well_contents, args->current_y_checkpoint);
-			else if (ch == args->controls[ROTATE_CW])
-				rotate_tetrimino(args->win[WELL_ID], args->tetrimino, CLOCKWISE, args->well_contents);
-			else if (ch == args->controls[ROTATE_CCW])
-				rotate_tetrimino(args->win[WELL_ID], args->tetrimino, CNT_CLOCKWISE, args->well_contents);
-			else if (ch == args->controls[HOLD])
-				hold_tetrimino(args->win[HOLD_ID], args->tetrimino, args->well_contents, args->current_y_checkpoint);
-			
-			draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
-			if (args->mode == SINGLE)
-			{
-				update_line_count(args->win[LINE_COUNT_ID]);
-				update_score(args->win[SCORE_ID]);
-				update_level(args->win[LEVEL_ID]);
-			}
-			pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
-			usleep(random() % STALL);
-		}
-		else 
-		{
-			if (GAME_OVER_FLAG) break;
-			usleep(random() % STALL);
-		}
-	}
-
-	nocbreak();
-	cbreak();
-}
-
-/* Thread responsible for getting input from the two users during versus mode 
-- FOR EXPERIMENTAL PURPOSES - */
-
-void *get_user_input_versus_thread (void *arguments)
-{
-	VERSUS_THREAD_ARGS *args = (VERSUS_THREAD_ARGS *) arguments;
-
-	int ch;
-
-	halfdelay(1);
-
-	while ((ch = getch()) != QUIT_KEY)
-	{
-		if (ch != ERR)
-		{
-			if (is_input_useful(ch, args->controls_1))
-			{
-				pthread_mutex_lock(&tetrimino_lock[0]);
-
-				if (ch == args->controls_1[MOVE_LEFT])
-					move_tetrimino(args->win[0], args->tetrimino_1, LEFT, args->well_contents_1);
-				else if (ch == args->controls_1[MOVE_RIGHT])
-					move_tetrimino(args->win[0], args->tetrimino_1, RIGHT, args->well_contents_1);
-				else if (ch == args->controls_1[MOVE_DOWN])
-					move_tetrimino(args->win[0], args->tetrimino_1, DOWN, args->well_contents_1);
-				else if (ch == args->controls_1[DROP])
-					drop_tetrimino(args->win[0], args->tetrimino_1, 4, args->well_contents_1, args->current_y_checkpoint_1);
-				else if (ch == args->controls_1[ROTATE_CW])
-					rotate_tetrimino(args->win[0], args->tetrimino_1, CLOCKWISE, args->well_contents_1);
-				else if (ch == args->controls_1[ROTATE_CCW])
-					rotate_tetrimino(args->win[0], args->tetrimino_1, CNT_CLOCKWISE, args->well_contents_1);
-				else if (ch == args->controls_1[HOLD])
-					hold_tetrimino(args->win[2], args->tetrimino_1, args->well_contents_1, args->current_y_checkpoint_1);
-				
-				draw_well(args->win[0], args->tetrimino_1, args->well_contents_1);
-		
-				pthread_mutex_unlock(&(tetrimino_lock[0]));
-				usleep(random() % STALL);
-			}
-
-			else if (is_input_useful(ch, args->controls_2))
-			{
-				pthread_mutex_lock(&tetrimino_lock[1]);
-
-				if (ch == args->controls_2[MOVE_LEFT])
-					move_tetrimino(args->win[3], args->tetrimino_2, LEFT, args->well_contents_2);
-				else if (ch == args->controls_2[MOVE_RIGHT])
-					move_tetrimino(args->win[3], args->tetrimino_2, RIGHT, args->well_contents_2);
-				else if (ch == args->controls_2[MOVE_DOWN])
-					move_tetrimino(args->win[3], args->tetrimino_2, DOWN, args->well_contents_2);
-				else if (ch == args->controls_2[DROP])
-					drop_tetrimino(args->win[3], args->tetrimino_2, 4, args->well_contents_2, args->current_y_checkpoint_2);
-				else if (ch == args->controls_2[ROTATE_CW])
-					rotate_tetrimino(args->win[3], args->tetrimino_2, CLOCKWISE, args->well_contents_2);
-				else if (ch == args->controls_2[ROTATE_CCW])
-					rotate_tetrimino(args->win[3], args->tetrimino_2, CNT_CLOCKWISE, args->well_contents_2);
-				else if (ch == args->controls_2[HOLD])
-					hold_tetrimino(args->win[5], args->tetrimino_2, args->well_contents_2, args->current_y_checkpoint_2);
-				
-				draw_well(args->win[3], args->tetrimino_2, args->well_contents_2);
-		
-				pthread_mutex_unlock(&(tetrimino_lock[1]));
-				usleep(random() % STALL);
-			}
-		}
-		else 
-		{
-			if (GAME_OVER_FLAG) break;
-			usleep(random() % STALL);
-		}
-	}
-
-}
-
 /* Thread responsible for moving the tetrimino down one unit at a time with GAME_DELAY pauses. */
 
 void *periodic_thread (void *arguments)
@@ -280,10 +152,7 @@ void *play_ntetris_single (void *difficulty)
 	srand((unsigned) time(NULL));
 
 	/* Enable input from arrow keys */
-	//keypad(well_win, TRUE);
 	keypad(stdscr, TRUE);
-
-	int controls[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
 
 	THREAD_ARGS *args = malloc(sizeof(THREAD_ARGS));
 	args->win[WELL_ID] = well_win;
@@ -296,8 +165,6 @@ void *play_ntetris_single (void *difficulty)
 	args->tetrimino = tetrimino;
 	args->well_contents = well_contents;
 
-	for (i = 0; i < NUM_CONTROLS; i++)
-		args->controls[i] = controls[i];
 
 	args->difficulty = *((int *) difficulty);
 	args->mode = SINGLE;
@@ -309,17 +176,56 @@ void *play_ntetris_single (void *difficulty)
 
 	pthread_t periodic_t;
 	pthread_t lock_in_t;
-	pthread_t get_user_input_t;
 	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, args))
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t, NULL, &lock_in_thread, args))
 		printf("Could not run lock in thread\n");
-	if (pthread_create(&get_user_input_t, NULL, &get_user_input_thread, args))
-		printf("Could not run lock in thread\n");
-	
-	if (pthread_join(get_user_input_t, NULL))
-		printf("Could not properly terminate user input thread\n");
+
+	int ch;
+	halfdelay(1);
+
+	while ((ch = getch()) != QUIT_KEY)
+	{
+		if (ch != ERR)
+		{
+			pthread_mutex_lock(&tetrimino_lock[args->lock_num]);
+
+			switch(ch)
+			{
+				case KEY_LEFT:
+					move_tetrimino(well_win, tetrimino, LEFT, well_contents); break;
+				case KEY_RIGHT:
+					move_tetrimino(well_win, tetrimino, RIGHT, well_contents); break;
+				case KEY_DOWN:
+					move_tetrimino(well_win, tetrimino, DOWN, well_contents); break;
+				case KEY_UP:
+					drop_tetrimino(well_win, tetrimino, args->difficulty, well_contents, &CURRENT_Y_CHECKPOINT); break;
+				case P_KEY:
+					rotate_tetrimino(well_win, tetrimino, CLOCKWISE, well_contents); break;
+				case O_KEY:
+					rotate_tetrimino(well_win, tetrimino, CNT_CLOCKWISE, well_contents); break;
+				case ENTER_KEY:
+					hold_tetrimino(hold_win, tetrimino, well_contents, &CURRENT_Y_CHECKPOINT); break;
+			}
+			
+			draw_well(well_win, tetrimino, well_contents);
+			update_line_count(line_count_win);
+			update_score(score_win);
+			update_level(level_win);
+			
+			pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
+			usleep(random() % STALL);
+		}
+		else 
+		{
+			if (GAME_OVER_FLAG) break;
+			usleep(random() % STALL);
+		}
+	}
+	nocbreak();
+	cbreak();
+
 	pthread_cancel(periodic_t);
 	pthread_cancel(lock_in_t);
 	if (pthread_join(periodic_t, NULL))
@@ -384,10 +290,6 @@ void *play_ntetris_versus (void *unused)
 
 	srand((unsigned) time(NULL));
 
-	/*
-	keypad(well_win_p1, TRUE);
-	keypad(well_win_p2, TRUE);
-	*/
 	keypad(stdscr, TRUE);
 
 	THREAD_ARGS *args_p1 = malloc(sizeof(THREAD_ARGS));
@@ -436,12 +338,6 @@ void *play_ntetris_versus (void *unused)
 	args->well_contents_1 = well_contents_p1;
 	args->well_contents_2 = well_contents_p2;
 
-	for (i = 0; i < NUM_CONTROLS; i++)
-	{
-		args->controls_1[i] = controls_p1[i];
-		args->controls_2[i] = controls_p2[i];
-	}
-
 	args->mode = VERSUS;
 	args->current_y_checkpoint_1 = &CURRENT_Y_CHECKPOINT;
 	args->current_y_checkpoint_2 = &CURRENT_Y_CHECKPOINT_2;
@@ -462,29 +358,83 @@ void *play_ntetris_versus (void *unused)
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t_p1, NULL, &lock_in_thread, args_p1))
 		printf("Could not run lock in thread\n");
-	/*if (pthread_create(&get_user_input_t_p1, NULL, &get_user_input_thread, args_p1))
-		printf("Could not run lock in thread\n");
-	*/
+
 	if (pthread_create(&periodic_t_p2, NULL, &periodic_thread, args_p2))
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t_p2, NULL, &lock_in_thread, args_p2))
 		printf("Could not run lock in thread\n");
-	/*if (pthread_create(&get_user_input_t_p2, NULL, &get_user_input_thread, args_p2))
-		printf("Could not run lock in thread\n");
-	
-	if (pthread_join(get_user_input_t_p1, NULL))
-		printf("Could not properly terminate user input thread\n");
-	
-	if (pthread_join(get_user_input_t_p2, NULL))
-		printf("Could not properly terminate user input thread\n");
-	*/
-	pthread_create(&get_user_input_versus_t, NULL, &get_user_input_versus_thread, args);
-	pthread_join(get_user_input_versus_t, NULL);
+
+	int ch;
+
+	halfdelay(1);
+
+	while ((ch = getch()) != QUIT_KEY)
+	{
+		if (ch != ERR)
+		{
+			if (is_input_useful(ch, controls_p1))
+			{
+				pthread_mutex_lock(&tetrimino_lock[0]);
+
+				switch(ch)
+				{
+					case KEY_LEFT:
+						move_tetrimino(well_win_p1, tetrimino_p1, LEFT, well_contents_p1); break;
+					case KEY_RIGHT:
+						move_tetrimino(well_win_p1, tetrimino_p1, RIGHT, well_contents_p1); break;
+					case KEY_DOWN:
+						move_tetrimino(well_win_p1, tetrimino_p1, DOWN, well_contents_p1); break;
+					case KEY_UP:
+						drop_tetrimino(well_win_p1, tetrimino_p1, args_p1->difficulty, well_contents_p1, &CURRENT_Y_CHECKPOINT); break;
+					case P_KEY:
+						rotate_tetrimino(well_win_p1, tetrimino_p1, CLOCKWISE, well_contents_p1); break;
+					case O_KEY:
+						rotate_tetrimino(well_win_p1, tetrimino_p1, CNT_CLOCKWISE, well_contents_p1); break;
+					case ENTER_KEY:
+						hold_tetrimino(hold_win_p1, tetrimino_p1, well_contents_p1, &CURRENT_Y_CHECKPOINT); break;
+				}
+				
+				draw_well(well_win_p1, tetrimino_p1, well_contents_p1);
+				pthread_mutex_unlock(&(tetrimino_lock[0]));
+				usleep(random() % STALL);
+			}
+
+			else if (is_input_useful(ch, controls_p2))
+			{
+				pthread_mutex_lock(&tetrimino_lock[1]);
+
+				switch(ch)
+				{
+					case A_KEY:
+						move_tetrimino(well_win_p2, tetrimino_p2, LEFT, well_contents_p2); break;
+					case D_KEY:
+						move_tetrimino(well_win_p2, tetrimino_p2, RIGHT, well_contents_p2); break;
+					case S_KEY:
+						move_tetrimino(well_win_p2, tetrimino_p2, DOWN, well_contents_p2); break;
+					case W_KEY:
+						drop_tetrimino(well_win_p2, tetrimino_p2, args_p2->difficulty, well_contents_p2, &CURRENT_Y_CHECKPOINT_2); break;
+					case G_KEY:
+						rotate_tetrimino(well_win_p2, tetrimino_p2, CLOCKWISE, well_contents_p2); break;
+					case F_KEY:
+						rotate_tetrimino(well_win_p2, tetrimino_p2, CNT_CLOCKWISE, well_contents_p2); break;
+					case SPACE_KEY:
+						hold_tetrimino(hold_win_p2, tetrimino_p2, well_contents_p2, &CURRENT_Y_CHECKPOINT_2); break;
+				}
+				
+				draw_well(well_win_p2, tetrimino_p2, well_contents_p2);
+				pthread_mutex_unlock(&(tetrimino_lock[1]));
+				usleep(random() % STALL);
+			}
+		}
+		else 
+		{
+			if (GAME_OVER_FLAG) break;
+			usleep(random() % STALL);
+		}
+	}
 
 	pthread_cancel(periodic_t_p1);
 	pthread_cancel(lock_in_t_p1);
-
-	
 	pthread_cancel(periodic_t_p2);
 	pthread_cancel(lock_in_t_p2);
 	

@@ -295,8 +295,8 @@ void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
 int get_rand_num (int lower, int upper);
 void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
-void *get_user_input_thread (void *arguments);
-void *get_user_input_versus_thread (void *arguments);
+//void *get_user_input_thread (void *arguments);
+//void *get_user_input_versus_thread (void *arguments);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
