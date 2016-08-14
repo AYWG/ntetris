@@ -238,6 +238,21 @@ typedef struct
 	int *current_y_checkpoint;
 } THREAD_ARGS;
 
+/* EXPERIMENTAL PURPOSES */
+typedef struct 
+{
+	WINDOW *win[NUM_WINDOWS];
+	TETRIMINO *tetrimino_1;
+	TETRIMINO *tetrimino_2;
+	COORDINATE_PAIR (*well_contents_1)[WELL_CONTENTS_WIDTH];
+	COORDINATE_PAIR (*well_contents_2)[WELL_CONTENTS_WIDTH];
+	int controls_1[NUM_CONTROLS];
+	int controls_2[NUM_CONTROLS];
+	int mode;
+	int *current_y_checkpoint_1;
+	int *current_y_checkpoint_2;
+
+} VERSUS_THREAD_ARGS;
 
 /* Function prototypes */
 void print_help_message();
@@ -280,6 +295,8 @@ void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
 int get_rand_num (int lower, int upper);
 void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
+void *get_user_input_thread (void *arguments);
+void *get_user_input_versus_thread (void *arguments);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
