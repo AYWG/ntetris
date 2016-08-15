@@ -81,12 +81,10 @@ void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complet
 void *periodic_thread (void *arguments)
 {
 	THREAD_ARGS *args = (THREAD_ARGS *) arguments;
-	while(!GAME_OVER_FLAG)
+	while(TRUE)
 	{
-		usleep(GAME_DELAY / 2); 
-		if (GAME_OVER_FLAG) break;
-		usleep(GAME_DELAY / 2);
-
+		usleep(GAME_DELAY); 
+		
 		pthread_mutex_lock(&(tetrimino_lock[args->lock_num]));
 		move_tetrimino(args->win[WELL_ID], args->tetrimino, DOWN, args->well_contents);
 
@@ -94,9 +92,7 @@ void *periodic_thread (void *arguments)
 			update_score(args->win[SCORE_ID]);
 
 		draw_well(args->win[WELL_ID], args->tetrimino, args->well_contents);
-		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
-		
-		if (GAME_OVER_FLAG) break;
+		pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));		
 	}
 }
 
@@ -110,10 +106,8 @@ void *lock_in_thread (void *arguments)
 	int pivot_bit = args->tetrimino->pivot_bit;
 	int num_complete_lines;
 
-	while(!GAME_OVER_FLAG)
+	while(TRUE)
 	{
-		if (GAME_OVER_FLAG) break;
-
 		usleep((GAME_DELAY));
 		if (get_y_checkpoint(args->tetrimino->bits) > *(args->current_y_checkpoint))
 		{
@@ -334,6 +328,9 @@ void *play_ntetris_versus (void *unused)
 	box(hold_win_p1, 0, 0);
 	box(hold_win_p2, 0, 0);
 
+	mvwprintw(stdscr, HOLD_INIT_Y_P2 + 10, HOLD_INIT_X_P2, "Player 2");
+	mvwprintw(stdscr, HOLD_INIT_Y_P1 + 10, HOLD_INIT_X_P1, "Player 1"); 
+
 	wattron(garbage_win_p1, A_BOLD);
 	wattron(garbage_win_p2, A_BOLD);
 	mvwprintw(garbage_win_p1, 0, 0, "Incoming");
@@ -348,6 +345,7 @@ void *play_ntetris_versus (void *unused)
 	update_garbage_line_counter(garbage_win_p1, &GARBAGE_COUNTER_1);
 	update_garbage_line_counter(garbage_win_p2, &GARBAGE_COUNTER_2);
 
+	wnoutrefresh(stdscr);
 	wnoutrefresh(well_win_p1);
 	wnoutrefresh(well_win_p2);
 	wnoutrefresh(cover_win_p1);
@@ -502,7 +500,7 @@ void *play_ntetris_versus (void *unused)
 				if (ch == W_KEY)
 					add_garbage(garbage_win_p2, garbage_win_p1, num_complete_lines_2, args_p2->lock_num,
 								&GARBAGE_COUNTER_2, &GARBAGE_COUNTER_1, well_contents_p2);
-				
+
 				draw_well(well_win_p2, tetrimino_p2, well_contents_p2);
 				pthread_mutex_unlock(&(tetrimino_lock[args_p2->lock_num]));
 				usleep(random() % STALL);
@@ -514,6 +512,9 @@ void *play_ntetris_versus (void *unused)
 			usleep(random() % STALL);
 		}
 	}
+
+	nocbreak();
+	cbreak();
 
 	pthread_cancel(periodic_t_p1);
 	pthread_cancel(lock_in_t_p1);
@@ -529,17 +530,23 @@ void *play_ntetris_versus (void *unused)
 	if (pthread_join(lock_in_t_p2, NULL))
 		printf("Could not properly terminate lock in thread\n");
 
+	if (well_contents_p1[0][0].value == 'e')
+		WHICH_PLAYER_WON = 2;
+	else if (well_contents_p2[0][0].value == 'e')
+		WHICH_PLAYER_WON = 1;
+
 	/* Free allocated windows and other structs */
-	/*
+	
 	free(tetrimino_p1);
 	free(tetrimino_p2);
-	free(args);
-	delwin(well_win);
-	delwin(cover_win);
-	delwin(hold_win);
-	delwin(line_count_win);
-	delwin(score_win);
-	delwin(level_win);
-	delwin(title_small_win);
-	*/
+	free(args_p1);
+	free(args_p2);
+	delwin(well_win_p1);
+	delwin(well_win_p2);
+	delwin(cover_win_p1);
+	delwin(cover_win_p2);
+	delwin(hold_win_p1);
+	delwin(hold_win_p2);
+	delwin(garbage_win_p1);
+	delwin(garbage_win_p2);
 }

@@ -22,6 +22,7 @@ int CURRENT_Y_CHECKPOINT = 0;
 int CURRENT_Y_CHECKPOINT_2 = 0;
 int GARBAGE_COUNTER_1 = 0;
 int GARBAGE_COUNTER_2 = 0;
+int WHICH_PLAYER_WON = 0;
 
 char *title[] = {
 				"             ______     __       _     ",
@@ -47,16 +48,20 @@ int main(int argc, char **argv)
 			printf("Current Version: ntetris 1.0.0\n");
 			exit(1);
 		}
-
-		if (!strcmp(argv[1],"--help"))
+		else if (!strcmp(argv[1],"--help"))
 		{
 			print_help_message();
 			exit(1);
 		}
-
-		if (!strcmp(argv[1],"--stats"))
+		else if (!strcmp(argv[1],"--stats"))
 		{
 			STATS = 1;
+		}
+		else
+		{
+			printf("Not a valid option.\n");
+			printf("Usage: ntetris [--version] [--help] [--stats]\n");
+			exit(1);
 		}
 	}
 
@@ -97,6 +102,8 @@ int main(int argc, char **argv)
 	char game_over_msg[] = "GAME OVER";								 	  
 	char game_over_msg_opt_1[] = "Press R to return to the main menu";
 	char game_over_msg_opt_2[] = "Press any other key to quit";
+	char versus_p1_win_msg[] = "Player 1 wins!";
+	char versus_p2_win_msg[] = "Player 2 wins!";
 
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
@@ -140,7 +147,11 @@ int main(int argc, char **argv)
 					mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
 					
 					int game_over_choice = getch();
-					if (game_over_choice == RESTART_KEY) continue;
+					if (game_over_choice == RESTART_KEY)
+					{
+						reset_global_vars();
+						continue;
+					} 
 					else break;
 				}
 				else break;
@@ -157,7 +168,29 @@ int main(int argc, char **argv)
 
 			if (pthread_join(game_t, NULL))
 				printf("Could not properly terminate versus phase of game\n");
-			break; 
+
+			if(GAME_OVER_FLAG)
+			{
+				clear();
+				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+				if (WHICH_PLAYER_WON == 1)
+					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
+				else if (WHICH_PLAYER_WON == 2)
+					mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
+				attroff(COLOR_PAIR(Z_COLOR_PAIR));
+
+				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
+				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
+
+				int game_over_choice = getch();
+				if (game_over_choice == RESTART_KEY)
+				{
+					reset_global_vars();
+					continue;
+				} 
+				else break;
+			}
+			else break; 
 		}
 		else if (choice == CONTROLS)
 		{
@@ -173,7 +206,7 @@ int main(int argc, char **argv)
 	/* Exit ncurses */
 	endwin();
 	
-	if(STATS)
+	if(STATS && choice == SINGLE)
 	{
 		printf("\n----------------------\n");
 		printf("Final level : %d\n", LINE_COUNT / 10);
@@ -181,6 +214,22 @@ int main(int argc, char **argv)
 		printf("Final score : %d\n", SCORE);
 	}
 	return 0;
+}
+
+void reset_global_vars()
+{
+	GAME_OVER_FLAG = 0;
+	RECENT_HOLD = 0;
+	RECENT_HOLD_2 = 0;
+	CURRENTLY_HELD_TETRIMINO_ID = INVALID_ID;
+	CURRENTLY_HELD_TETRIMINO_ID_2 = INVALID_ID;
+	LINE_COUNT = 0;
+	SCORE = 0;
+	CURRENT_Y_CHECKPOINT = 0;
+	CURRENT_Y_CHECKPOINT_2 = 0;
+	GARBAGE_COUNTER_1 = 0;
+	GARBAGE_COUNTER_2 = 0;
+	WHICH_PLAYER_WON = 0;
 }
 
 void print_help_message()

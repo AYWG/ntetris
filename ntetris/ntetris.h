@@ -251,6 +251,7 @@ typedef struct
 } THREAD_ARGS;
 
 /* Function prototypes */
+void reset_global_vars();
 void print_help_message();
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
 void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
@@ -324,7 +325,9 @@ extern int CURRENT_Y_CHECKPOINT;
 extern int CURRENT_Y_CHECKPOINT_2;
 extern int GARBAGE_COUNTER_1;
 extern int GARBAGE_COUNTER_2;
+extern int WHICH_PLAYER_WON;
 #endif
+
 
 
 
