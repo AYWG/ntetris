@@ -37,15 +37,17 @@ int main(int argc, char **argv)
 	int STATS = 0;
 	if (argc > 2)
 	{
-		printf("Usage: ntetris [--version] [--help] [--stats]\n");
+		printf("Usage: ntetris [--about] [--help] [--stats]\n");
+		printf("Example: ntetris --help\n");
 		exit(1);
 	}
 
 	if (argc == 2)
 	{
-		if (!strcmp(argv[1],"--version"))
+		if (!strcmp(argv[1],"--about"))
 		{
 			printf("Current Version: ntetris 1.0.0\n");
+			printf("Developed by: Andy Wong\n");
 			exit(1);
 		}
 		else if (!strcmp(argv[1],"--help"))
@@ -60,7 +62,8 @@ int main(int argc, char **argv)
 		else
 		{
 			printf("Not a valid option.\n");
-			printf("Usage: ntetris [--version] [--help] [--stats]\n");
+			printf("Usage: ntetris [--about] [--help] [--stats]\n");
+			printf("Example: ntetris --help\n");
 			exit(1);
 		}
 	}
@@ -68,7 +71,6 @@ int main(int argc, char **argv)
 	pthread_t game_t;
 
 	ntetris_init();
-
 	
 	int choice;
 	int difficulty;
@@ -234,6 +236,11 @@ void reset_global_vars()
 
 void print_help_message()
 {
-	printf("ntetris: a tetris clone that uses the ncurses API\n");
+	printf("ntetris: a tetris clone that uses the ncurses API.\n");
+	printf("Usage: ntetris [--option]\t(omit square brackets)\n\n");
+	printf("The following options are available:\n\n");
+	printf("--about\t\tPrints version and developer information\n");
+	printf("--help\t\tPrints this help message\n");
+	printf("--stats\t\tRuns the game. If player exits during or immediately after\n\t\tlosing a single player game, the player's stats are shown on the \t\tconsole.\n");
 }
 

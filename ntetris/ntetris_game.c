@@ -18,13 +18,11 @@ in bits_2 */
 int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS])
 {
 	int i;
-	int equal = 1;
-
 	for (i = 0; i < NUM_BITS; i++)
-		equal &= equal_coords(bits_1[i], bits_2[i]);
+		if (!equal_coords(bits_1[i], bits_2[i]))
+			return FALSE;
 	
-
-	return equal;
+	return TRUE;
 }
 
 /* Copies the location of each bit in source_bits into dest_bits */
@@ -39,6 +37,9 @@ void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits
 		dest_bits[i].x = source_bits[i].x;
 	}
 }
+
+/* Returns the y checkpoint for the given bits. The y checkpoint is defined as the 
+largest y coordinate out of all of bits' y coordinates, plus one. */
 
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS])
 {
@@ -94,7 +95,6 @@ int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_
 			break;
 		}
 	}
-
 	if (invalid) return FALSE;
 
 	return TRUE;
@@ -142,7 +142,6 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 		if (direction == DOWN) 
 			SCORE++;
 	}
-
 }
 
 /* Instantly move the tetrimino to where it would go if 
@@ -324,8 +323,8 @@ void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
 					int *current_y_checkpoint)
 {
-	int a, b, c, d;
-	int e, f, g, h;
+	int a, b, c, d; // y coordinates
+	int e, f, g, h; // x coordinates
 
 	switch(tetrimino_id)
 	{
@@ -386,7 +385,7 @@ void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id,
 	{
 		if ((well_contents[init_y[i] - 1][init_x[i] - 1].value & A_CHARTEXT) != ' ')
 		{
-			well_contents[0][0].value = 'e';
+			well_contents[0][0].value = 'e'; // used to determine which player wins in versus 
 			GAME_OVER_FLAG = 1;
 			return;
 		}
@@ -394,7 +393,7 @@ void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id,
 		tetrimino->bits[i].y = init_y[i];
 		tetrimino->bits[i].x = init_x[i];
 
-		/* Offset of 3 between ID number and COLOUR_PAIR number*/
+		/* Offset of 3 between ID number and COLOUR_PAIR number */
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);
 	}
 

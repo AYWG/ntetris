@@ -3,18 +3,21 @@
 pthread_mutex_t tetrimino_lock[] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 pthread_mutex_t garbage_line_counter_lock[] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
 
+/* Checks if the given input is an element of controls */
+
 int is_input_useful(int input, int controls[NUM_CONTROLS])
 {
 	int i;
 	for (i = 0; i < NUM_CONTROLS; i++)
-	{
 		if (controls[i] == input)
 			return TRUE;
-	}
-
+	
 	return FALSE;
 }
 
+/* Adds garbage lines to well_contents, resets garbage_counter, and adds num_complete_lines to
+other_garbage_counter. Note that the number of garbage lines added to well_contents is reduced
+by num_complete_lines */
 
 void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
 				int lock_num, int *garbage_counter, int *other_garbage_counter,
@@ -33,7 +36,6 @@ void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complet
 	}
 
 	/* Add the remaining counter value to the well as garbage lines */
-
 	for (i = WELL_CONTENTS_HEIGHT - 1; i >= 0; i--)
 		if (line_empty(i, well_contents)) break;
 
@@ -60,11 +62,11 @@ void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complet
 
 	*garbage_counter = 0;
 	update_garbage_line_counter(garbage_win, garbage_counter);
-
 	pthread_mutex_unlock(&(garbage_line_counter_lock[lock_num]));
 
 	pthread_mutex_lock(&(garbage_line_counter_lock[!lock_num]));
 
+	/* Increment other counter by number of_complete lines; maximum counter value is 5 */
 	for (i = 0; i < num_complete_lines; i++)
 	{
 		if (*other_garbage_counter == 5) break;
@@ -72,7 +74,6 @@ void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complet
 	}
 
 	update_garbage_line_counter(other_garbage_win, other_garbage_counter);
-
 	pthread_mutex_unlock(&(garbage_line_counter_lock[!lock_num]));
 }
 
@@ -108,6 +109,10 @@ void *lock_in_thread (void *arguments)
 
 	while(TRUE)
 	{
+		/* Repeatedly check if the tetrimino has fallen past a "checkpoint" that is calculated 
+		based on its current position. If it does not fall past the checkpoint within three GAME_DELAYs,
+		then it likely cannot fall any further and should be locked in. */
+
 		usleep((GAME_DELAY));
 		if (get_y_checkpoint(args->tetrimino->bits) > *(args->current_y_checkpoint))
 		{
@@ -149,11 +154,11 @@ void *lock_in_thread (void *arguments)
 	}
 }
 
-/* Top-level thread for running the game. */
+/* Top-level thread for running single player mode. */
 
 void *play_ntetris_single (void *difficulty) 
 {
-	/* Allocate memory for tetrimino and necessary windows */
+	/* Allocate memory for tetrimino, necessary windows, and thread arguments */
 
 	WINDOW *well_win = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
 	WINDOW *cover_win = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);	
@@ -163,6 +168,7 @@ void *play_ntetris_single (void *difficulty)
 	WINDOW *level_win = newwin(LEVEL_HEIGHT, LEVEL_WIDTH, LEVEL_INIT_Y, LEVEL_INIT_X);
 	WINDOW *title_small_win = newwin(TITLE_SMALL_HEIGHT, TITLE_SMALL_WIDTH, TITLE_SMALL_INIT_Y, TITLE_SMALL_INIT_X);
 	TETRIMINO *tetrimino = malloc(sizeof(TETRIMINO));
+	THREAD_ARGS *args = malloc(sizeof(THREAD_ARGS));
 
 	/* Draw borders for some windows */
 
@@ -216,7 +222,7 @@ void *play_ntetris_single (void *difficulty)
 	/* Enable input from arrow keys */
 	keypad(stdscr, TRUE);
 
-	THREAD_ARGS *args = malloc(sizeof(THREAD_ARGS));
+	/* Initialize thread arguments*/
 	args->win[WELL_ID] = well_win;
 	args->win[COVER_ID] = cover_win;
 	args->win[HOLD_ID] = hold_win;
@@ -245,7 +251,6 @@ void *play_ntetris_single (void *difficulty)
 
 	int ch;
 	halfdelay(1);
-
 	while ((ch = getch()) != QUIT_KEY)
 	{
 		if (ch != ERR)
@@ -308,8 +313,12 @@ void *play_ntetris_single (void *difficulty)
 	delwin(title_small_win);
 }
 
+/* Top-level thread for running versus mode. */
+
 void *play_ntetris_versus (void *unused)
 {
+	/* Allocate memory for tetrimino, necessary windows, and thread arguments */
+
 	WINDOW *well_win_p1 = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y_P1, WELL_INIT_X_P1);
 	WINDOW *well_win_p2 = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y_P2, WELL_INIT_X_P2);
 	WINDOW *cover_win_p1 = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y_P1, COVER_INIT_X_P1);
@@ -320,6 +329,8 @@ void *play_ntetris_versus (void *unused)
 	WINDOW *garbage_win_p2 = newwin(GARBAGE_HEIGHT, GARBAGE_WIDTH, GARBAGE_INIT_Y_P2, GARBAGE_INIT_X_P2);
 	TETRIMINO *tetrimino_p1 = malloc(sizeof(TETRIMINO));
 	TETRIMINO *tetrimino_p2 = malloc(sizeof(TETRIMINO));
+	THREAD_ARGS *args_p1 = malloc(sizeof(THREAD_ARGS));
+	THREAD_ARGS *args_p2 = malloc(sizeof(THREAD_ARGS));
 
 	box(well_win_p1, 0, 0);
 	box(well_win_p2, 0, 0);
@@ -341,7 +352,6 @@ void *play_ntetris_versus (void *unused)
 	mvwprintw(garbage_win_p2, 2, 0, "Lines");
 	wattroff(garbage_win_p1, A_BOLD);
 	wattroff(garbage_win_p2, A_BOLD);
-
 	update_garbage_line_counter(garbage_win_p1, &GARBAGE_COUNTER_1);
 	update_garbage_line_counter(garbage_win_p2, &GARBAGE_COUNTER_2);
 
@@ -360,6 +370,7 @@ void *play_ntetris_versus (void *unused)
 	COORDINATE_PAIR well_contents_p2[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
 
 	int i, j;
+	/* Initialize both well contents to be empty */
 	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
 	{
 		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
@@ -373,16 +384,15 @@ void *play_ntetris_versus (void *unused)
 		}
 	}
 
+	/* Generate random number seed*/
 	srand((unsigned) time(NULL));
-
+	/* Enable input from arrow keys */
 	keypad(stdscr, TRUE);
-
-	THREAD_ARGS *args_p1 = malloc(sizeof(THREAD_ARGS));
-	THREAD_ARGS *args_p2 = malloc(sizeof(THREAD_ARGS));
 
 	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
 	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
 
+	/* Initialize thread arguments*/
 	args_p1->win[WELL_ID] = well_win_p1;
 	args_p1->win[COVER_ID] = cover_win_p1;
 	args_p1->win[HOLD_ID] = hold_win_p1;
@@ -437,7 +447,6 @@ void *play_ntetris_versus (void *unused)
 	int num_complete_lines_1;
 	int num_complete_lines_2;
 	halfdelay(1);
-
 	while ((ch = getch()) != QUIT_KEY)
 	{
 		if (ch != ERR)
