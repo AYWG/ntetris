@@ -149,12 +149,13 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 just fell naturally down the well from its current position,
 then lock it into the well.*/
 
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
+int drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
 					int *current_y_checkpoint, int *recent_hold)
 {
 	COORDINATE_PAIR new_bits[NUM_BITS];
 	int i;
+	int num_complete_lines;
 	int distance_traveled = 0;
 	copy_bits(tetrimino->bits, new_bits);
 
@@ -172,14 +173,16 @@ void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 	copy_bits(new_bits, tetrimino->bits);
 	lock_tetrimino_into_well(tetrimino, well_contents, recent_hold);
 	
-	update_lines(win, tetrimino, difficulty, well_contents);
+	num_complete_lines = update_lines(win, tetrimino, difficulty, well_contents);
 
 	/* Player gets more points by dropping tetriminos rather
 	than letting them fall naturally */
-	SCORE += 2 * distance_traveled;
+	if (difficulty != INVALID_DIFF)
+		SCORE += 2 * distance_traveled;
 
 	init_tetrimino(tetrimino, get_rand_num(0, 6), well_contents, current_y_checkpoint);
 	draw_well(win, tetrimino, well_contents);
+	return num_complete_lines;
 }
 
 /* Shifts the coordinates of each bit in bits based on the given
@@ -295,15 +298,6 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 			/* True if trying to rotate near another existing piece in the well */
 			if (coords_out_of_y_bounds == 0 && coords_out_of_x_bounds == 0)
 			{
-				/* Have to stop adjusting eventually... */
-				//if (count_adjust > ADJUST_LIMIT)
-				//	return;
-
-				/* Difficult to know exactly which way we should adjust, so just
-				choose a random direction (represented by values ranging from 1 - 4) */
-				//adjust_bits(new_bits, get_rand_num(1, 4));
-				//count_adjust++;
-
 				/* Attempt to move once in each direction from invalid position; 
 				If all new positions are still invalid, don't rotate at all */
 
@@ -317,11 +311,8 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
 				return;
 			}
-
 		}
-
 		copy_bits(new_bits, tetrimino->bits);
-	
 	}
 }
 
@@ -495,7 +486,7 @@ complete lines before clearing them, determining the appropriate number of point
 rewarded, and how the rest of the well contents should be adjusted. Also adjusts the game 
 delay every time the player levels up. */
 
-void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
+int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 				  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
 	
@@ -518,7 +509,7 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 		}
 		else
 		{
-			if (consec_complete_lines > 0)
+			if (consec_complete_lines > 0 && difficulty != INVALID_DIFF)
 				SCORE += (base_pts_for_line_clears[consec_complete_lines - 1] * ((LINE_COUNT / 10) + 1 + difficulty));
 			
 			consec_complete_lines = 0;
@@ -556,7 +547,7 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 			// copy line (i) to line (i + num_complete_lines)
 			if (i + num_complete_lines != i)
 			{
-				for (j = 0; j < WELL_R_BNDRY; j++)
+				for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 					well_contents[i + num_complete_lines][j].value = well_contents[i][j].value;
 				
 				clear_line(i, well_contents);
@@ -564,5 +555,7 @@ void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 		}
 
 	}
+
+	return num_complete_lines;
 	
 }

@@ -88,7 +88,7 @@ Z : oo 	 - bits: 0 1 	  Pivot = 2
 
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
-#define NUM_WINDOWS 7
+#define NUM_WINDOWS 9
 
 #define WELL_ID 0
 
@@ -170,6 +170,16 @@ the WINDOWs used */
 #define TITLE_SMALL_INIT_Y LEVEL_INIT_Y
 #define TITLE_SMALL_INIT_X SCORE_INIT_X
 
+#define GARBAGE_ID 7
+#define OTHER_GARBAGE_ID 8
+
+#define GARBAGE_HEIGHT 5
+#define GARBAGE_WIDTH 9
+#define GARBAGE_INIT_Y_P1 WELL_HEIGHT - 6
+#define GARBAGE_INIT_X_P1 HOLD_INIT_X_P1
+#define GARBAGE_INIT_Y_P2 WELL_HEIGHT - 6
+#define GARBAGE_INIT_X_P2 HOLD_INIT_X_P2
+
 #define CONTROLS_INIT_X 8
 
 #define NUM_CONTROLS 7
@@ -236,11 +246,16 @@ typedef struct
 	int lock_num;
 	int *current_y_checkpoint;
 	int *recent_hold;
+	int *garbage_counter;
+	int *other_garbage_counter;
 } THREAD_ARGS;
 
 /* Function prototypes */
 void print_help_message();
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
+void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
+				int lock_num, int *garbage_counter, int *other_garbage_counter,
+				COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 
 /* GUI prototypes */
 void ntetris_init ();
@@ -254,6 +269,7 @@ int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id)
 void update_line_count(WINDOW *line_count_win);
 void update_level(WINDOW *level_win);
 void update_score(WINDOW *score_win);
+void update_garbage_line_counter(WINDOW *garbage_win, int *garbage_counter);
 void print_controls();
 void print_title_small(WINDOW *win);
 
@@ -265,7 +281,7 @@ void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM
 					  int direction);
 void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction, 
 					  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
+int drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
 					int *current_y_checkpoint, int *recent_hold);
 void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id, 
@@ -293,7 +309,7 @@ int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_
 int line_complete (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
+int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 				  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 
 extern int GAME_DELAY;
@@ -306,6 +322,8 @@ extern int LINE_COUNT;
 extern int SCORE;
 extern int CURRENT_Y_CHECKPOINT;
 extern int CURRENT_Y_CHECKPOINT_2;
+extern int GARBAGE_COUNTER_1;
+extern int GARBAGE_COUNTER_2;
 #endif
 
 

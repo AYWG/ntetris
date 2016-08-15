@@ -297,6 +297,14 @@ void update_score(WINDOW *score_win)
 	wrefresh(score_win);
 }
 
+void update_garbage_line_counter(WINDOW *garbage_win, int *garbage_counter)
+{
+	wmove(garbage_win, 4, 0);
+	wclrtoeol(garbage_win);
+	mvwprintw(garbage_win, 4, 0, "%d", *garbage_counter);
+	wrefresh(garbage_win);
+}
+
 /* Display the controls for playing the game */
 
 void print_controls()
