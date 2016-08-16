@@ -4,6 +4,27 @@
 
 int base_pts_for_line_clears[] = {40, 100, 300, 1200};
 
+int init_y[NUM_TETRIMINOS][NUM_BITS] = {{1, 1, 1, 1},
+										{1, 1, 1, 2},
+										{1, 1, 1, 2},
+										{1, 1, 2, 2},
+										{1, 1, 2, 2},
+										{1, 1, 1, 2},
+										{1, 1, 2, 2}
+										};
+
+int init_x[NUM_TETRIMINOS][NUM_BITS] = {{11, 12, 13, 14},
+										{11, 12, 13, 13},
+										{11, 12, 13, 11},
+										{12, 13, 12, 13},
+										{12, 13, 11, 12},
+										{11, 12, 13, 12},
+										{11, 12, 12, 13} 
+										};
+
+
+int pivot_bits[NUM_TETRIMINOS] = {1, 1, 1, 0, 3, 1, 2};										
+
 
 /* Determines whether cp_1 is located at the same coordinates as cp_2. */
 
@@ -114,17 +135,9 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 
 	switch(direction)
 	{
-		case LEFT:
-			delta_x = -1;
-			break;
-
-		case RIGHT:
-			delta_x = 1;
-			break;
-
-		case DOWN:
-			delta_y = 1;
-			break;
+		case LEFT: delta_x = -1; break;
+		case RIGHT: delta_x = 1; break;
+		case DOWN: delta_y = 1; break;
 	}
 
 	for (i = 0; i < NUM_BITS; i++)
@@ -146,7 +159,8 @@ void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 
 /* Instantly move the tetrimino to where it would go if 
 just fell naturally down the well from its current position,
-then lock it into the well.*/
+then lock it into the well. Returns the number of lines cleared
+as a result of dropping the tetrimino */
 
 int drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
@@ -158,6 +172,7 @@ int drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 	int distance_traveled = 0;
 	copy_bits(tetrimino->bits, new_bits);
 
+	/* Keep descending until invalid position reached */
 	while (valid_position(win, tetrimino, new_bits, well_contents))
 	{
 		for (i = 0; i < NUM_BITS; i++)
@@ -165,13 +180,13 @@ int drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 		distance_traveled++;
 	}
 
+	/* Invalid position reached, so go back up one unit before updating tetrimino bits */
 	for (i = 0; i < NUM_BITS; i++)
-			new_bits[i].y--;
+		new_bits[i].y--;
 	distance_traveled--;
 
 	copy_bits(new_bits, tetrimino->bits);
 	lock_tetrimino_into_well(tetrimino, well_contents, recent_hold);
-	
 	num_complete_lines = update_lines(win, tetrimino, difficulty, well_contents);
 
 	/* Player gets more points by dropping tetriminos rather
@@ -297,9 +312,7 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 			/* True if trying to rotate near another existing piece in the well */
 			if (coords_out_of_y_bounds == 0 && coords_out_of_x_bounds == 0)
 			{
-				/* Attempt to move once in each direction from invalid position; 
-				If all new positions are still invalid, don't rotate at all */
-
+				/* Attempt to move once in each direction from invalid position; */
 				adjust_bits(new_bits, LEFT);
 				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
 				adjust_bits(new_bits, RIGHT); adjust_bits(new_bits, RIGHT);
@@ -308,6 +321,8 @@ void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
 				adjust_bits(new_bits, DOWN); adjust_bits(new_bits, DOWN);
 				if (valid_position(win, tetrimino, new_bits, well_contents)) break;
+
+				/* All new positions are invalid, don't rotate at all */
 				return;
 			}
 		}
@@ -323,75 +338,21 @@ void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
 					int *current_y_checkpoint)
 {
-	int a, b, c, d; // y coordinates
-	int e, f, g, h; // x coordinates
+	tetrimino->tetrimino_type = tetrimino_id;
+	tetrimino->pivot_bit = pivot_bits[tetrimino_id];
 
-	switch(tetrimino_id)
+	int i;
+	for (i = 0; i < NUM_BITS; i++)
 	{
-		case TETRIMINO_I: 
-			tetrimino->tetrimino_type = TETRIMINO_I;
-			tetrimino->pivot_bit = 1;
-			a = b = c = d = 1;
-			e = 11; f = e + 1; g = f + 1; h = g + 1;
-			break;
-			
-		case TETRIMINO_J:
-			tetrimino->tetrimino_type = TETRIMINO_J;
-			tetrimino->pivot_bit = 1;
-			a = b = c = 1; d = 2; 
-			e = 11; f = e + 1; g = f + 1; h = g;
-			break;
-
-		case TETRIMINO_L:
-			tetrimino->tetrimino_type = TETRIMINO_L;
-			tetrimino->pivot_bit = 1;
-			a = b = c = 1; d = 2;
-			e = 11; f = e + 1; g = f + 1; h = e;
-			break;
-
-		case TETRIMINO_O:
-			tetrimino->tetrimino_type = TETRIMINO_O;	
-			tetrimino->pivot_bit = 0; // actually has no pivot bit
-			a = b = 1; c = d = 2;
-			e = g = 12; f = h = 13;
-			break;
-
-		case TETRIMINO_S:
-			tetrimino->tetrimino_type = TETRIMINO_S;
-			tetrimino->pivot_bit = 3;
-			a = b = 1; c = d = 2;
-			e = h = 12; f = 13; g = 11;
-			break;
-
-		case TETRIMINO_T:
-			tetrimino->tetrimino_type = TETRIMINO_T;
-			tetrimino->pivot_bit = 1;
-			a = b = c = 1; d = 2;
-			e = 11; f = e + 1; g = f + 1; h = f;
-			break;
-
-		case TETRIMINO_Z:
-			tetrimino->tetrimino_type = TETRIMINO_Z;
-			tetrimino->pivot_bit = 2;
-			a = b = 1; c = d = 2;
-			e = 11; f = g = 12; h = 13;
-			break;
-	}
-
-	int init_y[NUM_BITS] = {a, b, c, d};
-	int init_x[NUM_BITS] = {e, f, g, h};
-
-	for (int i = 0; i < NUM_BITS; i++)
-	{
-		if ((well_contents[init_y[i] - 1][init_x[i] - 1].value & A_CHARTEXT) != ' ')
+		if ((well_contents[init_y[tetrimino_id][i] - 1][init_x[tetrimino_id][i] - 1].value & A_CHARTEXT) != ' ')
 		{
 			well_contents[0][0].value = 'e'; // used to determine which player wins in versus 
 			GAME_OVER_FLAG = 1;
 			return;
 		}
 
-		tetrimino->bits[i].y = init_y[i];
-		tetrimino->bits[i].x = init_x[i];
+		tetrimino->bits[i].y = init_y[tetrimino_id][i];
+		tetrimino->bits[i].x = init_x[tetrimino_id][i];
 
 		/* Offset of 3 between ID number and COLOUR_PAIR number */
 		tetrimino->bits[i].value = 'o' | COLOR_PAIR(tetrimino_id + 3);

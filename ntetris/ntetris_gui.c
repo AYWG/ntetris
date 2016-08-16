@@ -2,6 +2,26 @@
 
 #include "ntetris.h"		
 
+int hold_y[NUM_TETRIMINOS][NUM_BITS] = {{2, 2, 2, 2},
+										{2, 2, 2, 3},
+										{2, 2, 2, 3},
+										{2, 2, 3, 3},
+										{2, 2, 3, 3},
+										{2, 2, 2, 3},
+										{2, 2, 3, 3}
+										};
+
+int hold_x[NUM_TETRIMINOS][NUM_BITS] = {{2, 3, 4, 5},
+										{2, 3, 4, 4},
+										{2, 3, 4, 2},
+										{3, 4, 3, 4},
+										{3, 4, 2, 3},
+										{2, 3, 4, 3},
+										{2, 3, 3, 4} 
+										};
+
+
+
 /* Initialization function that must be called */
 						   
 void ntetris_init()
@@ -213,54 +233,9 @@ int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id)
 		for (j = HOLD_L_BNDRY; j <= HOLD_R_BNDRY; j++)
 			mvwaddch(win, i, j, ' ');
 
-	int a, b, c, d;
-	int e, f, g, h;
-
-	switch(tetrimino_id)
-	{
-		case TETRIMINO_I: 
-			a = b = c = d = 2;
-			e = 2; f = e + 1; g = f + 1; h = g + 1;
-			break;
-			
-		case TETRIMINO_J:
-			a = b = c = 2; d = 3; 
-			e = 2; f = e + 1; g = f + 1; h = g;
-			break;
-
-		case TETRIMINO_L:
-			a = b = c = 2; d = 3;
-			e = 2; f = e + 1; g = f + 1; h = e;
-			break;
-
-		case TETRIMINO_O:
-			a = b = 2; c = d = 3;
-			e = g = 3; f = h = 4;
-			break;
-
-		case TETRIMINO_S:
-			a = b = 2; c = d = 3;
-			e = h = 3; f = 4; g = 2;
-			break;
-
-		case TETRIMINO_T:
-			a = b = c = 2; d = 3;
-			e = 2; f = e + 1; g = f + 1; h = f;
-			break;
-
-		case TETRIMINO_Z:
-			a = b = 2; c = d = 3;
-			e = 2; f = g = 3; h = 4;
-			break; 
-	}
-
-	int tetr_y[NUM_BITS] = {a, b, c, d};
-	int tetr_x[NUM_BITS] = {e, f, g, h};
-
-
 	for (i = 0; i < NUM_BITS; i++)
 		/* Offset of 3 between ID number and COLOUR_PAIR number*/
-		mvwaddch(win, tetr_y[i], tetr_x[i], 'o' | COLOR_PAIR(tetrimino_id + 3));
+		mvwaddch(win, hold_y[tetrimino_id][i], hold_x[tetrimino_id][i], 'o' | COLOR_PAIR(tetrimino_id + 3));
 
 	wrefresh(win);
 

@@ -50,6 +50,7 @@
 #define TETRIMINO_T 5
 #define TETRIMINO_Z 6
 #define INVALID_ID 7
+#define NUM_TETRIMINOS 7
 
 /* FOR REFERENCE
 I : oooo - bits: 0 1 2 3  Pivot = 1
