@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	int STATS = 0;
 	if (argc > 2)
 	{
-		printf("Usage: ntetris [--about] [--help] [--stats]\n");
+		printf("Usage: ntetris [--about] [--help] [--howtoplay] [--stats]\n");
 		printf("Example: ntetris --help\n");
 		exit(1);
 	}
@@ -53,6 +53,11 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[1],"--help"))
 		{
 			print_help_message();
+			exit(1);
+		}
+		else if (!strcmp(argv[1],"--howtoplay"))
+		{
+			print_howtoplay_message();
 			exit(1);
 		}
 		else if (!strcmp(argv[1],"--stats"))
@@ -237,10 +242,38 @@ void reset_global_vars()
 void print_help_message()
 {
 	printf("ntetris: a tetris clone that uses the ncurses API.\n");
-	printf("Usage: ntetris [--option]\t(omit square brackets)\n\n");
+	printf("Usage: ntetris [--option]\t(omit square brackets)\n");
+	printf("Note - options are not required\n\n");
 	printf("The following options are available:\n\n");
-	printf("--about\t\tPrints version and developer information\n");
-	printf("--help\t\tPrints this help message\n");
-	printf("--stats\t\tRuns the game. If player exits during or immediately after\n\t\tlosing a single player game, the player's stats are shown on the \t\tconsole.\n");
+	printf("about\t\tDisplays version and developer information\n");
+	printf("help\t\tDisplays this help message\n");
+	printf("howtoplay\tDisplays instructions on how to play ntetris\n");
+	printf("stats\t\tRuns the game; if player exits during or immediately after\n\t\tlosing a single player game, the player's stats are shown on the \t\tconsole.\n");
+
 }
 
+void print_howtoplay_message()
+{
+	printf("\n-----------------HOW-TO-PLAY--------------------------\n\n");
+	printf(" - Control the falling tetriminos by moving or rotating them inside the well.\n");
+	printf(" - Complete horizontal lines to clear them.\n");
+	printf(" - The more lines you clear at once, the more points you earn!\n");
+	printf(" - The game ends when the tetriminos stack up to the top of the well. \n\n");
+
+	printf("-----------------HOW-TO-PLAY (VERSUS)-----------------\n\n");
+	printf(" - Control the falling tetriminos by moving or rotating them inside your well.\n");
+	printf(" - Complete horizontal lines to clear them.\n");
+	printf(" - The more lines you clear at once, the more garbage lines you can add to your\n");
+	printf("   opponent's well, and the more garbage lines you can take away from your well!\n");
+	printf(" - The first player whose tetriminos stack up to the top of their well loses. \n\n");
+
+	printf("-----------------CONTROLS-----------------------------\n\n");
+	printf("                                      Single/Player 1      Player2\n\n");
+	printf("Move tetrimino left                   Left arrow key       A\n");
+	printf("Move tetrimino right                  Right arrow key      D\n");
+	printf("Move tetrimino down                   Down arrow key       S\n");
+	printf("Drop tetrimino                        Up arrow key         W\n");
+	printf("Rotate tetrimino clockwise            P                    G\n");
+	printf("Rotate tetrimino counterclockwise     O                    F\n");
+	printf("Hold tetrimino                        Enter                Space\n\n");
+}

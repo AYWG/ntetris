@@ -254,6 +254,7 @@ typedef struct
 /* Function prototypes */
 void reset_global_vars();
 void print_help_message();
+void print_howtoplay_message();
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
 void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
 				int lock_num, int *garbage_counter, int *other_garbage_counter,
