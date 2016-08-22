@@ -250,11 +250,16 @@ void *play_ntetris_single (void *difficulty)
 		printf("Could not run lock in thread\n");
 
 	int ch;
+
+	/* Cause getch() calls to wait for user input for 0.1 s (rather than wait indefinitely). 
+	If no input is received, getch() returns ERR*/
 	halfdelay(1);
+
 	while ((ch = getch()) != QUIT_KEY)
 	{
 		if (ch != ERR)
 		{
+			/* Acquire tetrimino lock before we do anything to the tetrimino */
 			pthread_mutex_lock(&tetrimino_lock[args->lock_num]);
 
 			switch(ch)
@@ -282,7 +287,10 @@ void *play_ntetris_single (void *difficulty)
 			update_score(score_win);
 			update_level(level_win);
 			
+			/* Done, so release tetrimino lock */
 			pthread_mutex_unlock(&(tetrimino_lock[args->lock_num]));
+
+			/* Wait a bit so other threads can acquire lock */
 			usleep(random() % STALL);
 		}
 		else 
@@ -291,9 +299,12 @@ void *play_ntetris_single (void *difficulty)
 			usleep(random() % STALL);
 		}
 	}
+	/* getch() calls are now blocking as usual */
 	nocbreak();
 	cbreak();
 
+	/* This point is reached if user presses QUIT_KEY or GAME_OVER_FLAG is set; 
+	need to stop the other threads */
 	pthread_cancel(periodic_t);
 	pthread_cancel(lock_in_t);
 	if (pthread_join(periodic_t, NULL))
@@ -400,6 +411,13 @@ void *play_ntetris_versus (void *unused)
 	args_p1->win[OTHER_GARBAGE_ID] = garbage_win_p2;
 	args_p1->tetrimino = tetrimino_p1;
 	args_p1->well_contents = well_contents_p1;
+	args_p1->difficulty = INVALID_DIFF;
+	args_p1->mode = VERSUS;
+	args_p1->lock_num = 0;
+	args_p1->current_y_checkpoint = &CURRENT_Y_CHECKPOINT;
+	args_p1->recent_hold = &RECENT_HOLD;
+	args_p1->garbage_counter = &GARBAGE_COUNTER_1;
+	args_p1->other_garbage_counter = &GARBAGE_COUNTER_2;
 
 	args_p2->win[WELL_ID] = well_win_p2;
 	args_p2->win[COVER_ID] = cover_win_p2;
@@ -408,19 +426,12 @@ void *play_ntetris_versus (void *unused)
 	args_p2->win[OTHER_GARBAGE_ID] = garbage_win_p1;
 	args_p2->tetrimino = tetrimino_p2;
 	args_p2->well_contents = well_contents_p2;	
-	args_p1->difficulty = INVALID_DIFF;
 	args_p2->difficulty = INVALID_DIFF;
-	args_p1->mode = VERSUS;
 	args_p2->mode = VERSUS;
-	args_p1->lock_num = 0;
 	args_p2->lock_num = 1;
-	args_p1->current_y_checkpoint = &CURRENT_Y_CHECKPOINT;
 	args_p2->current_y_checkpoint = &CURRENT_Y_CHECKPOINT_2;
-	args_p1->recent_hold = &RECENT_HOLD;
 	args_p2->recent_hold = &RECENT_HOLD_2;
-	args_p1->garbage_counter = &GARBAGE_COUNTER_1;
 	args_p2->garbage_counter = &GARBAGE_COUNTER_2;
-	args_p1->other_garbage_counter = &GARBAGE_COUNTER_2;
 	args_p2->other_garbage_counter = &GARBAGE_COUNTER_1;
 
 	init_tetrimino(tetrimino_p1, get_rand_num(0, 6), well_contents_p1, &CURRENT_Y_CHECKPOINT);
@@ -446,11 +457,17 @@ void *play_ntetris_versus (void *unused)
 	int ch;
 	int num_complete_lines_1;
 	int num_complete_lines_2;
+
+	/* Cause getch() calls to wait for user input for 0.1 s (rather than wait indefinitely). 
+	If no input is received, getch() returns ERR*/
 	halfdelay(1);
+
 	while ((ch = getch()) != QUIT_KEY)
 	{
 		if (ch != ERR)
 		{
+			/* Since this loop checks for input from both players, need to check if
+			a given input has any "usefulness" to a specific player (to avoid unnecessary computations) */
 			if (is_input_useful(ch, controls_p1))
 			{
 				pthread_mutex_lock(&tetrimino_lock[args_p1->lock_num]);
@@ -474,7 +491,7 @@ void *play_ntetris_versus (void *unused)
 						hold_tetrimino(hold_win_p1, tetrimino_p1, well_contents_p1, &CURRENT_Y_CHECKPOINT,
 									  &RECENT_HOLD, &CURRENTLY_HELD_TETRIMINO_ID); break;
 				}
-				if (ch == KEY_UP)
+				if (ch == KEY_UP) // if tetrimino was dropped
 					add_garbage(garbage_win_p1, garbage_win_p2, num_complete_lines_1, args_p1->lock_num,
 								&GARBAGE_COUNTER_1, &GARBAGE_COUNTER_2, well_contents_p1);
 
@@ -506,7 +523,7 @@ void *play_ntetris_versus (void *unused)
 						hold_tetrimino(hold_win_p2, tetrimino_p2, well_contents_p2, &CURRENT_Y_CHECKPOINT_2,
 									  &RECENT_HOLD_2, &CURRENTLY_HELD_TETRIMINO_ID_2); break;
 				}
-				if (ch == W_KEY)
+				if (ch == W_KEY) // if tetrimino was dropped
 					add_garbage(garbage_win_p2, garbage_win_p1, num_complete_lines_2, args_p2->lock_num,
 								&GARBAGE_COUNTER_2, &GARBAGE_COUNTER_1, well_contents_p2);
 
@@ -521,10 +538,12 @@ void *play_ntetris_versus (void *unused)
 			usleep(random() % STALL);
 		}
 	}
-
+	/* getch() calls are now blocking as usual */
 	nocbreak();
 	cbreak();
 
+	/* This point is reached if user presses QUIT_KEY or GAME_OVER_FLAG is set; 
+	need to stop the other threads */
 	pthread_cancel(periodic_t_p1);
 	pthread_cancel(lock_in_t_p1);
 	pthread_cancel(periodic_t_p2);
@@ -539,13 +558,13 @@ void *play_ntetris_versus (void *unused)
 	if (pthread_join(lock_in_t_p2, NULL))
 		printf("Could not properly terminate lock in thread\n");
 
+	/* Figure out who won based on an arbitrary flag */
 	if (well_contents_p1[0][0].value == 'e')
 		WHICH_PLAYER_WON = 2;
 	else if (well_contents_p2[0][0].value == 'e')
 		WHICH_PLAYER_WON = 1;
 
 	/* Free allocated windows and other structs */
-	
 	free(tetrimino_p1);
 	free(tetrimino_p2);
 	free(args_p1);

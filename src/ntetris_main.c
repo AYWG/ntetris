@@ -167,7 +167,6 @@ int main(int argc, char **argv)
 		else if (choice == VERSUS)
 		{
 			GAME_DELAY = INTERMEDIATE_INIT_DELAY;
-			// spawn versus thread
 			clear();
 			refresh();
 			if (pthread_create(&game_t, NULL, &play_ntetris_versus, NULL))

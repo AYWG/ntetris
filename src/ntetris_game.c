@@ -22,7 +22,6 @@ int init_x[NUM_TETRIMINOS][NUM_BITS] = {{11, 12, 13, 14},
 										{11, 12, 12, 13} 
 										};
 
-
 int pivot_bits[NUM_TETRIMINOS] = {1, 1, 1, 0, 3, 1, 2};										
 
 
@@ -91,7 +90,6 @@ the well window. */
 int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
-	int invalid = 0;
 	int row, col;
 	int i;
 
@@ -99,11 +97,8 @@ int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_
 	{
 		/* Check boundaries */
 		if (out_of_boundaries(well_win, new_bits[i]))
-		{
-			invalid = 1;
-			break;
-		}
-
+			return FALSE;
+		
 		row = new_bits[i].y - 1;
 		col = new_bits[i].x - 1;
 
@@ -111,13 +106,9 @@ int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_
 		tetrimino's "ghost" */
 		if ((well_contents[row][col].value & A_CHARTEXT != ' ') &&
 			(well_contents[row][col].value & A_ATTRIBUTES) != A_DIM)
-		{
-			invalid = 1;
-			break;
-		}
+			return FALSE;
+		
 	}
-	if (invalid) return FALSE;
-
 	return TRUE;
 }
 
@@ -445,7 +436,7 @@ void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WE
 /* Handles line clearing every time a tetrimino locks into the well, highlighting all
 complete lines before clearing them, determining the appropriate number of points to be 
 rewarded, and how the rest of the well contents should be adjusted. Also adjusts the game 
-delay every time the player levels up. */
+delay every time the player levels up. Returns the number of complete lines.*/
 
 int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 				  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
@@ -463,7 +454,7 @@ int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 		if (line_complete(i, well_contents))
 		{
 			for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
-				well_contents[i][j].value |= A_REVERSE;
+				well_contents[i][j].value |= A_REVERSE; // "highlights" the complete rows
 			
 			complete = 1;
 			consec_complete_lines++;
@@ -471,6 +462,7 @@ int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 		else
 		{
 			if (consec_complete_lines > 0 && difficulty != INVALID_DIFF)
+				// Score determined by number of consecutive complete lines, current level, and difficulty
 				SCORE += (base_pts_for_line_clears[consec_complete_lines - 1] * ((LINE_COUNT / 10) + 1 + difficulty));
 			
 			consec_complete_lines = 0;
@@ -479,7 +471,7 @@ int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 
 	draw_well(win, tetrimino, well_contents);
 	if (complete)
-		usleep(GAME_DELAY);
+		usleep(GAME_DELAY);  // pause briefly so player can see which lines were cleared
 
 	for (i = WELL_CONTENTS_HEIGHT - 1; i >= 0; i--)
 	{
@@ -490,6 +482,8 @@ int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 			clear_line(i, well_contents);
 			num_complete_lines++;
 			LINE_COUNT++;
+
+			// decrease game delay every level up (down to a minimum value, and assuming current mode is single)
 			if (LINE_COUNT % 10 == 0 && GAME_DELAY >= MIN_DELAY && difficulty != INVALID_DIFF) 
 			{ 
 				switch(difficulty)
@@ -506,7 +500,7 @@ int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
 		else
 		{
 			// copy line (i) to line (i + num_complete_lines)
-			if (i + num_complete_lines != i)
+			if (i + num_complete_lines != i) // this prevents lines from deleting themselves if they don't move
 			{
 				for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 					well_contents[i + num_complete_lines][j].value = well_contents[i][j].value;

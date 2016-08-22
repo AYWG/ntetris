@@ -142,12 +142,9 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 			case ENTER_KEY: 
 				choice = highlight;
 				break;
-
-			default:
-				break;
 		}
 		print_menu(menu_win, highlight, menu_choices, num_menu_choices);
-		if(choice != -1)	/* User did a choice, so come out of the infinite loop */
+		if(choice != -1)	/* User made a choice, so come out of loop */
 			break;
 	}
 
