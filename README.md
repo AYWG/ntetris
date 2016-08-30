@@ -19,4 +19,10 @@ Supported OS: Linux
 
 5. Enjoy!
 
+### Screenshots
+
+<img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_menu.jpg" alt="ntetris menu" width="420" height="300" >
+<img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_single.jpg" alt="ntetris single" width="420" height="300" >
+<img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_versus.jpg" alt="ntetris versus" width="420" height="300">
+
 
