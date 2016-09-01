@@ -231,7 +231,7 @@ int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id)
 			mvwaddch(win, i, j, ' ');
 
 	for (i = 0; i < NUM_BITS; i++)
-		/* Offset of 3 between ID number and COLOUR_PAIR number*/
+		/* Offset of 3 between ID number and COLOUR_PAIR number */
 		mvwaddch(win, hold_y[tetrimino_id][i], hold_x[tetrimino_id][i], 'o' | COLOR_PAIR(tetrimino_id + 3));
 
 	wrefresh(win);
@@ -293,7 +293,36 @@ void print_controls()
 	mvprintw(12, CONTROLS_INIT_X, "Rotate tetrimino clockwise            P                    G");
 	mvprintw(13, CONTROLS_INIT_X, "Rotate tetrimino counterclockwise     O                    F");
 	mvprintw(14, CONTROLS_INIT_X, "Hold tetrimino                        Enter                Space");
+	attron(A_BOLD);
 	mvprintw(18, CONTROLS_INIT_X, "Press any key to return");
+	attroff(A_BOLD);
+}
+
+void print_howtoplay()
+{
+	attron(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
+	mvprintw(2, HOWTOPLAY_INIT_X, "HOW TO PLAY NTETRIS (SINGLE)");
+	attroff(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
+	mvprintw(4, HOWTOPLAY_INIT_X, "- Control the falling tetriminos by moving or rotating them inside");
+	mvprintw(5, HOWTOPLAY_INIT_X, "  the well.");
+	mvprintw(6, HOWTOPLAY_INIT_X, "- Complete horizontal lines to clear them.");
+	mvprintw(7, HOWTOPLAY_INIT_X, "- The more lines you clear at once, the more points you earn!");
+	mvprintw(8, HOWTOPLAY_INIT_X, "- The game ends when the tetriminos stack up to the top of the well.");
+
+	attron(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
+	mvprintw(10, HOWTOPLAY_INIT_X, "HOW TO PLAY NTETRIS (VERSUS)");
+	attroff(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));
+	mvprintw(12, HOWTOPLAY_INIT_X, "- Control the falling tetriminos by moving or rotating them inside");
+	mvprintw(13, HOWTOPLAY_INIT_X, "  your well.");
+	mvprintw(14, HOWTOPLAY_INIT_X, "- Complete horizontal lines to clear them.");
+	mvprintw(15, HOWTOPLAY_INIT_X, "- The more lines you clear at once, the more garbage lines you can");
+	mvprintw(16, HOWTOPLAY_INIT_X, "  add to your opponent's well, and the more garbage lines you can");
+	mvprintw(17, HOWTOPLAY_INIT_X, "  take away from your well!");
+	mvprintw(18, HOWTOPLAY_INIT_X, "- The first player whose tetriminos stack up to the top of their");
+	mvprintw(19, HOWTOPLAY_INIT_X, "  well loses.");
+	attron(A_BOLD);
+	mvprintw(21, HOWTOPLAY_INIT_X, "Press any key to return");
+	attroff(A_BOLD);
 }
 
 /* Prints a small version of the title in the UI */

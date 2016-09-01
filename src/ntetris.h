@@ -25,7 +25,8 @@
 #define SINGLE 0
 #define VERSUS 1
 #define CONTROLS 2
-#define EXIT 3
+#define HOWTOPLAY 3
+#define EXIT 4
 
 /* Difficulty levels */
 #define CASUAL 0
@@ -181,7 +182,12 @@ the WINDOWs used */
 #define GARBAGE_INIT_Y_P2 WELL_HEIGHT - 6
 #define GARBAGE_INIT_X_P2 HOLD_INIT_X_P2
 
+/* For the menu option */
+
 #define CONTROLS_INIT_X 8
+#define HOWTOPLAY_INIT_X 6
+
+/* Constants representing the different controls */
 
 #define NUM_CONTROLS 7
 
@@ -209,10 +215,6 @@ the WINDOWs used */
 #define G_KEY 103
 #define F_KEY 102
 #define SPACE_KEY 32
-
-/* The maximum number of times a tetrimino can
-"adjust" itself into a valid position after an invalid rotation */
-//#define ADJUST_LIMIT 3
 
 /* Struct to represent a coordinate and its associated value */
 typedef struct 
@@ -251,14 +253,20 @@ typedef struct
 	int *other_garbage_counter;
 } THREAD_ARGS;
 
-/* Function prototypes */
+/* Main prototypes */
 void reset_global_vars();
 void print_help_message();
 void print_howtoplay_message();
+
+/* Thread prototypes */
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
 void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
 				int lock_num, int *garbage_counter, int *other_garbage_counter,
 				COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void *play_ntetris_single (void *difficulty);
+void *play_ntetris_versus(void *unused);
+void *periodic_thread(void *arguments);
+void *lock_in_thread(void *arguments);
 
 /* GUI prototypes */
 void ntetris_init ();
@@ -274,9 +282,17 @@ void update_level(WINDOW *level_win);
 void update_score(WINDOW *score_win);
 void update_garbage_line_counter(WINDOW *garbage_win, int *garbage_counter);
 void print_controls();
+void print_howtoplay();
 void print_title_small(WINDOW *win);
 
 /* Game prototypes*/
+int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
+int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS]);
+void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
+int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
+int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
+int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
+					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void adjust_bits (COORDINATE_PAIR bits[NUM_BITS], int direction);
@@ -296,19 +312,6 @@ void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
 					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
 					int *current_y_checkpoint, int *recent_hold, int *currently_held_tetrimino_id);
 int get_rand_num (int lower, int upper);
-void *play_ntetris_single (void *difficulty);
-void *play_ntetris_versus(void *unused);
-//void *get_user_input_thread (void *arguments);
-//void *get_user_input_versus_thread (void *arguments);
-void *periodic_thread(void *arguments);
-void *lock_in_thread(void *arguments);
-int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
-int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS]);
-void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
-int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
-int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
-int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int line_complete (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);

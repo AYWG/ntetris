@@ -66,8 +66,8 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			printf("Not a valid option.\n");
-			printf("Usage: ntetris [--about] [--help] [--stats]\n");
+			printf("Invalid option.\n");
+			printf("Usage: ntetris [--about] [--help] [--howtoplay] [--stats]\n");
 			printf("Example: ntetris --help\n");
 			exit(1);
 		}
@@ -96,6 +96,7 @@ int main(int argc, char **argv)
 									"Single Player",
 									"Versus (2 Players)",
 									"Controls", 
+									"How To Play",
 							 		"Exit"
 					   		 	 };				   		 	 
 
@@ -203,6 +204,14 @@ int main(int argc, char **argv)
 			clear();
 			refresh();
 			print_controls();
+			getch();
+			continue;
+		}
+		else if (choice == HOWTOPLAY)
+		{
+			clear();
+			refresh();
+			print_howtoplay();
 			getch();
 			continue;
 		}
