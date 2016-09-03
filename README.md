@@ -3,7 +3,7 @@ A tetris clone that uses the [ncurses](https://en.wikipedia.org/wiki/Ncurses) AP
 
 Supported OS: Linux
 
-### Installation
+## Installation
 
 1. Install ncurses. For example, using `apt-get`:
 
@@ -19,7 +19,7 @@ Supported OS: Linux
 
 5. Enjoy!
 
-### Usage and Instructions
+## Usage and Instructions
 
 #### Usage
 
@@ -51,23 +51,23 @@ The following options are available:
 
 #### Controls
 
-                                      Single/Player 1      Player 2
+                                          Single/Player 1      Player 2
 
-Move tetrimino left                   Left arrow key       A
+    Move tetrimino left                   Left arrow key       A
 
-Move tetrimino right                  Right arrow key      D
+    Move tetrimino right                  Right arrow key      D
 
-Move tetrimino down                   Down arrow key       S
+    Move tetrimino down                   Down arrow key       S
 
-Drop tetrimino                        Up arrow key         W      
+    Drop tetrimino                        Up arrow key         W      
 
-Rotate tetrimino clockwise            P                    G     
+    Rotate tetrimino clockwise            P                    G     
 
-Rotate tetrimino counterclockwise     O                    F
+    Rotate tetrimino counterclockwise     O                    F
 
-Hold tetrimino                        Enter                Space                           
+    Hold tetrimino                        Enter                Space                           
 
-### Screenshots
+## Screenshots
 
 <img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_menu.jpg" alt="ntetris menu" width="420" height="300" >
 <img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_single.jpg" alt="ntetris single" width="420" height="300" >
