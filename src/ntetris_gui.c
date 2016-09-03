@@ -298,6 +298,8 @@ void print_controls()
 	attroff(A_BOLD);
 }
 
+/* Displays instructions for how to play the game */
+
 void print_howtoplay()
 {
 	attron(A_BOLD | COLOR_PAIR(TITLE_COLOR_PAIR));

@@ -1,11 +1,5 @@
 /*
-             ______     __       _     
-   ____     /_  __/__  / /______(_)____
-  / __ \     / / / _ \/ __/ ___/ / ___/
- / / / /    / / /  __/ /_/ /  / (__  ) 
-/_/ /_/    /_/  \___/\__/_/  /_/____/  
-
-
+Main file for ntetris
 */
 
 #include "ntetris.h"
@@ -250,8 +244,7 @@ void reset_global_vars()
 void print_help_message()
 {
 	printf("ntetris: a tetris clone that uses the ncurses API.\n");
-	printf("Usage: ntetris [--option]\t(omit square brackets)\n");
-	printf("Note - options are not required\n\n");
+	printf("Usage: ntetris [--option]\n\n");
 	printf("The following options are available:\n\n");
 	printf("about\t\tDisplays version and developer information\n");
 	printf("help\t\tDisplays this help message\n");
@@ -262,21 +255,21 @@ void print_help_message()
 
 void print_howtoplay_message()
 {
-	printf("\n-----------------HOW-TO-PLAY--------------------------\n\n");
+	printf("\n-----------------HOW-TO-PLAY (SINGLE)--------------------------\n\n");
 	printf(" - Control the falling tetriminos by moving or rotating them inside the well.\n");
 	printf(" - Complete horizontal lines to clear them.\n");
 	printf(" - The more lines you clear at once, the more points you earn!\n");
-	printf(" - The game ends when the tetriminos stack up to the top of the well. \n\n");
+	printf(" - The game ends when the tetriminos stack up to the top of the well.\n\n");
 
 	printf("-----------------HOW-TO-PLAY (VERSUS)-----------------\n\n");
 	printf(" - Control the falling tetriminos by moving or rotating them inside your well.\n");
 	printf(" - Complete horizontal lines to clear them.\n");
 	printf(" - The more lines you clear at once, the more garbage lines you can add to your\n");
 	printf("   opponent's well, and the more garbage lines you can take away from your well!\n");
-	printf(" - The first player whose tetriminos stack up to the top of their well loses. \n\n");
+	printf(" - The first player whose tetriminos stack up to the top of their well loses.\n\n");
 
 	printf("-----------------CONTROLS-----------------------------\n\n");
-	printf("                                      Single/Player 1      Player2\n\n");
+	printf("                                      Single/Player 1      Player 2\n\n");
 	printf("Move tetrimino left                   Left arrow key       A\n");
 	printf("Move tetrimino right                  Right arrow key      D\n");
 	printf("Move tetrimino down                   Down arrow key       S\n");
