@@ -1,5 +1,5 @@
 # ntetris
-A tetris clone that uses the [ncurses](https://en.wikipedia.org/wiki/Ncurses) API.
+A Tetris clone that uses the [ncurses](https://en.wikipedia.org/wiki/Ncurses) API.
 
 Supported OS: Linux
 
