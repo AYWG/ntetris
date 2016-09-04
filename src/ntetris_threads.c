@@ -353,6 +353,16 @@ void *play_ntetris_versus (void *unused)
 	mvwprintw(stdscr, HOLD_INIT_Y_P2 + 10, HOLD_INIT_X_P2, "Player 2");
 	mvwprintw(stdscr, HOLD_INIT_Y_P1 + 10, HOLD_INIT_X_P1, "Player 1"); 
 
+	mvwprintw(stdscr, 1, 36, "Press Q");
+	mvwprintw(stdscr, 2, 36, "to quit");
+	mvwaddch(stdscr, 10, 40, 'N' | A_BOLD | COLOR_PAIR(I_COLOR_PAIR));
+	mvwaddch(stdscr, 11, 40,'T' | A_BOLD | COLOR_PAIR(J_COLOR_PAIR));
+	mvwaddch(stdscr, 12, 40,'E' | A_BOLD | COLOR_PAIR(L_COLOR_PAIR));
+	mvwaddch(stdscr, 13, 40,'T' | A_BOLD | COLOR_PAIR(O_COLOR_PAIR));
+	mvwaddch(stdscr, 14, 40,'R' | A_BOLD | COLOR_PAIR(S_COLOR_PAIR));
+	mvwaddch(stdscr, 15, 40,'I' | A_BOLD | COLOR_PAIR(T_COLOR_PAIR));
+	mvwaddch(stdscr, 16, 40,'S' | A_BOLD | COLOR_PAIR(Z_COLOR_PAIR));
+	
 	wattron(garbage_win_p1, A_BOLD);
 	wattron(garbage_win_p2, A_BOLD);
 	mvwprintw(garbage_win_p1, 0, 0, "Incoming");
