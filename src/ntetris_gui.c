@@ -67,9 +67,10 @@ void print_title(WINDOW *win, char *title[], int title_size)
 {
 	int num_cols = getmaxx(win);
 
-	int j = 2;
+	int i, j = 2;
 	attron(COLOR_PAIR(TITLE_COLOR_PAIR)); // title is green
-	for (int i = 0; i < title_size; i++)
+
+	for (i = 0; i < title_size; i++)
 	{
 		mvprintw(j, (num_cols - strlen(title[i])) / 2, "%s", title[i]);
 		j++;
