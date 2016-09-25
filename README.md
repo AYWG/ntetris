@@ -73,4 +73,8 @@ The following options are available:
 <img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_single.jpg" alt="ntetris single" width="420" height="300" >
 <img src="https://github.com/AYWG/ntetris/blob/master/img/ntetris_versus.jpg" alt="ntetris versus" width="420" height="300">
 
+## Current Issues
+
+Bash on Ubuntu on Windows : not all colours display correctly (one color becomes black, making the corresponding tetrimino invisible).
+
 
