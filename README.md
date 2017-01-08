@@ -7,11 +7,15 @@ Supported OS: Linux
 
 1. Install ncurses. For example, using `apt-get`:
 
-`sudo apt-get install libncurses5-dev`
+  ```
+  sudo apt-get install libncurses5-dev
+  ```
 
 2. Clone this repository. For example:
 
-`git clone https://github.com/AYWG/ntetris.git`
+  ```
+  git clone https://github.com/AYWG/ntetris.git
+  ```
 
 3. Change into the *src* directory, type `make`, and press Enter.
 
