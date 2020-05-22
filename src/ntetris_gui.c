@@ -2,7 +2,7 @@
 
 #include "ntetris.h"		
 
-int hold_y[NUM_TETRIMINOS][NUM_BITS] = {{2, 2, 2, 2},
+static int hold_y[NUM_TETRIMINOS][NUM_BITS] = {{2, 2, 2, 2},
 										{2, 2, 2, 3},
 										{2, 2, 2, 3},
 										{2, 2, 3, 3},
@@ -11,7 +11,7 @@ int hold_y[NUM_TETRIMINOS][NUM_BITS] = {{2, 2, 2, 2},
 										{2, 2, 3, 3}
 										};
 
-int hold_x[NUM_TETRIMINOS][NUM_BITS] = {{2, 3, 4, 5},
+static int hold_x[NUM_TETRIMINOS][NUM_BITS] = {{2, 3, 4, 5},
 										{2, 3, 4, 4},
 										{2, 3, 4, 2},
 										{3, 4, 3, 4},
@@ -58,6 +58,64 @@ void ntetris_init()
 	init_pair(S_COLOR_PAIR, COLOR_GREEN, COLOR_BLACK);
 	init_pair(T_COLOR_PAIR, COLOR_MAGENTA, COLOR_BLACK);
 	init_pair(Z_COLOR_PAIR, COLOR_RED, COLOR_BLACK);
+}
+
+/* Initializes main GUI that players see when playing single or versus mode. Assumes that game state has
+already been initialized. */
+void gui_init(GUI *gui, GameState *state)
+{
+	gui->state = state;
+	gui->refresh_delay = 1000;
+
+	// TODO: init well max y and well max x in state
+	if (state->mode == SINGLE) {
+		// Init windows
+		
+		gui->win[PLAYER_1][WELL_ID] = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
+		gui->win[PLAYER_1][COVER_ID] = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);	
+		gui->win[PLAYER_1][HOLD_ID] = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
+		gui->win[PLAYER_1][LINE_COUNT_ID] = newwin(LINE_COUNT_HEIGHT, LINE_COUNT_WIDTH, LINE_COUNT_INIT_Y, LINE_COUNT_INIT_X);
+		gui->win[PLAYER_1][SCORE_ID] = newwin(SCORE_HEIGHT, SCORE_WIDTH, SCORE_INIT_Y, SCORE_INIT_X);
+		gui->win[PLAYER_1][LEVEL_ID] = newwin(LEVEL_HEIGHT, LEVEL_WIDTH, LEVEL_INIT_Y, LEVEL_INIT_X);
+		gui->win[PLAYER_1][TITLE_SMALL_ID] = newwin(TITLE_SMALL_HEIGHT, TITLE_SMALL_WIDTH, TITLE_SMALL_INIT_SINGLE_Y, TITLE_SMALL_INIT_SINGLE_X);
+
+		/* Draw borders for some windows */
+		box(gui->win[PLAYER_1][WELL_ID], 0, 0);
+		wborder(gui->win[PLAYER_1][COVER_ID], ' ', ' ', ' ', 0, ' ', ' ', ACS_ULCORNER, ACS_URCORNER);
+		box(gui->win[PLAYER_1][HOLD_ID], 0, 0);
+
+		/* Print some bold headings */
+		wattron(gui->win[PLAYER_1][LEVEL_ID], A_BOLD);
+		wattron(gui->win[PLAYER_1][SCORE_ID], A_BOLD);
+		wattron(gui->win[PLAYER_1][LINE_COUNT_ID], A_BOLD);
+		mvwprintw(gui->win[PLAYER_1][LEVEL_ID], 0, 0, "Level");
+		mvwprintw(gui->win[PLAYER_1][SCORE_ID], 1, 0, "Score");
+		mvwprintw(gui->win[PLAYER_1][LINE_COUNT_ID], 0, 0, "Lines Cleared");
+		wattroff(gui->win[PLAYER_1][LEVEL_ID], A_BOLD);
+		wattroff(gui->win[PLAYER_1][SCORE_ID], A_BOLD);
+		wattroff(gui->win[PLAYER_1][LINE_COUNT_ID], A_BOLD);
+
+		update_line_count(gui, PLAYER_1);
+		update_score(gui, PLAYER_1);
+		update_level(gui, PLAYER_1);
+		print_title_small(gui);
+
+		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][COVER_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][HOLD_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][LINE_COUNT_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][SCORE_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][LEVEL_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][TITLE_SMALL_ID]);
+		doupdate();	
+	}
+
+	
+}
+
+void gui_cleanup(GUI *gui)
+{
+
 }
 
 /* Displays the title of the game at the top of the screen 
@@ -167,13 +225,13 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino,
 
 	copy_bits(tetrimino->bits, shadow_bits);
 
-	while (valid_position(win, tetrimino, shadow_bits, well_contents)) 
-	{
-		for (i = 0; i < NUM_BITS; i++)
-			shadow_bits[i].y++;
+	// while (valid_position(win, tetrimino, shadow_bits, well_contents)) 
+	// {
+	// 	for (i = 0; i < NUM_BITS; i++)
+	// 		shadow_bits[i].y++;
 
-		locked_in = 0;
-	}
+	// 	locked_in = 0;
+	// }
 	
 	for (i = 0; i < NUM_BITS; i++)
 	{
@@ -215,16 +273,13 @@ void clear_well(WINDOW *win)
 	wrefresh(win);
 }
 
-/* Updates the hold window by displaying the tetrimino specified by
-tetrimino_id. Returns the ID of the tetrimino that was being shown 
-in the hold window prior to this function being called. If no prior
-tetrimino was being shown, then return INVALID_ID */
+/* Updates the player's hold window by displaying the tetrimino specified by
+tetrimino_id. */
 
-int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id)
+void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id)
 {
+	WINDOW *win = gui->win[player_id][HOLD_ID];
 	int i, j;
-	int old_id = *currently_held_tetrimino_id;
-	*currently_held_tetrimino_id = tetrimino_id;
 
 	/* First, clear the window contents */
 	for (i = HOLD_T_BNDRY; i <= HOLD_B_BNDRY; i++)
@@ -236,45 +291,47 @@ int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id)
 		mvwaddch(win, hold_y[tetrimino_id][i], hold_x[tetrimino_id][i], 'o' | COLOR_PAIR(tetrimino_id + 3));
 
 	wrefresh(win);
-
-	return old_id;
 }
 
 /* Updates the UI with the current number of lines cleared */
 
-void update_line_count(WINDOW *line_count_win)
+void update_line_count(GUI *gui, EPlayer player_id)
 {
+	WINDOW *line_count_win = gui->win[player_id][LINE_COUNT_ID];
 	wmove(line_count_win, 2, 0);
 	wclrtoeol(line_count_win);
-	mvwprintw(line_count_win, 2, 0, "%05d", LINE_COUNT);
+	mvwprintw(line_count_win, 2, 0, "%05d", gui->state->line_count);
 	wrefresh(line_count_win);
 }
 
 /* Updates the UI with the current level */
 
-void update_level(WINDOW *level_win)
+void update_level(GUI *gui, EPlayer player_id)
 {
+	WINDOW *level_win = gui->win[player_id][LEVEL_ID];
 	wmove(level_win, 2, 0);
 	wclrtoeol(level_win);
-	mvwprintw(level_win, 2, 0, "%03d", LINE_COUNT / 10);
+	mvwprintw(level_win, 2, 0, "%03d", gui->state->line_count / 10);
 	wrefresh(level_win);
 }
 
 /* Updates the UI with the current score */
 
-void update_score(WINDOW *score_win)
+void update_score(GUI *gui, EPlayer player_id)
 {
+	WINDOW *score_win = gui->win[player_id][SCORE_ID];
 	wmove(score_win, 2, 0);
 	wclrtoeol(score_win);
-	mvwprintw(score_win, 2, 0, "%010d", SCORE);
+	mvwprintw(score_win, 2, 0, "%010d", gui->state->score);
 	wrefresh(score_win);
 }
 
-void update_garbage_line_counter(WINDOW *garbage_win, int *garbage_counter)
+void update_garbage_line_counter(GUI *gui, EPlayer player_id)
 {
+	WINDOW *garbage_win = gui->win[player_id][GARBAGE_ID];
 	wmove(garbage_win, 4, 0);
 	wclrtoeol(garbage_win);
-	mvwprintw(garbage_win, 4, 0, "%d", *garbage_counter);
+	mvwprintw(garbage_win, 4, 0, "%d", gui->state->garbage_counter[player_id]);
 	wrefresh(garbage_win);
 }
 
@@ -330,8 +387,9 @@ void print_howtoplay()
 
 /* Prints a small version of the title in the UI */
 
-void print_title_small(WINDOW *win)
+void print_title_small(GUI *gui)
 {
+	WINDOW *win = gui->win[PLAYER_1][TITLE_SMALL_ID];
 	mvwaddch(win, 0, 0, 'N' | A_BOLD | COLOR_PAIR(I_COLOR_PAIR));
 	mvwaddch(win, 1, 0,'T' | A_BOLD | COLOR_PAIR(J_COLOR_PAIR));
 	mvwaddch(win, 2, 0,'E' | A_BOLD | COLOR_PAIR(L_COLOR_PAIR));
