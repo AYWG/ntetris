@@ -92,6 +92,7 @@ void *run_gui (void *ui)
 		update_line_count(gui, PLAYER_1);
 		update_level(gui, PLAYER_1);
 		update_score(gui, PLAYER_1);
+		doupdate();
 
 		/*
 		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);

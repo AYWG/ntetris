@@ -112,10 +112,10 @@ int main(int argc, char **argv)
 			                                                               
 			{
 				game_state_init(&state, difficulty, SINGLE);
-				gui_init(&gui, &state);
-
 				clear();
 				refresh();
+				gui_init(&gui, &state);
+				
 				if (pthread_create(&gui_t, NULL, &run_gui, &gui))
 					printf("Could not run GUI\n");
 

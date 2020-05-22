@@ -66,8 +66,8 @@ void gui_init(GUI *gui, GameState *state)
 {
 	gui->state = state;
 	gui->refresh_delay = 1000;
-
 	// TODO: init well max y and well max x in state
+	
 	if (state->mode == SINGLE) {
 		// Init windows
 		gui->win[PLAYER_1][WELL_ID] = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
@@ -111,6 +111,7 @@ void gui_init(GUI *gui, GameState *state)
 		gui->state->well_max_x[PLAYER_1] = getmaxx(gui->win[PLAYER_1][WELL_ID]);
 		gui->state->well_max_y[PLAYER_1] = getmaxy(gui->win[PLAYER_1][WELL_ID]);
 	}
+	
 }
 
 void gui_cleanup(GUI *gui)
@@ -279,7 +280,7 @@ void update_well(GUI *gui, EPlayer player_id)
 			if ((gui->state->well_contents[player_id][i][j].value & A_CHARTEXT) == 'o' && gui->state->well_contents[player_id][i][j].y >= COVER_B_BNDRY)
 				mvwaddch(win, gui->state->well_contents[player_id][i][j].y, gui->state->well_contents[player_id][i][j].x, gui->state->well_contents[player_id][i][j].value);
 				
-	wrefresh(win);
+	wnoutrefresh(win);
 }
 
 /* Updates the player's hold window by displaying the tetrimino specified by
@@ -299,7 +300,7 @@ void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id)
 		/* Offset of 3 between ID number and COLOUR_PAIR number */
 		mvwaddch(win, hold_y[tetrimino_id][i], hold_x[tetrimino_id][i], 'o' | COLOR_PAIR(tetrimino_id + 3));
 
-	wrefresh(win);
+	wnoutrefresh(win);
 }
 
 /* Updates the UI with the current number of lines cleared */
@@ -310,7 +311,7 @@ void update_line_count(GUI *gui, EPlayer player_id)
 	wmove(line_count_win, 2, 0);
 	wclrtoeol(line_count_win);
 	mvwprintw(line_count_win, 2, 0, "%05d", gui->state->line_count);
-	wrefresh(line_count_win);
+	wnoutrefresh(line_count_win);
 }
 
 /* Updates the UI with the current level */
@@ -321,7 +322,7 @@ void update_level(GUI *gui, EPlayer player_id)
 	wmove(level_win, 2, 0);
 	wclrtoeol(level_win);
 	mvwprintw(level_win, 2, 0, "%03d", gui->state->line_count / 10);
-	wrefresh(level_win);
+	wnoutrefresh(level_win);
 }
 
 /* Updates the UI with the current score */
@@ -332,7 +333,7 @@ void update_score(GUI *gui, EPlayer player_id)
 	wmove(score_win, 2, 0);
 	wclrtoeol(score_win);
 	mvwprintw(score_win, 2, 0, "%010d", gui->state->score);
-	wrefresh(score_win);
+	wnoutrefresh(score_win);
 }
 
 void update_garbage_line_counter(GUI *gui, EPlayer player_id)
@@ -341,7 +342,7 @@ void update_garbage_line_counter(GUI *gui, EPlayer player_id)
 	wmove(garbage_win, 4, 0);
 	wclrtoeol(garbage_win);
 	mvwprintw(garbage_win, 4, 0, "%d", gui->state->garbage_counter[player_id]);
-	wrefresh(garbage_win);
+	wnoutrefresh(garbage_win);
 }
 
 /* Display the controls for playing the game */
@@ -408,4 +409,5 @@ void print_title_small(GUI *gui)
 	mvwaddch(win, 6, 0,'S' | A_BOLD | COLOR_PAIR(Z_COLOR_PAIR));
 
 	mvwprintw(win, 9, 0, "Press Q to quit");
+	wnoutrefresh(win);
 }
