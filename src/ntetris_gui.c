@@ -65,7 +65,7 @@ already been initialized. */
 void gui_init(GUI *gui, GameState *state)
 {
 	gui->state = state;
-	gui->refresh_delay = 1000;
+	gui->refresh_delay = 25000;
 	// TODO: init well max y and well max x in state
 	
 	if (state->mode == SINGLE) {
@@ -231,8 +231,6 @@ static void clear_well(GUI *gui, EPlayer player_id)
 	for (i = WELL_T_BNDRY + 2; i <= WELL_B_BNDRY; i++) 
 		for (j = WELL_L_BNDRY; j <= WELL_R_BNDRY; j++)
 			mvwaddch(well_win, i, j, ' ');
-
-	wrefresh(well_win);
 }
 
 /* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates

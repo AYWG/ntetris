@@ -47,6 +47,8 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 		state->game_delay = INTERMEDIATE_INIT_DELAY;
 	}
 
+	state->currently_held_tetrimino[PLAYER_1] = INVALID_ID;
+
 	// Init well contents
 	int i, j;
 	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)

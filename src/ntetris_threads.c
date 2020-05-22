@@ -93,24 +93,6 @@ void *run_gui (void *ui)
 		update_level(gui, PLAYER_1);
 		update_score(gui, PLAYER_1);
 		doupdate();
-
-		/*
-		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);
-		wnoutrefresh(gui->win[PLAYER_1][HOLD_ID]);
-		wnoutrefresh(gui->win[PLAYER_1][LINE_COUNT_ID]);
-		wnoutrefresh(gui->win[PLAYER_1][SCORE_ID]);
-		wnoutrefresh(gui->win[PLAYER_1][LEVEL_ID]);
-		*/
-
-		/*
-		update_well
-		update_hold
-		update_line_count
-		update_level
-		update_score
-		update_garbage_line_counter
-		*/
-
 	}
 }
 
@@ -197,7 +179,6 @@ void *play_ntetris_single (void *game_state)
 	GameState *state = (GameState *) game_state;
 
 	init_tetrimino(state, PLAYER_1, get_rand_num(0, 6));
-	// draw_well(well_win, tetrimino, well_contents);
 
 	pthread_t periodic_t;
 	pthread_t lock_in_t;
@@ -210,7 +191,8 @@ void *play_ntetris_single (void *game_state)
 	int ch;
 
 	/* Cause getch() calls to wait for user input for 0.1 s (rather than wait indefinitely). 
-	If no input is received, getch() returns ERR*/
+	If no input is received, getch() returns ERR. This is done to ensure that the game ends
+	promptly when the game over flag is set (instead of waiting for user input). */
 	halfdelay(1);
 
 	while ((ch = getch()) != QUIT_KEY)
@@ -236,12 +218,6 @@ void *play_ntetris_single (void *game_state)
 				case ENTER_KEY:
 					hold_tetrimino(state, PLAYER_1); break;
 			}
-			
-			// draw_well(well_win, tetrimino, well_contents);
-			// update_line_count(line_count_win);
-			// update_score(score_win);
-			// update_level(level_win);
-			
 			/* Done, so release tetrimino lock */
 			pthread_mutex_unlock(&(tetrimino_lock[PLAYER_1]));
 
