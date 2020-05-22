@@ -170,7 +170,7 @@ static int out_of_boundaries (GameState *state, EPlayer player_id, COORDINATE_PA
 /* Determines if new_bits is a valid array of bits for the tetrimino within
 the given player's well*/
 
-static int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS])
+int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS])
 {
 	int row, col;
 	int i;

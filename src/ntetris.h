@@ -307,11 +307,12 @@ void *lock_in_thread(void *arguments);
 
 /* GUI prototypes */
 void ntetris_init ();
+void gui_init(GUI *gui, GameState *state);
+void gui_cleanup(GUI *gui);
 void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
-void draw_well (WINDOW *win, TETRIMINO *tetrimino, 
-			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void draw_well(GUI *gui, EPlayer player_id);
 void clear_well (WINDOW *win);
 void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id);
 void update_line_count(GUI *gui, EPlayer player_id);
@@ -330,8 +331,7 @@ void reset_game_state(GameState *state);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
 // int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
-// int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
-					// COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS]);
 void move_tetrimino (GameState *state, EPlayer player_id, EDirection direction);
 // void adjust_bits (COORDINATE_PAIR bits[NUM_BITS], int direction);
 void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM_BITS],

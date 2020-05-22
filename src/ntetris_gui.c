@@ -70,7 +70,6 @@ void gui_init(GUI *gui, GameState *state)
 	// TODO: init well max y and well max x in state
 	if (state->mode == SINGLE) {
 		// Init windows
-		
 		gui->win[PLAYER_1][WELL_ID] = newwin(WELL_HEIGHT, WELL_WIDTH, WELL_INIT_Y, WELL_INIT_X);
 		gui->win[PLAYER_1][COVER_ID] = newwin(COVER_HEIGHT, COVER_WIDTH, COVER_INIT_Y, COVER_INIT_X);	
 		gui->win[PLAYER_1][HOLD_ID] = newwin(HOLD_HEIGHT, HOLD_WIDTH, HOLD_INIT_Y, HOLD_INIT_X);
@@ -108,14 +107,22 @@ void gui_init(GUI *gui, GameState *state)
 		wnoutrefresh(gui->win[PLAYER_1][LEVEL_ID]);
 		wnoutrefresh(gui->win[PLAYER_1][TITLE_SMALL_ID]);
 		doupdate();	
-	}
 
-	
+		gui->state->well_max_x[PLAYER_1] = getmaxx(gui->win[PLAYER_1][WELL_ID]);
+		gui->state->well_max_y[PLAYER_1] = getmaxy(gui->win[PLAYER_1][WELL_ID]);
+	}
 }
 
 void gui_cleanup(GUI *gui)
 {
-
+	// Cleanup dependent on single or versus
+	delwin(gui->win[PLAYER_1][WELL_ID]);
+	delwin(gui->win[PLAYER_1][COVER_ID]);
+	delwin(gui->win[PLAYER_1][HOLD_ID]);
+	delwin(gui->win[PLAYER_1][LINE_COUNT_ID]);
+	delwin(gui->win[PLAYER_1][SCORE_ID]);
+	delwin(gui->win[PLAYER_1][LEVEL_ID]);
+	delwin(gui->win[PLAYER_1][TITLE_SMALL_ID]);
 }
 
 /* Displays the title of the game at the top of the screen 
@@ -215,9 +222,10 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 /* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates
 where it will land in the well */
 
-void draw_well(WINDOW *win, TETRIMINO *tetrimino, 
-			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
+void draw_well(GUI *gui, EPlayer player_id)
 {
+	WINDOW *win = gui->win[player_id][WELL_ID];
+	TETRIMINO *tetrimino = &gui->state->tetrimino[player_id];
 	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
 	int locked_in = 1;
@@ -225,13 +233,13 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino,
 
 	copy_bits(tetrimino->bits, shadow_bits);
 
-	// while (valid_position(win, tetrimino, shadow_bits, well_contents)) 
-	// {
-	// 	for (i = 0; i < NUM_BITS; i++)
-	// 		shadow_bits[i].y++;
+	while (valid_position(gui->state, player_id, shadow_bits)) 
+	{
+		for (i = 0; i < NUM_BITS; i++)
+			shadow_bits[i].y++;
 
-	// 	locked_in = 0;
-	// }
+		locked_in = 0;
+	}
 	
 	for (i = 0; i < NUM_BITS; i++)
 	{
@@ -253,8 +261,8 @@ void draw_well(WINDOW *win, TETRIMINO *tetrimino,
 		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 			/* Only draw well contents if their corresponding character is an 'o' and they are located
 			outside the cover window */
-			if ((well_contents[i][j].value & A_CHARTEXT) == 'o' && well_contents[i][j].y >= COVER_B_BNDRY)
-				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
+			if ((gui->state->well_contents[player_id][i][j].value & A_CHARTEXT) == 'o' && gui->state->well_contents[player_id][i][j].y >= COVER_B_BNDRY)
+				mvwaddch(win, gui->state->well_contents[player_id][i][j].y, gui->state->well_contents[player_id][i][j].x, gui->state->well_contents[player_id][i][j].value);
 				
 	wrefresh(win);
 }
