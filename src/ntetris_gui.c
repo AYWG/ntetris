@@ -219,17 +219,32 @@ int get_menu_choice (char *menu_choices[], int num_menu_choices)
 	return choice;
 }
 
+/* "Erases" the contents of the well that show up in the terminal
+(below the cover window) */
+
+static void clear_well(GUI *gui, EPlayer player_id)
+{
+	WINDOW *well_win = gui->win[player_id][WELL_ID];
+	int i, j;
+
+	for (i = WELL_T_BNDRY + 2; i <= WELL_B_BNDRY; i++) 
+		for (j = WELL_L_BNDRY; j <= WELL_R_BNDRY; j++)
+			mvwaddch(well_win, i, j, ' ');
+
+	wrefresh(well_win);
+}
+
 /* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates
 where it will land in the well */
 
-void draw_well(GUI *gui, EPlayer player_id)
+void update_well(GUI *gui, EPlayer player_id)
 {
 	WINDOW *win = gui->win[player_id][WELL_ID];
 	TETRIMINO *tetrimino = &gui->state->tetrimino[player_id];
 	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
 	int locked_in = 1;
-	clear_well(win); // erase everything before drawing
+	clear_well(gui, player_id); // erase everything before drawing
 
 	copy_bits(tetrimino->bits, shadow_bits);
 
@@ -264,20 +279,6 @@ void draw_well(GUI *gui, EPlayer player_id)
 			if ((gui->state->well_contents[player_id][i][j].value & A_CHARTEXT) == 'o' && gui->state->well_contents[player_id][i][j].y >= COVER_B_BNDRY)
 				mvwaddch(win, gui->state->well_contents[player_id][i][j].y, gui->state->well_contents[player_id][i][j].x, gui->state->well_contents[player_id][i][j].value);
 				
-	wrefresh(win);
-}
-
-/* "Erases" the contents of the well that show up in the terminal
-(below the cover window) */
-
-void clear_well(WINDOW *win)
-{
-	int i, j;
-
-	for (i = WELL_T_BNDRY + 2; i <= WELL_B_BNDRY; i++) 
-		for (j = WELL_L_BNDRY; j <= WELL_R_BNDRY; j++)
-			mvwaddch(win, i, j, ' ');
-
 	wrefresh(win);
 }
 

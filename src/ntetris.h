@@ -304,6 +304,7 @@ void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
+void *run_gui(void *ui);
 
 /* GUI prototypes */
 void ntetris_init ();
@@ -312,8 +313,7 @@ void gui_cleanup(GUI *gui);
 void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
-void draw_well(GUI *gui, EPlayer player_id);
-void clear_well (WINDOW *win);
+void update_well(GUI *gui, EPlayer player_id);
 void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id);
 void update_line_count(GUI *gui, EPlayer player_id);
 void update_level(GUI *gui, EPlayer player_id);

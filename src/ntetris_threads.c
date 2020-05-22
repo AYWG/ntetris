@@ -79,13 +79,30 @@ by num_complete_lines */
 
 
 /* Thread responsible updating the GUI */
-void *gui_thread (void *arguments)
+void *run_gui (void *ui)
 {
+	GUI *gui = (GUI *) ui;
+
 	while(TRUE)
 	{
+		usleep(gui->refresh_delay);
+
+		update_well(gui, PLAYER_1);
+		update_hold(gui, PLAYER_1, gui->state->currently_held_tetrimino[PLAYER_1]);
+		update_line_count(gui, PLAYER_1);
+		update_level(gui, PLAYER_1);
+		update_score(gui, PLAYER_1);
+
 		/*
-		clear_well
-		draw_Well
+		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][HOLD_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][LINE_COUNT_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][SCORE_ID]);
+		wnoutrefresh(gui->win[PLAYER_1][LEVEL_ID]);
+		*/
+
+		/*
+		update_well
 		update_hold
 		update_line_count
 		update_level

@@ -57,6 +57,7 @@ int main(int argc, char **argv)
 	GameState state;
 	GUI gui;
 	pthread_t game_t;
+	pthread_t gui_t;
 
 	ntetris_init();
 	
@@ -115,12 +116,16 @@ int main(int argc, char **argv)
 
 				clear();
 				refresh();
+				if (pthread_create(&gui_t, NULL, &run_gui, &gui))
+					printf("Could not run GUI\n");
+
 				if (pthread_create(&game_t, NULL, &play_ntetris_single, &state))
 					printf("Could not run main phase of game\n");	
 
 				if (pthread_join(game_t, NULL))
 					printf("Could not properly terminate main phase of game\n");
 				
+				pthread_cancel(gui_t);
 				gui_cleanup(&gui);
 
 				if(state.game_over_flag)
