@@ -67,6 +67,11 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 			}
 		}
 	}
+
+	if (mode == VERSUS) {
+		state->garbage_counter[PLAYER_1] = 0;
+		state->garbage_counter[PLAYER_2] = 0;
+	}
 }
 
 void reset_game_state(GameState *state)
