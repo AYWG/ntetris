@@ -48,6 +48,7 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 	}
 
 	state->currently_held_tetrimino[PLAYER_1] = INVALID_ID;
+	state->currently_held_tetrimino[PLAYER_2] = INVALID_ID;
 
 	// Init well contents
 	int i, j;
@@ -70,7 +71,6 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 
 void reset_game_state(GameState *state)
 {
-	// TODO: add more resets
 	state->currently_held_tetrimino[PLAYER_1] = INVALID_ID;
 	state->currently_held_tetrimino[PLAYER_2] = INVALID_ID;
 	state->difficulty = INVALID_DIFFICULTY;
@@ -292,8 +292,6 @@ int drop_tetrimino (GameState *state, EPlayer player_id)
 		state->score += 2 * distance_traveled;
 
 	init_tetrimino(state, player_id, get_rand_num(0, 6));
-	// TODO: remove this
-	// draw_well(win, tetrimino, well_contents);
 	return num_complete_lines;
 }
 
@@ -526,8 +524,6 @@ int update_lines(GameState *state, EPlayer player_id)
 		} 
 	}
 
-	// TODO: remove this
-	// draw_well(win, tetrimino, well_contents);
 	if (complete)
 		usleep(state->game_delay);  // pause briefly so player can see which lines were cleared
 

@@ -170,14 +170,27 @@ void gui_init(GUI *gui, GameState *state)
 
 void gui_cleanup(GUI *gui)
 {
+	int mode = gui->state->mode;
 	// Cleanup dependent on single or versus
 	delwin(gui->win[PLAYER_1][WELL_ID]);
 	delwin(gui->win[PLAYER_1][COVER_ID]);
 	delwin(gui->win[PLAYER_1][HOLD_ID]);
-	delwin(gui->win[PLAYER_1][LINE_COUNT_ID]);
-	delwin(gui->win[PLAYER_1][SCORE_ID]);
-	delwin(gui->win[PLAYER_1][LEVEL_ID]);
-	delwin(gui->win[PLAYER_1][TITLE_SMALL_ID]);
+
+	if (mode == SINGLE) {
+		delwin(gui->win[PLAYER_1][LINE_COUNT_ID]);
+		delwin(gui->win[PLAYER_1][SCORE_ID]);
+		delwin(gui->win[PLAYER_1][LEVEL_ID]);
+		delwin(gui->win[PLAYER_1][TITLE_SMALL_ID]);
+	}
+	
+	if (mode == VERSUS) {
+		delwin(gui->win[PLAYER_1][GARBAGE_ID]);
+
+		delwin(gui->win[PLAYER_2][WELL_ID]);
+		delwin(gui->win[PLAYER_2][COVER_ID]);
+		delwin(gui->win[PLAYER_2][HOLD_ID]);
+		delwin(gui->win[PLAYER_2][GARBAGE_ID]);
+	}
 }
 
 /* Displays the title of the game at the top of the screen 

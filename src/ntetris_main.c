@@ -154,15 +154,21 @@ int main(int argc, char **argv)
 		}
 		else if (choice == VERSUS)
 		{
-			state.mode = VERSUS;
-			state.game_delay = INTERMEDIATE_INIT_DELAY;
+			game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
 			clear();
 			refresh();
-			// if (pthread_create(&game_t, NULL, &play_ntetris_versus, NULL))
-			// 	printf("Could not run versus phase of game\n");
+			gui_init(&gui, &state);
+			if (pthread_create(&gui_t, NULL, &run_gui, &gui))
+				printf("Could not run GUI\n");
+			
+			if (pthread_create(&game_t, NULL, &play_ntetris_versus, &state))
+				printf("Could not run versus phase of game\n");
 
 			if (pthread_join(game_t, NULL))
 				printf("Could not properly terminate versus phase of game\n");
+			
+			pthread_cancel(gui_t);
+			gui_cleanup(&gui);
 
 			if(state.game_over_flag)
 			{

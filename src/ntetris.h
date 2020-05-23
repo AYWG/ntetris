@@ -251,21 +251,6 @@ typedef struct
 	COORDINATE_PAIR bits[NUM_BITS];
 } TETRIMINO;
 
-/* Struct for use as arguments for periodic_thread and lock_in_thread*/
-typedef struct
-{
-	WINDOW *win[NUM_WINDOWS];
-	TETRIMINO *tetrimino;
-	COORDINATE_PAIR (*well_contents)[WELL_CONTENTS_WIDTH];
-	int difficulty;
-	int mode;
-	int lock_num;
-	int *current_y_checkpoint;
-	int *recent_hold;
-	int *garbage_counter;
-	int *other_garbage_counter;
-} THREAD_ARGS;
-
 typedef struct
 {
 	TETRIMINO tetrimino[NUM_PLAYERS];
@@ -291,15 +276,20 @@ typedef struct
 	WINDOW *win[NUM_PLAYERS][NUM_WINDOWS];
 } GUI;
 
+/* Struct for use as arguments for periodic_thread and lock_in_thread*/
+typedef struct
+{
+	GameState *state;
+	EPlayer player_id;
+} ThreadArgs;
+
 /* Main prototypes */
 void print_help_message();
 void print_howtoplay_message();
 
 /* Thread prototypes */
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
-void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
-				int lock_num, int *garbage_counter, int *other_garbage_counter,
-				COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int num_complete_lines);
 void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
 void *periodic_thread(void *arguments);
@@ -326,14 +316,10 @@ void print_title_small(GUI *gui);
 /* Game prototypes*/
 void game_state_init(GameState *state, EDifficulty difficulty, int mode);
 void reset_game_state(GameState *state);
-// int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
-// int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS]);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
-// int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
 int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS]);
 void move_tetrimino (GameState *state, EPlayer player_id, EDirection direction);
-// void adjust_bits (COORDINATE_PAIR bits[NUM_BITS], int direction);
 void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM_BITS],
 					  EDirection direction);
 void rotate_tetrimino (GameState *state, EPlayer player_id, EDirection direction);
@@ -342,9 +328,7 @@ void init_tetrimino (GameState *state, EPlayer player_id, ETetrimino tetrimino_i
 void lock_tetrimino_into_well(GameState *state, EPlayer player_id);
 void hold_tetrimino(GameState *state, EPlayer player_id);
 int get_rand_num (int lower, int upper);
-// int line_complete (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-// void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int update_lines(GameState *state, EPlayer player_id);
 
 #endif

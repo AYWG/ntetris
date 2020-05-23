@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-lncurses -lpthread
+CFLAGS=-lncurses -lpthread -g
 DEPS = ntetris.h
 OBJ = ntetris_main.o ntetris_gui.o ntetris_game.o ntetris_threads.o
 EXEDIR = ~/bin
