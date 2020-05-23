@@ -28,12 +28,26 @@
 #define HOWTOPLAY 3
 #define EXIT 4
 
+/* Maximum number of players */
+typedef enum {
+	PLAYER_1,
+	PLAYER_2,
+	NUM_PLAYERS
+} EPlayer;
+
+typedef enum {
+	NOT_OVER,
+	PLAYER_1_LOST,
+	PLAYER_2_LOST
+} EGameOver;
+
 /* Difficulty levels */
-#define CASUAL 0
-#define INTERMEDIATE 1
-#define EXPERT 2
-#define BACK 3
-#define INVALID_DIFF 4
+typedef enum {
+	CASUAL,
+	INTERMEDIATE,
+	EXPERT,
+	INVALID_DIFFICULTY
+} EDifficulty;
 
 /* Game delays (in microseconds) */
 #define CASUAL_INIT_DELAY 1000000
@@ -43,15 +57,17 @@
 #define STALL 1000
 
 /* IDs of the different game pieces */
-#define TETRIMINO_I 0
-#define TETRIMINO_J 1
-#define TETRIMINO_L 2
-#define TETRIMINO_O 3 
-#define TETRIMINO_S 4
-#define TETRIMINO_T 5
-#define TETRIMINO_Z 6
-#define INVALID_ID 7
-#define NUM_TETRIMINOS 7
+typedef enum {
+	TETRIMINO_I, 
+	TETRIMINO_J, 
+	TETRIMINO_L, 
+	TETRIMINO_O, 
+	TETRIMINO_S, 
+	TETRIMINO_T, 
+	TETRIMINO_Z, 
+	NUM_TETRIMINOS, 
+	INVALID_ID
+} ETetrimino;
 
 /* FOR REFERENCE
 I : oooo - bits: 0 1 2 3  Pivot = 1
@@ -79,20 +95,30 @@ Z : oo 	 - bits: 0 1 	  Pivot = 2
 #define NUM_BITS 4
 
 /* Directions of movement */
-#define UP 0
-#define DOWN 1
-#define LEFT 2
-#define RIGHT 3
-
-/* Directions of rotation */
-#define CLOCKWISE 4
-#define CNT_CLOCKWISE 5
+typedef enum {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+	CW,
+	CCW
+} EDirection;
 
 /* Dimensions and initial coordinates for 
 the WINDOWs used */
+typedef enum {
+	WELL_ID,
+	COVER_ID,
+	HOLD_ID,
+	LINE_COUNT_ID,
+	SCORE_ID,
+	LEVEL_ID,
+	TITLE_SMALL_ID,
+	GARBAGE_ID,
+	OTHER_GARBAGE_ID,
+	NUM_WINDOWS
+} EWindow;
 #define NUM_WINDOWS 9
-
-#define WELL_ID 0
 
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
@@ -112,8 +138,6 @@ the WINDOWs used */
 #define WELL_CONTENTS_HEIGHT WELL_HEIGHT - 2
 #define WELL_CONTENTS_WIDTH WELL_WIDTH - 2
 
-#define COVER_ID 1
-
 #define COVER_HEIGHT 3
 #define COVER_WIDTH WELL_WIDTH
 #define COVER_INIT_Y WELL_INIT_Y
@@ -125,8 +149,6 @@ the WINDOWs used */
 #define COVER_INIT_X_P2 WELL_INIT_X_P2
 
 #define COVER_B_BNDRY COVER_INIT_Y + COVER_HEIGHT
-
-#define HOLD_ID 2
 
 #define HOLD_HEIGHT 6
 #define HOLD_WIDTH 8
@@ -144,36 +166,27 @@ the WINDOWs used */
 #define HOLD_T_BNDRY 1
 #define HOLD_B_BNDRY HOLD_HEIGHT - 2
 
-#define LINE_COUNT_ID 3
-
 #define LINE_COUNT_HEIGHT 3
 #define LINE_COUNT_WIDTH 15
 #define LINE_COUNT_INIT_Y WELL_HEIGHT - 5
 #define LINE_COUNT_INIT_X HOLD_INIT_X - 6
-
-#define SCORE_ID 4
 
 #define SCORE_HEIGHT 3
 #define SCORE_WIDTH 10
 #define SCORE_INIT_Y HOLD_INIT_Y
 #define SCORE_INIT_X WELL_INIT_X + WELL_WIDTH + 5
 
-#define LEVEL_ID 5
-
 #define LEVEL_HEIGHT 3
 #define LEVEL_WIDTH 10
 #define LEVEL_INIT_Y LINE_COUNT_INIT_Y - 6
 #define LEVEL_INIT_X LINE_COUNT_INIT_X
 
-#define TITLE_SMALL_ID 6
-
 #define TITLE_SMALL_HEIGHT 10
 #define TITLE_SMALL_WIDTH 15
-#define TITLE_SMALL_INIT_Y LEVEL_INIT_Y
-#define TITLE_SMALL_INIT_X SCORE_INIT_X
-
-#define GARBAGE_ID 7
-#define OTHER_GARBAGE_ID 8
+#define TITLE_SMALL_INIT_SINGLE_Y LEVEL_INIT_Y
+#define TITLE_SMALL_INIT_SINGLE_X SCORE_INIT_X
+#define TITLE_SMALL_INIT_VERSUS_Y 10
+#define TITLE_SMALL_INIT_VERSUS_X 40
 
 #define GARBAGE_HEIGHT 5
 #define GARBAGE_WIDTH 9
@@ -188,16 +201,16 @@ the WINDOWs used */
 #define HOWTOPLAY_INIT_X 6
 
 /* Constants representing the different controls */
-
-#define NUM_CONTROLS 7
-
-#define MOVE_LEFT 0
-#define MOVE_RIGHT 1
-#define MOVE_DOWN 2
-#define DROP 3
-#define ROTATE_CW 4
-#define ROTATE_CCW 5
-#define HOLD 6
+typedef enum {
+	MOVE_LEFT,
+	MOVE_RIGHT,
+	MOVE_DOWN,
+	DROP,
+	ROTATE_CW,
+	ROTATE_CCW,
+	HOLD,
+	NUM_CONTROLS
+} EControls;
 
 /* Decimal value of needed ASCII characters */
 
@@ -228,7 +241,7 @@ typedef struct
 typedef struct 
 {
 	/* Which tetrimino is it? */
-	int tetrimino_type;
+	ETetrimino tetrimino_type;
 
 	/* The bit that is used as pivot when the tetrimino rotates */
 	int pivot_bit;
@@ -238,99 +251,86 @@ typedef struct
 	COORDINATE_PAIR bits[NUM_BITS];
 } TETRIMINO;
 
+typedef struct
+{
+	TETRIMINO tetrimino[NUM_PLAYERS];
+	ETetrimino currently_held_tetrimino[NUM_PLAYERS];
+	EDifficulty difficulty;
+	COORDINATE_PAIR well_contents[NUM_PLAYERS][WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+	EGameOver game_over_flag;	
+	int has_held_recently[NUM_PLAYERS];
+	int mode;
+	int game_delay;
+	int line_count;
+	int score; 
+	int current_y_checkpoint[NUM_PLAYERS];
+	int garbage_counter[NUM_PLAYERS];
+	int well_max_y[NUM_PLAYERS];
+	int well_max_x[NUM_PLAYERS];
+} GameState;
+
+typedef struct
+{
+	int refresh_delay;
+	GameState *state;
+	WINDOW *win[NUM_PLAYERS][NUM_WINDOWS];
+} GUI;
+
 /* Struct for use as arguments for periodic_thread and lock_in_thread*/
 typedef struct
 {
-	WINDOW *win[NUM_WINDOWS];
-	TETRIMINO *tetrimino;
-	COORDINATE_PAIR (*well_contents)[WELL_CONTENTS_WIDTH];
-	int difficulty;
-	int mode;
-	int lock_num;
-	int *current_y_checkpoint;
-	int *recent_hold;
-	int *garbage_counter;
-	int *other_garbage_counter;
-} THREAD_ARGS;
+	GameState *state;
+	EPlayer player_id;
+} ThreadArgs;
 
 /* Main prototypes */
-void reset_global_vars();
 void print_help_message();
 void print_howtoplay_message();
 
 /* Thread prototypes */
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
-void add_garbage(WINDOW *garbage_win, WINDOW *other_garbage_win, int num_complete_lines, 
-				int lock_num, int *garbage_counter, int *other_garbage_counter,
-				COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int num_complete_lines);
 void *play_ntetris_single (void *difficulty);
 void *play_ntetris_versus(void *unused);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
+void *run_gui(void *ui);
 
 /* GUI prototypes */
 void ntetris_init ();
+void gui_init(GUI *gui, GameState *state);
+void gui_cleanup(GUI *gui);
 void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
-void draw_well (WINDOW *win, TETRIMINO *tetrimino, 
-			   COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void clear_well (WINDOW *win);
-int update_hold(WINDOW *win, int tetrimino_id, int *currently_held_tetrimino_id);
-void update_line_count(WINDOW *line_count_win);
-void update_level(WINDOW *level_win);
-void update_score(WINDOW *score_win);
-void update_garbage_line_counter(WINDOW *garbage_win, int *garbage_counter);
+void update_well(GUI *gui, EPlayer player_id);
+void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id);
+void update_line_count(GUI *gui, EPlayer player_id);
+void update_level(GUI *gui, EPlayer player_id);
+void update_score(GUI *gui, EPlayer player_id);
+void update_garbage_line_counter(GUI *gui, EPlayer player_id);
 void print_controls();
 void print_howtoplay();
-void print_title_small(WINDOW *win);
+void print_title_small(GUI *gui);
 
 /* Game prototypes*/
-int equal_coords (COORDINATE_PAIR cp_1, COORDINATE_PAIR cp_2);
-int equal_bits (COORDINATE_PAIR bits_1[NUM_BITS], COORDINATE_PAIR bits_2[NUM_BITS]);
+void game_state_init(GameState *state, EDifficulty difficulty, int mode);
+void reset_game_state(GameState *state);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
-int out_of_boundaries (WINDOW *win, COORDINATE_PAIR coords);
-int valid_position (WINDOW *well_win, TETRIMINO *tetrimino, COORDINATE_PAIR new_bits[NUM_BITS], 
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void move_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void adjust_bits (COORDINATE_PAIR bits[NUM_BITS], int direction);
+int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS]);
+void move_tetrimino (GameState *state, EPlayer player_id, EDirection direction);
 void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM_BITS],
-					  int direction);
-void rotate_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int direction, 
-					  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-int drop_tetrimino (WINDOW *win, TETRIMINO *tetrimino, int difficulty,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint, int *recent_hold);
-void init_tetrimino (TETRIMINO *tetrimino, int tetrimino_id, 
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint);
-void lock_tetrimino_into_well(TETRIMINO *tetrimino, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-							 int *recent_hold);
-void hold_tetrimino(WINDOW *hold_win, TETRIMINO *tetrimino,
-					COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH],
-					int *current_y_checkpoint, int *recent_hold, int *currently_held_tetrimino_id);
+					  EDirection direction);
+void rotate_tetrimino (GameState *state, EPlayer player_id, EDirection direction);
+int drop_tetrimino (GameState *state, EPlayer player_id);
+void init_tetrimino (GameState *state, EPlayer player_id, ETetrimino tetrimino_id);
+void lock_tetrimino_into_well(GameState *state, EPlayer player_id);
+void hold_tetrimino(GameState *state, EPlayer player_id);
 int get_rand_num (int lower, int upper);
-int line_complete (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-int update_lines(WINDOW *win, TETRIMINO *tetrimino, int difficulty,
-				  COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+int update_lines(GameState *state, EPlayer player_id);
 
-extern int GAME_DELAY;
-extern int GAME_OVER_FLAG;
-extern int RECENT_HOLD;
-extern int RECENT_HOLD_2;
-extern int CURRENTLY_HELD_TETRIMINO_ID;
-extern int CURRENTLY_HELD_TETRIMINO_ID_2;
-extern int LINE_COUNT;
-extern int SCORE;
-extern int CURRENT_Y_CHECKPOINT;
-extern int CURRENT_Y_CHECKPOINT_2;
-extern int GARBAGE_COUNTER_1;
-extern int GARBAGE_COUNTER_2;
-extern int WHICH_PLAYER_WON;
 #endif
 
 
