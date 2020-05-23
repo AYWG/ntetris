@@ -164,6 +164,12 @@ void gui_init(GUI *gui, GameState *state)
 		wnoutrefresh(gui->win[PLAYER_1][GARBAGE_ID]);
 		wnoutrefresh(gui->win[PLAYER_2][GARBAGE_ID]);
 		doupdate();
+
+		gui->state->well_max_x[PLAYER_1] = getmaxx(gui->win[PLAYER_1][WELL_ID]);
+		gui->state->well_max_y[PLAYER_1] = getmaxy(gui->win[PLAYER_1][WELL_ID]);
+
+		gui->state->well_max_x[PLAYER_2] = getmaxx(gui->win[PLAYER_2][WELL_ID]);
+		gui->state->well_max_y[PLAYER_2] = getmaxy(gui->win[PLAYER_2][WELL_ID]);
 	}
 	
 }
