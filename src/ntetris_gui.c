@@ -151,8 +151,8 @@ void gui_init(GUI *gui, GameState *state)
 		mvwprintw(gui->win[PLAYER_2][GARBAGE_ID], 2, 0, "Lines");
 		wattroff(gui->win[PLAYER_1][GARBAGE_ID], A_BOLD);
 		wattroff(gui->win[PLAYER_2][GARBAGE_ID], A_BOLD);
-		update_garbage_line_counter(gui, PLAYER_1);
-		update_garbage_line_counter(gui, PLAYER_2);
+		update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_counter[PLAYER_1]);
+		update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_counter[PLAYER_2]);
 
 		wnoutrefresh(stdscr);
 		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);
@@ -309,18 +309,17 @@ static void clear_well(GUI *gui, EPlayer player_id)
 /* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates
 where it will land in the well */
 
-void update_well(GUI *gui, EPlayer player_id)
+void update_well(GUI *gui, EPlayer player_id, COORDINATE_PAIR tetrimino_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
 	WINDOW *win = gui->win[player_id][WELL_ID];
-	TETRIMINO *tetrimino = &gui->state->tetrimino[player_id];
 	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
 	int locked_in = 1;
 	clear_well(gui, player_id); // erase everything before drawing
 
-	copy_bits(tetrimino->bits, shadow_bits);
+	copy_bits(tetrimino_bits, shadow_bits);
 
-	while (valid_position(gui->state, player_id, shadow_bits)) 
+	while (valid_position(getmaxx(win), getmaxy(win), shadow_bits, well_contents)) 
 	{
 		for (i = 0; i < NUM_BITS; i++)
 			shadow_bits[i].y++;
@@ -336,20 +335,20 @@ void update_well(GUI *gui, EPlayer player_id)
 
 		/* Only draw shadow bits if they're outside the cover window */
 		if (shadow_bits[i].y >= COVER_B_BNDRY)
-			mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino->bits[i].value | A_DIM);
+			mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino_bits[i].value | A_DIM);
 	}
 	
 	for (i = 0; i < NUM_BITS; i++)
 		/* Only draw tetrimino bits if they're outside the cover window */
-		if (tetrimino->bits[i].y >= COVER_B_BNDRY)
-			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
+		if (tetrimino_bits[i].y >= COVER_B_BNDRY)
+			mvwaddch(win, tetrimino_bits[i].y, tetrimino_bits[i].x, tetrimino_bits[i].value);
 		
 	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
 		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 			/* Only draw well contents if their corresponding character is an 'o' and they are located
 			outside the cover window */
-			if ((gui->state->well_contents[player_id][i][j].value & A_CHARTEXT) == 'o' && gui->state->well_contents[player_id][i][j].y >= COVER_B_BNDRY)
-				mvwaddch(win, gui->state->well_contents[player_id][i][j].y, gui->state->well_contents[player_id][i][j].x, gui->state->well_contents[player_id][i][j].value);
+			if ((well_contents[i][j].value & A_CHARTEXT) == 'o' && well_contents[i][j].y >= COVER_B_BNDRY)
+				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
 				
 	wnoutrefresh(win);
 }
@@ -407,12 +406,12 @@ void update_score(GUI *gui, EPlayer player_id)
 	wnoutrefresh(score_win);
 }
 
-void update_garbage_line_counter(GUI *gui, EPlayer player_id)
+void update_garbage_line_counter(GUI *gui, EPlayer player_id, int garbage_counter)
 {
 	WINDOW *garbage_win = gui->win[player_id][GARBAGE_ID];
 	wmove(garbage_win, 4, 0);
 	wclrtoeol(garbage_win);
-	mvwprintw(garbage_win, 4, 0, "%d", gui->state->garbage_counter[player_id]);
+	mvwprintw(garbage_win, 4, 0, "%d", garbage_counter);
 	wnoutrefresh(garbage_win);
 }
 

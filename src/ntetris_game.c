@@ -168,16 +168,16 @@ static void clear_line (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEI
 /* Determines whether the given tetrimino coords are outside the boundaries
 of the given player's well */
 
-static int out_of_boundaries (GameState *state, EPlayer player_id, COORDINATE_PAIR tetr_coords)
+static int out_of_boundaries (int well_max_x, int well_max_y, COORDINATE_PAIR tetr_coords)
 {
-	return (tetr_coords.y < 1 || tetr_coords.y > state->well_max_y[player_id] - 2 ||
-			tetr_coords.x < 1 || tetr_coords.x > state->well_max_x[player_id] - 2);
+	return (tetr_coords.y < 1 || tetr_coords.y > well_max_y - 2 ||
+			tetr_coords.x < 1 || tetr_coords.x > well_max_x - 2);
 }
 
 /* Determines if new_bits is a valid array of bits for the tetrimino within
 the given player's well*/
 
-int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS])
+int valid_position (int well_max_x, int well_max_y, COORDINATE_PAIR new_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_HEIGHT][WELL_CONTENTS_WIDTH])
 {
 	int row, col;
 	int i;
@@ -185,7 +185,7 @@ int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bit
 	for (i = 0; i < NUM_BITS; i++)
 	{
 		/* Check boundaries */
-		if (out_of_boundaries(state, player_id, new_bits[i]))
+		if (out_of_boundaries(well_max_x, well_max_y, new_bits[i]))
 			return FALSE;
 		
 		row = new_bits[i].y - 1;
@@ -193,8 +193,8 @@ int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bit
 
 		/* Valid coordinates in the well are those unoccupied or occupied by the 
 		tetrimino's "ghost" */
-		if ((state->well_contents[player_id][row][col].value & A_CHARTEXT != ' ') &&
-			(state->well_contents[player_id][row][col].value & A_ATTRIBUTES) != A_DIM)
+		if ((well_contents[row][col].value & A_CHARTEXT != ' ') &&
+			(well_contents[row][col].value & A_ATTRIBUTES) != A_DIM)
 			return FALSE;
 		
 	}
@@ -252,7 +252,7 @@ void move_tetrimino (GameState *state, EPlayer player_id, EDirection direction)
 	
 	/* if the new coordinates are valid, update position */
 
-	if (valid_position(state, player_id, new_bits))
+	if (valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id]))
 	{
 		copy_bits(new_bits, state->tetrimino[player_id].bits);
 		/* "soft" drops award 1 point */
@@ -275,7 +275,7 @@ int drop_tetrimino (GameState *state, EPlayer player_id)
 	copy_bits(state->tetrimino[player_id].bits, new_bits);
 
 	/* Keep descending until invalid position reached */
-	while (valid_position(state, player_id, new_bits))
+	while (valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id]))
 	{
 		for (i = 0; i < NUM_BITS; i++)
 			new_bits[i].y++;
@@ -354,7 +354,7 @@ void rotate_tetrimino (GameState *state, EPlayer player_id, EDirection direction
 		copy_bits(tetrimino->bits, new_bits);
 		get_rotated_bits(pivot, new_bits, direction);
 
-		while (!valid_position(state, player_id, new_bits))
+		while (!valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id]))
 		{
 			/* Check if at least one of the new bits is out of bounds*/
 			coords_out_of_y_bounds = 0;
@@ -392,13 +392,13 @@ void rotate_tetrimino (GameState *state, EPlayer player_id, EDirection direction
 			{
 				/* Attempt to move once in each direction from invalid position; */
 				adjust_bits(new_bits, LEFT);
-				if (valid_position(state, player_id, new_bits)) break;
+				if (valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id])) break;
 				adjust_bits(new_bits, RIGHT); adjust_bits(new_bits, RIGHT);
-				if (valid_position(state, player_id, new_bits)) break;
+				if (valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id])) break;
 				adjust_bits(new_bits, LEFT); adjust_bits(new_bits, UP);
-				if (valid_position(state, player_id, new_bits)) break;
+				if (valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id])) break;
 				adjust_bits(new_bits, DOWN); adjust_bits(new_bits, DOWN);
-				if (valid_position(state, player_id, new_bits)) break;
+				if (valid_position(state->well_max_x[player_id], state->well_max_y[player_id], new_bits, state->well_contents[player_id])) break;
 
 				/* All new positions are invalid, don't rotate at all */
 				return;

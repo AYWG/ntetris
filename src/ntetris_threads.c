@@ -86,7 +86,8 @@ void *run_gui (void *ui)
 	{
 		usleep(gui->refresh_delay);
 
-		update_well(gui, PLAYER_1);
+		// TODO: remove state reference from GUI?
+		update_well(gui, PLAYER_1, gui->state->tetrimino[PLAYER_1].bits, gui->state->well_contents[PLAYER_1]);
 		update_hold(gui, PLAYER_1, gui->state->currently_held_tetrimino[PLAYER_1]);
 
 		if (mode == SINGLE) {
@@ -96,11 +97,11 @@ void *run_gui (void *ui)
 		}
 
 		if (mode == VERSUS) {
-			update_garbage_line_counter(gui, PLAYER_1);
+			update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_counter[PLAYER_1]);
 
-			update_well(gui, PLAYER_2);
+			update_well(gui, PLAYER_2, gui->state->tetrimino[PLAYER_2].bits, gui->state->well_contents[PLAYER_2]);
 			update_hold(gui, PLAYER_2, gui->state->currently_held_tetrimino[PLAYER_2]);
-			update_garbage_line_counter(gui, PLAYER_2);
+			update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_counter[PLAYER_2]);
 		}
 		doupdate();
 	}
