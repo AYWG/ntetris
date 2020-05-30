@@ -154,44 +154,49 @@ int main(int argc, char **argv)
 		}
 		else if (choice == VERSUS)
 		{
-			game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
 			clear();
 			refresh();
-			gui_init(&gui, &state);
-			if (pthread_create(&gui_t, NULL, &run_gui, &gui))
-				printf("Could not run GUI\n");
+			connect_to_server("andy-UX430UNR");
+			break;
+
+			// game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
+			// clear();
+			// refresh();
+			// gui_init(&gui, &state);
+			// if (pthread_create(&gui_t, NULL, &run_gui, &gui))
+			// 	printf("Could not run GUI\n");
 			
-			if (pthread_create(&game_t, NULL, &play_ntetris_versus, &state))
-				printf("Could not run versus phase of game\n");
+			// if (pthread_create(&game_t, NULL, &play_ntetris_versus, &state))
+			// 	printf("Could not run versus phase of game\n");
 
-			if (pthread_join(game_t, NULL))
-				printf("Could not properly terminate versus phase of game\n");
+			// if (pthread_join(game_t, NULL))
+			// 	printf("Could not properly terminate versus phase of game\n");
 			
-			pthread_cancel(gui_t);
-			gui_cleanup(&gui);
+			// pthread_cancel(gui_t);
+			// gui_cleanup(&gui);
 
-			if(state.game_over_flag)
-			{
-				clear();
-				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-				if (state.game_over_flag == 1)
-					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
-				else if (state.game_over_flag == 2)
-					mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
-				attroff(COLOR_PAIR(Z_COLOR_PAIR));
+			// if(state.game_over_flag)
+			// {
+			// 	clear();
+			// 	attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+			// 	if (state.game_over_flag == 1)
+			// 		mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
+			// 	else if (state.game_over_flag == 2)
+			// 		mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
+			// 	attroff(COLOR_PAIR(Z_COLOR_PAIR));
 
-				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
-				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
+			// 	mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
+			// 	mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
 
-				int game_over_choice = getch();
-				if (game_over_choice == RESTART_KEY)
-				{
-					reset_game_state(&state);
-					continue;
-				} 
-				else break;
-			}
-			else break; 
+			// 	int game_over_choice = getch();
+			// 	if (game_over_choice == RESTART_KEY)
+			// 	{
+			// 		reset_game_state(&state);
+			// 		continue;
+			// 	} 
+			// 	else break;
+			// }
+			// else break; 
 		}
 		else if (choice == CONTROLS)
 		{

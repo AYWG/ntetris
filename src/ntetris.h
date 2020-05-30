@@ -331,6 +331,9 @@ int get_rand_num (int lower, int upper);
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int update_lines(GameState *state, EPlayer player_id);
 
+/* Networking stuff */
+void connect_to_server(const char * hostname);
+
 #endif
 
 

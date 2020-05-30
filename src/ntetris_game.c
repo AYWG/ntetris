@@ -30,6 +30,7 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 	srand((unsigned) time(NULL));
 
 	/* Enable input from arrow keys */
+	// TODO: move this to somewhere appropriate for client
 	keypad(stdscr, TRUE);
 
 	state->difficulty = difficulty;
