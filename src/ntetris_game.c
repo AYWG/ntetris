@@ -48,9 +48,6 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 		state->game_delay = INTERMEDIATE_INIT_DELAY;
 	}
 
-	state->currently_held_tetrimino[PLAYER_1] = INVALID_ID;
-	state->currently_held_tetrimino[PLAYER_2] = INVALID_ID;
-
 	// Init well contents
 	int i, j;
 	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
@@ -69,17 +66,9 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 		}
 	}
 
-	if (mode == VERSUS) {
-		state->garbage_counter[PLAYER_1] = 0;
-		state->garbage_counter[PLAYER_2] = 0;
-	}
-}
-
-void reset_game_state(GameState *state)
-{
+	// Init variables
 	state->currently_held_tetrimino[PLAYER_1] = INVALID_ID;
 	state->currently_held_tetrimino[PLAYER_2] = INVALID_ID;
-	state->difficulty = INVALID_DIFFICULTY;
 	state->game_over_flag = NOT_OVER;
 	state->has_held_recently[PLAYER_1] = FALSE;
 	state->has_held_recently[PLAYER_2] = FALSE;
@@ -87,8 +76,14 @@ void reset_game_state(GameState *state)
 	state->score = 0;
 	state->current_y_checkpoint[PLAYER_1] = 0;
 	state->current_y_checkpoint[PLAYER_2] = 0;
-	state->garbage_counter[PLAYER_1] = 0;
-	state->garbage_counter[PLAYER_2] = 0;
+	state->garbage_line[PLAYER_1].counter = 0;
+	state->garbage_line[PLAYER_2].counter = 0;
+
+	// Init locks
+	pthread_mutex_init(&(state->tetrimino[PLAYER_1].lock), NULL);
+	pthread_mutex_init(&(state->tetrimino[PLAYER_2].lock), NULL);
+	pthread_mutex_init(&(state->garbage_line[PLAYER_1].lock), NULL);
+	pthread_mutex_init(&(state->garbage_line[PLAYER_2].lock), NULL);
 }
 
 /* Determines whether cp_1 is located at the same coordinates as cp_2. */

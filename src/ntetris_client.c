@@ -65,15 +65,14 @@ void connect_to_server(const char * hostname) {
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-	    perror("recv");
-	    exit(1);
+	while ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) > 0) {
+	    // perror("recv");
+	    // exit(1);
+        buf[numbytes] = '\0';
+        printf("client: received '%s'\n",buf);
 	}
 
-	buf[numbytes] = '\0';
-
-	printf("client: received '%s'\n",buf);
-    usleep(2000000);
+    printf("Server closed socket\n");
 
 	close(sockfd);
 }

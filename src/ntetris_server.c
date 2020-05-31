@@ -1,9 +1,13 @@
 /* Server code for running ntetris versus mode. */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h> 
 #include <sys/types.h>
 #include <netdb.h>
+#include <arpa/inet.h>
+
+#include "ntetris.h"
 
 #define PORT "3490"
 
@@ -21,6 +25,7 @@ void *get_in_addr(struct sockaddr *sa)
 
 int main (void)
 {
+	// Networking stuff
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
     int new_fd2;
 	struct addrinfo hints, *servinfo, *p;
@@ -30,6 +35,10 @@ int main (void)
 	int yes=1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
+
+	// Game stuff
+	GameState state;
+	
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -90,31 +99,33 @@ int main (void)
         s, sizeof s);
     printf("server: got connection from %s\n", s);
 
-    if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
-        perror("send");
-    }
+    // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
+    //     perror("send");
+    // }
 
-    sin_size = sizeof their_addr;
-    new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-    if (new_fd2 == -1) {
-        perror("accept");
-    }
+    // sin_size = sizeof their_addr;
+    // new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+    // if (new_fd2 == -1) {
+    //     perror("accept");
+    // }
 
-    inet_ntop(their_addr.ss_family,
-        get_in_addr((struct sockaddr *)&their_addr),
-        s, sizeof s);
-    printf("server: got connection from %s\n", s);
+    // inet_ntop(their_addr.ss_family,
+    //     get_in_addr((struct sockaddr *)&their_addr),
+    //     s, sizeof s);
+    // printf("server: got connection from %s\n", s);
 
-    if (send(new_fd, "Both players connected!", 23, 0) == -1) {
-        perror("send");
-    }
+    // if (send(new_fd, "Both players connected!", 23, 0) == -1) {
+    //     perror("send");
+    // }
 
-    if (send(new_fd2, "Both players connected!", 23, 0) == -1) {
-        perror("send");
-    }
+    // if (send(new_fd2, "Both players connected!", 23, 0) == -1) {
+    //     perror("send");
+    // }
+
+    // usleep(3000000);
 
     close(new_fd);
-    close(new_fd2);
+    // close(new_fd2);
 
     close(sockfd);
 

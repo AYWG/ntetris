@@ -249,7 +249,16 @@ typedef struct
 	/* The coordinates of each of
 	the bits that make up the tetrimino*/
 	COORDINATE_PAIR bits[NUM_BITS];
+
+	/* Lock for modifying the tetrimino*/
+	pthread_mutex_t lock;
 } TETRIMINO;
+
+typedef struct
+{
+	int counter;
+	pthread_mutex_t lock;
+} GarbageLine;
 
 typedef struct
 {
@@ -258,13 +267,13 @@ typedef struct
 	EDifficulty difficulty;
 	COORDINATE_PAIR well_contents[NUM_PLAYERS][WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
 	EGameOver game_over_flag;	
+	GarbageLine garbage_line[NUM_PLAYERS];
 	int has_held_recently[NUM_PLAYERS];
 	int mode;
 	int game_delay;
 	int line_count;
 	int score; 
 	int current_y_checkpoint[NUM_PLAYERS];
-	int garbage_counter[NUM_PLAYERS];
 	int well_max_y[NUM_PLAYERS];
 	int well_max_x[NUM_PLAYERS];
 } GameState;
@@ -290,8 +299,8 @@ void print_howtoplay_message();
 /* Thread prototypes */
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
 void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int num_complete_lines);
-void *play_ntetris_single (void *difficulty);
-void *play_ntetris_versus(void *unused);
+
+
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 void *run_gui(void *ui);
@@ -299,7 +308,7 @@ void *run_gui(void *ui);
 /* GUI prototypes */
 void ntetris_init ();
 void gui_init(GUI *gui, GameState *state);
-void gui_cleanup(GUI *gui);
+void gui_cleanup(GUI *gui, int mode);
 void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
@@ -315,7 +324,8 @@ void print_title_small(GUI *gui);
 
 /* Game prototypes*/
 void game_state_init(GameState *state, EDifficulty difficulty, int mode);
-void reset_game_state(GameState *state);
+void play_ntetris_single (GameState *state);
+void play_ntetris_versus (GameState *state);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
 int valid_position (int well_max_x, int well_max_y, COORDINATE_PAIR new_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_HEIGHT][WELL_CONTENTS_WIDTH]);

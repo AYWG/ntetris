@@ -1,8 +1,5 @@
 #include "ntetris.h"
 
-static pthread_mutex_t tetrimino_lock[] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
-static pthread_mutex_t garbage_line_counter_lock[] = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER};
-
 /* Checks if the given input is an element of controls */
 
 int is_input_useful(int input, int controls[NUM_CONTROLS])
@@ -21,7 +18,7 @@ by num_complete_lines */
 
 void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int num_complete_lines)
 {
-	pthread_mutex_lock(&(garbage_line_counter_lock[to_player]));
+	pthread_mutex_lock(&(state->garbage_line[to_player].lock));
 
 	int i, j;
 	int highest_nonempty_row;
@@ -29,8 +26,8 @@ void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int n
 	/* Decrement counter by number of complete lines; minimum counter value is 0 */
 	for (i = 0; i < num_complete_lines; i++)
 	{
-		if (state->garbage_counter[to_player] == 0) break;
-		state->garbage_counter[to_player]--;
+		if (state->garbage_line[to_player].counter == 0) break;
+		state->garbage_line[to_player].counter--;
 	}
 
 	/* Add the remaining counter value to the well as garbage lines */
@@ -41,14 +38,14 @@ void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int n
 
 	for (i = highest_nonempty_row; i < WELL_CONTENTS_HEIGHT; i++)
 	{
-		if (i - state->garbage_counter[to_player] != i)
+		if (i - state->garbage_line[to_player].counter != i)
 		{
 			for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
-				state->well_contents[to_player][i - state->garbage_counter[to_player]][j].value = state->well_contents[to_player][i][j].value;
+				state->well_contents[to_player][i - state->garbage_line[to_player].counter][j].value = state->well_contents[to_player][i][j].value;
 		}
 	}
 
-	for (i = WELL_CONTENTS_HEIGHT - 1; i > WELL_CONTENTS_HEIGHT - 1 - state->garbage_counter[to_player]; i--)
+	for (i = WELL_CONTENTS_HEIGHT - 1; i > WELL_CONTENTS_HEIGHT - 1 - state->garbage_line[to_player].counter; i--)
 	{
 		/* Garbage lines are white */
 		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
@@ -58,21 +55,21 @@ void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int n
 		state->well_contents[to_player][i][get_rand_num(0, WELL_CONTENTS_WIDTH - 1)].value = ' ';
 	}
 
-	state->garbage_counter[to_player] = 0;
+	state->garbage_line[to_player].counter = 0;
 	// update_garbage_line_counter(garbage_win, garbage_counter);
-	pthread_mutex_unlock(&(garbage_line_counter_lock[to_player]));
+	pthread_mutex_unlock(&(state->garbage_line[to_player].lock));
 
-	pthread_mutex_lock(&(garbage_line_counter_lock[from_player]));
+	pthread_mutex_lock(&(state->garbage_line[from_player].lock));
 
 	/* Increment other counter by number of_complete lines; maximum counter value is 5 */
 	for (i = 0; i < num_complete_lines; i++)
 	{
-		if (state->garbage_counter[from_player] == 5) break;
-		state->garbage_counter[from_player]++;
+		if (state->garbage_line[from_player].counter == 5) break;
+		state->garbage_line[from_player].counter++;
 	}
 
 	// update_garbage_line_counter(other_garbage_win, other_garbage_counter);
-	pthread_mutex_unlock(&(garbage_line_counter_lock[from_player]));
+	pthread_mutex_unlock(&(state->garbage_line[from_player].lock));
 }
 
 
@@ -97,11 +94,11 @@ void *run_gui (void *ui)
 		}
 
 		if (mode == VERSUS) {
-			update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_counter[PLAYER_1]);
+			update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_line[PLAYER_1].counter);
 
 			update_well(gui, PLAYER_2, gui->state->tetrimino[PLAYER_2].bits, gui->state->well_contents[PLAYER_2]);
 			update_hold(gui, PLAYER_2, gui->state->currently_held_tetrimino[PLAYER_2]);
-			update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_counter[PLAYER_2]);
+			update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_line[PLAYER_2].counter);
 		}
 		doupdate();
 	}
@@ -118,9 +115,9 @@ void *periodic_thread (void *arguments)
 	{
 		usleep(state->game_delay); 
 		
-		pthread_mutex_lock(&(tetrimino_lock[player_id]));
+		pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
 		move_tetrimino(state, player_id, DOWN);
-		pthread_mutex_unlock(&(tetrimino_lock[player_id]));
+		pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
 	}
 }
 
@@ -161,7 +158,7 @@ void *lock_in_thread (void *arguments)
 			continue;
 		}
 
-		pthread_mutex_lock(&(tetrimino_lock[player_id]));
+		pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
 		lock_tetrimino_into_well(state, player_id);
 		num_complete_lines = update_lines(state, player_id);
 
@@ -171,15 +168,15 @@ void *lock_in_thread (void *arguments)
 		}
 		
 		init_tetrimino(state, player_id, get_rand_num(0, 6));
-		pthread_mutex_unlock(&(tetrimino_lock[player_id]));
+		pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
 	}
 }
 
 /* Top-level thread for running single player mode. */
 
-void *play_ntetris_single (void *game_state) 
+void play_ntetris_single (GameState *state) 
 {
-	GameState *state = (GameState *) game_state;
+	// GameState *state = (GameState *) game_state;
 
 	init_tetrimino(state, PLAYER_1, get_rand_num(0, 6));
 
@@ -207,7 +204,7 @@ void *play_ntetris_single (void *game_state)
 		if (ch != ERR)
 		{
 			/* Acquire tetrimino lock before we do anything to the tetrimino */
-			pthread_mutex_lock(&tetrimino_lock[PLAYER_1]);
+			pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
 			switch(ch)
 			{
 				case KEY_LEFT:
@@ -226,7 +223,7 @@ void *play_ntetris_single (void *game_state)
 					hold_tetrimino(state, PLAYER_1); break;
 			}
 			/* Done, so release tetrimino lock */
-			pthread_mutex_unlock(&(tetrimino_lock[PLAYER_1]));
+			pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
 
 			/* Wait a bit so other threads can acquire lock */
 			usleep(random() % STALL);
@@ -253,10 +250,8 @@ void *play_ntetris_single (void *game_state)
 
 /* Top-level thread for running versus mode. */
 
-void *play_ntetris_versus (void *game_state)
+void play_ntetris_versus (GameState *state)
 {
-	GameState *state = (GameState *) game_state;
-
 	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
 	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
 
@@ -300,7 +295,7 @@ void *play_ntetris_versus (void *game_state)
 			a given input has any "usefulness" to a specific player (to avoid unnecessary computations) */
 			if (is_input_useful(ch, controls_p1))
 			{
-				pthread_mutex_lock(&tetrimino_lock[PLAYER_1]);
+				pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
 
 				switch(ch)
 				{
@@ -322,13 +317,13 @@ void *play_ntetris_versus (void *game_state)
 				if (ch == KEY_UP) // if tetrimino was dropped
 					add_garbage(state, PLAYER_2, PLAYER_1, num_complete_lines_1);
 
-				pthread_mutex_unlock(&tetrimino_lock[PLAYER_1]);
+				pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
 				usleep(random() % STALL);
 			}
 
 			else if (is_input_useful(ch, controls_p2))
 			{
-				pthread_mutex_lock(&tetrimino_lock[PLAYER_2]);
+				pthread_mutex_lock(&(state->tetrimino[PLAYER_2].lock));
 
 				switch(ch)
 				{
@@ -350,7 +345,7 @@ void *play_ntetris_versus (void *game_state)
 				if (ch == W_KEY) // if tetrimino was dropped
 					add_garbage(state, PLAYER_1, PLAYER_2, num_complete_lines_2);
 
-				pthread_mutex_unlock(&(tetrimino_lock[PLAYER_2]));
+				pthread_mutex_unlock(&(state->tetrimino[PLAYER_2].lock));
 				usleep(random() % STALL);
 			}
 		}

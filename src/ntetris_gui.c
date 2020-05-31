@@ -151,8 +151,8 @@ void gui_init(GUI *gui, GameState *state)
 		mvwprintw(gui->win[PLAYER_2][GARBAGE_ID], 2, 0, "Lines");
 		wattroff(gui->win[PLAYER_1][GARBAGE_ID], A_BOLD);
 		wattroff(gui->win[PLAYER_2][GARBAGE_ID], A_BOLD);
-		update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_counter[PLAYER_1]);
-		update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_counter[PLAYER_2]);
+		update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_line[PLAYER_1].counter);
+		update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_line[PLAYER_2].counter);
 
 		wnoutrefresh(stdscr);
 		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);
@@ -174,9 +174,8 @@ void gui_init(GUI *gui, GameState *state)
 	
 }
 
-void gui_cleanup(GUI *gui)
+void gui_cleanup(GUI *gui, int mode)
 {
-	int mode = gui->state->mode;
 	// Cleanup dependent on single or versus
 	delwin(gui->win[PLAYER_1][WELL_ID]);
 	delwin(gui->win[PLAYER_1][COVER_ID]);

@@ -56,7 +56,6 @@ int main(int argc, char **argv)
 
 	GameState state;
 	GUI gui;
-	pthread_t game_t;
 	pthread_t gui_t;
 
 	ntetris_init();
@@ -119,14 +118,10 @@ int main(int argc, char **argv)
 				if (pthread_create(&gui_t, NULL, &run_gui, &gui))
 					printf("Could not run GUI\n");
 
-				if (pthread_create(&game_t, NULL, &play_ntetris_single, &state))
-					printf("Could not run main phase of game\n");	
-
-				if (pthread_join(game_t, NULL))
-					printf("Could not properly terminate main phase of game\n");
+				play_ntetris_single(&state);
 				
 				pthread_cancel(gui_t);
-				gui_cleanup(&gui);
+				gui_cleanup(&gui, SINGLE);
 
 				if(state.game_over_flag)
 				{
@@ -142,11 +137,7 @@ int main(int argc, char **argv)
 					mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
 					
 					int game_over_choice = getch();
-					if (game_over_choice == RESTART_KEY)
-					{
-						reset_game_state(&state);
-						continue;
-					} 
+					if (game_over_choice == RESTART_KEY) continue;
 					else break;
 				}
 				else break;
@@ -166,14 +157,10 @@ int main(int argc, char **argv)
 			// if (pthread_create(&gui_t, NULL, &run_gui, &gui))
 			// 	printf("Could not run GUI\n");
 			
-			// if (pthread_create(&game_t, NULL, &play_ntetris_versus, &state))
-			// 	printf("Could not run versus phase of game\n");
-
-			// if (pthread_join(game_t, NULL))
-			// 	printf("Could not properly terminate versus phase of game\n");
+			// play_ntetris_versus(&state);
 			
 			// pthread_cancel(gui_t);
-			// gui_cleanup(&gui);
+			// gui_cleanup(&gui, VERSUS);
 
 			// if(state.game_over_flag)
 			// {
@@ -191,7 +178,6 @@ int main(int argc, char **argv)
 			// 	int game_over_choice = getch();
 			// 	if (game_over_choice == RESTART_KEY)
 			// 	{
-			// 		reset_game_state(&state);
 			// 		continue;
 			// 	} 
 			// 	else break;
