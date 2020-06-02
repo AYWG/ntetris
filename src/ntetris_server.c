@@ -28,6 +28,7 @@ int main (void)
 	// Networking stuff
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
     int new_fd2;
+	int numbytes;
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t sin_size;
@@ -38,7 +39,7 @@ int main (void)
 
 	// Game stuff
 	GameState state;
-	
+	int input;	
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -98,6 +99,13 @@ int main (void)
         get_in_addr((struct sockaddr *)&their_addr),
         s, sizeof s);
     printf("server: got connection from %s\n", s);
+
+	while ((numbytes = recv(new_fd, &input, sizeof(int), 0)) > 0) {
+	    // perror("recv");
+	    // exit(1);
+        // buf[numbytes] = '\0';
+        printf("server: received '%d'\n", input);
+	}
 
     // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
     //     perror("send");

@@ -292,6 +292,12 @@ typedef struct
 	EPlayer player_id;
 } ThreadArgs;
 
+/* Struct for server messages */
+// typedef struct
+// {
+
+// };
+
 /* Main prototypes */
 void print_help_message();
 void print_howtoplay_message();
@@ -342,7 +348,8 @@ int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WEL
 int update_lines(GameState *state, EPlayer player_id);
 
 /* Networking stuff */
-void connect_to_server(const char * hostname);
+void play_ntetris_remote();
+int connect_to_server(const char * hostname);
 
 #endif
 

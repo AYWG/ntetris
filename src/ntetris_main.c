@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 		{
 			clear();
 			refresh();
-			connect_to_server("andy-UX430UNR");
+			play_ntetris_remote();
 			break;
 
 			// game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 			// 	} 
 			// 	else break;
 			// }
-			// else break; 
+			// else continue; 
 		}
 		else if (choice == CONTROLS)
 		{

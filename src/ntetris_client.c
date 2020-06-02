@@ -23,7 +23,28 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void connect_to_server(const char * hostname) {
+void play_ntetris_remote() {
+	int ch;
+
+	// TODO: connect to server
+	int socket_to_server = connect_to_server("localhost");
+
+	// Enable semi-non-blocking reads of user input
+	halfdelay(1);
+
+	while ((ch = getch()) != QUIT_KEY) {
+		if (ch != ERR) {
+			// TODO: send it to the server.
+			if (send(socket_to_server, &ch, sizeof(int), 0) == -1) {
+    		    perror("send");
+    		}
+		}
+	}
+	// TODO: Notify server that client has quit.
+	close(socket_to_server);
+}
+
+int connect_to_server(const char * hostname) {
     int sockfd, numbytes;  
 	char buf[MAXDATASIZE];
 	struct addrinfo hints, *servinfo, *p;
@@ -65,14 +86,15 @@ void connect_to_server(const char * hostname) {
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	while ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) > 0) {
-	    // perror("recv");
-	    // exit(1);
-        buf[numbytes] = '\0';
-        printf("client: received '%s'\n",buf);
-	}
+	// while ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) > 0) {
+	//     // perror("recv");
+	//     // exit(1);
+    //     buf[numbytes] = '\0';
+    //     printf("client: received '%s'\n",buf);
+	// }
 
-    printf("Server closed socket\n");
+    // printf("Server closed socket\n");
 
-	close(sockfd);
+	// close(sockfd);
+	return sockfd;
 }
