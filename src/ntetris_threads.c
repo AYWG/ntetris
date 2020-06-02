@@ -232,9 +232,9 @@ void *play_ntetris_single (void *game_state)
 		}
 		else 
 		{
-			if (state->game_over_flag) break;
 			usleep(random() % STALL);
 		}
+		if (state->game_over_flag) break;
 	}
 	/* getch() calls are now blocking as usual */
 	nocbreak();
@@ -355,9 +355,9 @@ void *play_ntetris_versus (void *game_state)
 		}
 		else 
 		{
-			if (state->game_over_flag) break;
 			usleep(random() % STALL);
 		}
+		if (state->game_over_flag) break;
 	}
 	/* getch() calls are now blocking as usual */
 	nocbreak();

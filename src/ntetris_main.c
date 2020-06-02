@@ -174,10 +174,10 @@ int main(int argc, char **argv)
 			{
 				clear();
 				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-				if (state.game_over_flag == 1)
-					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
-				else if (state.game_over_flag == 2)
+				if (state.game_over_flag == PLAYER_1_LOST)
 					mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
+				else if (state.game_over_flag == PLAYER_2_LOST)
+					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
 				attroff(COLOR_PAIR(Z_COLOR_PAIR));
 
 				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
