@@ -292,11 +292,23 @@ typedef struct
 	EPlayer player_id;
 } ThreadArgs;
 
-/* Struct for server messages */
-// typedef struct
-// {
+/* Struct for server_send_thread and client_recv_thread*/
+typedef struct
+{
+	int client_server_socket;
+	GameState *state;
 
-// };
+} ClientServerThreadArgs;
+
+/* Struct for game data that server sends to client */
+typedef struct
+{
+	EGameOver game_over_flag;
+	ETetrimino currently_held_tetrimino[NUM_PLAYERS];
+	COORDINATE_PAIR tetrmino_bits[NUM_PLAYERS][NUM_BITS];
+	COORDINATE_PAIR well_contents[NUM_PLAYERS][WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+	int garbage_line_counter[NUM_PLAYERS];
+} ServerResponse;
 
 /* Main prototypes */
 void print_help_message();
@@ -305,11 +317,11 @@ void print_howtoplay_message();
 /* Thread prototypes */
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
 void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int num_complete_lines);
-
-
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 void *run_gui(void *ui);
+void *server_send_thread(void *send_args);
+void *client_recv_thread(void *recv_args);
 
 /* GUI prototypes */
 void ntetris_init ();
@@ -348,7 +360,7 @@ int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WEL
 int update_lines(GameState *state, EPlayer player_id);
 
 /* Networking stuff */
-void play_ntetris_remote();
+void play_ntetris_remote(GameState *local_game_state);
 int connect_to_server(const char * hostname);
 
 #endif

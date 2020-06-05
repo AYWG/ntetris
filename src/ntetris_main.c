@@ -99,6 +99,8 @@ int main(int argc, char **argv)
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
 
+	/* Enable input from arrow keys */
+	keypad(stdscr, TRUE);
 	while (TRUE)
 	{
 		clear();
@@ -145,9 +147,20 @@ int main(int argc, char **argv)
 		}
 		else if (choice == VERSUS)
 		{
+			// TODO: this is hacky
+			state.mode = VERSUS;
 			clear();
 			refresh();
-			play_ntetris_remote();
+			gui_init(&gui, &state);
+
+			if (pthread_create(&gui_t, NULL, &run_gui, &gui))
+				printf("Could not run GUI\n");
+
+			play_ntetris_remote(&state);
+
+			pthread_cancel(gui_t);
+			gui_cleanup(&gui, SINGLE);
+
 			break;
 
 			// game_state_init(&state, INVALID_DIFFICULTY, VERSUS);

@@ -23,6 +23,173 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+void *server_send_thread(void *send_args)
+{
+	EPlayer i;
+	int j, k;
+	ClientServerThreadArgs *args = (ClientServerThreadArgs *) send_args;
+
+	int client_socket = args->client_server_socket;
+	GameState *state = args->state;
+
+	ServerResponse response;
+	response.game_over_flag = state->game_over_flag;
+	for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
+		response.currently_held_tetrimino[i] = state->current_y_checkpoint[i];
+		response.garbage_line_counter[i] = state->garbage_line[i].counter;
+
+		for (j = 0; j < NUM_BITS; j++) {
+			response.tetrmino_bits[i][j] = state->tetrimino[i].bits[j];
+			response.tetrmino_bits[i][j] = state->tetrimino[i].bits[j];
+		}
+
+		for (j = 0; j < WELL_CONTENTS_HEIGHT; j++)
+			for (k = 0; k < WELL_CONTENTS_WIDTH; k++)
+				response.well_contents[i][j][k] = state->well_contents[i][j][k];
+	}
+
+	while (TRUE)
+	{
+		if (send(client_socket, &response, sizeof(ServerResponse), 0) == -1) {
+			perror("send");
+		}
+	}
+}
+
+
+void run_game(int client_socket)
+{
+	int numbytes, input;
+	int num_complete_lines_1;
+	int num_complete_lines_2;
+	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
+	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
+
+	GameState state;
+	
+	pthread_t send_t;
+	pthread_t periodic_t_p1, periodic_t_p2;
+	pthread_t lock_in_t_p1, lock_in_t_p2;
+	
+	ThreadArgs args_p1;
+	args_p1.state = &state;
+	args_p1.player_id = PLAYER_1;
+
+	ThreadArgs args_p2;
+	args_p2.state = &state;
+	args_p2.player_id = PLAYER_2;
+
+	ClientServerThreadArgs args;
+	args.client_server_socket = client_socket;
+	args.state = &state;
+
+	game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
+
+	init_tetrimino(&state, PLAYER_1, get_rand_num(0, 6));
+	init_tetrimino(&state, PLAYER_2, get_rand_num(0, 6));
+
+	if (pthread_create(&periodic_t_p1, NULL, &periodic_thread, &args_p1))
+		printf("Could not run periodic thread\n");
+	if (pthread_create(&lock_in_t_p1, NULL, &lock_in_thread, &args_p1))
+		printf("Could not run lock in thread\n");
+
+	if (pthread_create(&periodic_t_p2, NULL, &periodic_thread, &args_p2))
+		printf("Could not run periodic thread\n");
+	if (pthread_create(&lock_in_t_p2, NULL, &lock_in_thread, &args_p2))
+		printf("Could not run lock in thread\n");
+
+	if (pthread_create(&send_t, NULL, &server_send_thread, &args))
+		printf("Could not run send thread\n");
+
+	while (TRUE) {
+		numbytes = recv(client_socket, &input, sizeof(int), 0);
+		if (numbytes == -1) {
+			perror("server recv");
+		}
+        printf("server: received '%d'\n", input);
+
+		if (is_input_useful(input, controls_p1)) {
+			pthread_mutex_lock(&(state.tetrimino[PLAYER_1].lock));
+
+			switch(input)
+			{
+				case KEY_LEFT:
+					move_tetrimino(&state, PLAYER_1, LEFT); break;
+				case KEY_RIGHT:
+					move_tetrimino(&state, PLAYER_1, RIGHT); break;
+				case KEY_DOWN:
+					move_tetrimino(&state, PLAYER_1, DOWN); break;
+				case KEY_UP:
+					num_complete_lines_1 = drop_tetrimino(&state, PLAYER_1); break;
+				case P_KEY:
+					rotate_tetrimino(&state, PLAYER_1, CW); break;
+				case O_KEY:
+					rotate_tetrimino(&state, PLAYER_1, CCW); break;
+				case ENTER_KEY:
+					hold_tetrimino(&state, PLAYER_1); break;
+			}
+			if (input == KEY_UP) // if tetrimino was dropped
+				add_garbage(&state, PLAYER_2, PLAYER_1, num_complete_lines_1);
+
+			pthread_mutex_unlock(&(state.tetrimino[PLAYER_1].lock));
+			usleep(random() % STALL);
+		}
+
+		else if (is_input_useful(input, controls_p2))
+		{
+			pthread_mutex_lock(&(state.tetrimino[PLAYER_2].lock));
+
+			switch(input)
+			{
+				case A_KEY:
+					move_tetrimino(&state, PLAYER_2, LEFT); break;
+				case D_KEY:
+					move_tetrimino(&state, PLAYER_2, RIGHT); break;
+				case S_KEY:
+					move_tetrimino(&state, PLAYER_2, DOWN); break;
+				case W_KEY:
+					num_complete_lines_2 = drop_tetrimino(&state, PLAYER_2); break;
+				case G_KEY:
+					rotate_tetrimino(&state, PLAYER_2, CW); break;
+				case F_KEY:
+					rotate_tetrimino(&state, PLAYER_2, CCW); break;
+				case SPACE_KEY:
+					hold_tetrimino(&state, PLAYER_2); break;
+			}
+			if (input == W_KEY) // if tetrimino was dropped
+				add_garbage(&state, PLAYER_1, PLAYER_2, num_complete_lines_2);
+
+			pthread_mutex_unlock(&(state.tetrimino[PLAYER_2].lock));
+			usleep(random() % STALL);
+		}
+		else {
+			usleep(random() % STALL);
+		}
+		// TODO: how to resolve game over with client
+		if (state.game_over_flag) break;
+	}
+
+	printf("this should not happen %d\n", state.game_over_flag);
+	pthread_cancel(periodic_t_p1);
+	pthread_cancel(lock_in_t_p1);
+	pthread_cancel(periodic_t_p2);
+	pthread_cancel(lock_in_t_p2);
+
+	pthread_cancel(send_t);
+
+	if (pthread_join(periodic_t_p1, NULL))
+		printf("Could not properly terminate periodic thread\n");
+	if (pthread_join(lock_in_t_p1, NULL))
+		printf("Could not properly terminate lock in thread\n");
+	if (pthread_join(periodic_t_p2, NULL))
+		printf("Could not properly terminate periodic thread\n");
+	if (pthread_join(lock_in_t_p2, NULL))
+		printf("Could not properly terminate lock in thread\n");
+
+	if (pthread_join(send_t, NULL))
+		printf("Could not properly terminate send thread\n");
+}
+
 int main (void)
 {
 	// Networking stuff
@@ -36,10 +203,6 @@ int main (void)
 	int yes=1;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
-
-	// Game stuff
-	GameState state;
-	int input;	
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -88,7 +251,6 @@ int main (void)
 
     printf("server: waiting for connections...\n");
 
-    // TODO: accept connections
     sin_size = sizeof their_addr;
     new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
     if (new_fd == -1) {
@@ -100,12 +262,9 @@ int main (void)
         s, sizeof s);
     printf("server: got connection from %s\n", s);
 
-	while ((numbytes = recv(new_fd, &input, sizeof(int), 0)) > 0) {
-	    // perror("recv");
-	    // exit(1);
-        // buf[numbytes] = '\0';
-        printf("server: received '%d'\n", input);
-	}
+	run_game(new_fd);
+
+
 
     // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
     //     perror("send");
@@ -130,11 +289,7 @@ int main (void)
     //     perror("send");
     // }
 
-    // usleep(3000000);
-
     close(new_fd);
-    // close(new_fd2);
-
     close(sockfd);
 
     return 0;

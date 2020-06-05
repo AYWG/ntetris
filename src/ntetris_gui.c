@@ -198,6 +198,38 @@ void gui_cleanup(GUI *gui, int mode)
 	}
 }
 
+/* Thread responsible updating the GUI */
+void *run_gui (void *ui)
+{
+	GUI *gui = (GUI *) ui;
+	int mode = gui->state->mode;
+
+	while(TRUE)
+	{
+		usleep(gui->refresh_delay);
+
+		// TODO: remove state reference from GUI?
+		update_well(gui, PLAYER_1, gui->state->tetrimino[PLAYER_1].bits, gui->state->well_contents[PLAYER_1]);
+		update_hold(gui, PLAYER_1, gui->state->currently_held_tetrimino[PLAYER_1]);
+
+		if (mode == SINGLE) {
+			update_line_count(gui, PLAYER_1);
+			update_level(gui, PLAYER_1);
+			update_score(gui, PLAYER_1);
+		}
+
+		if (mode == VERSUS) {
+			update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_line[PLAYER_1].counter);
+
+			update_well(gui, PLAYER_2, gui->state->tetrimino[PLAYER_2].bits, gui->state->well_contents[PLAYER_2]);
+			update_hold(gui, PLAYER_2, gui->state->currently_held_tetrimino[PLAYER_2]);
+			update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_line[PLAYER_2].counter);
+		}
+		doupdate();
+	}
+}
+
+
 /* Displays the title of the game at the top of the screen 
 in ASCII. */
 

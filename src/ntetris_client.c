@@ -23,18 +23,58 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void play_ntetris_remote() {
-	int ch;
+void *client_recv_thread(void *recv_args)
+{
+	EPlayer i;
+	int j, k;
+	ClientServerThreadArgs* args = (ClientServerThreadArgs *) recv_args;
 
-	// TODO: connect to server
+	int socket = args->client_server_socket;
+	GameState *state = args->state;
+	ServerResponse response;
+
+	while (TRUE)
+	{
+		if (recv(socket, &response, sizeof(ServerResponse), 0) == -1) {
+			perror("recv");
+			printf("%d\n", socket);
+		}
+
+		state->game_over_flag = response.game_over_flag;
+		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
+			state->current_y_checkpoint[i] = response.currently_held_tetrimino[i];
+			state->garbage_line[i].counter = response.garbage_line_counter[i];
+
+			for (j = 0; j < NUM_BITS; j++) {
+				state->tetrimino[i].bits[j] = response.tetrmino_bits[i][j];
+				state->tetrimino[i].bits[j] = response.tetrmino_bits[i][j];
+			}
+
+			for (j = 0; j < WELL_CONTENTS_HEIGHT; j++)
+				for (k = 0; k < WELL_CONTENTS_WIDTH; k++)
+					state->well_contents[i][j][k] = response.well_contents[i][j][k];
+		}
+	}
+
+}
+
+void play_ntetris_remote(GameState *local_game_state) {
+	int ch;
 	int socket_to_server = connect_to_server("localhost");
+
+	pthread_t recv_t;
+	ClientServerThreadArgs args;
+	args.client_server_socket = socket_to_server;
+	args.state = local_game_state;
+
+	if (pthread_create(&recv_t, NULL, &client_recv_thread, &args))
+		printf("Could not run periodic thread\n");
 
 	// Enable semi-non-blocking reads of user input
 	halfdelay(1);
 
 	while ((ch = getch()) != QUIT_KEY) {
 		if (ch != ERR) {
-			// TODO: send it to the server.
 			if (send(socket_to_server, &ch, sizeof(int), 0) == -1) {
     		    perror("send");
     		}
@@ -42,6 +82,10 @@ void play_ntetris_remote() {
 	}
 	// TODO: Notify server that client has quit.
 	close(socket_to_server);
+
+	pthread_cancel(recv_t);
+	if (pthread_join(recv_t, NULL))
+		printf("Could not properly terminate periodic thread\n");
 }
 
 int connect_to_server(const char * hostname) {
@@ -82,19 +126,7 @@ int connect_to_server(const char * hostname) {
 
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
-	printf("client: connecting to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
-
-	// while ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) > 0) {
-	//     // perror("recv");
-	//     // exit(1);
-    //     buf[numbytes] = '\0';
-    //     printf("client: received '%s'\n",buf);
-	// }
-
-    // printf("Server closed socket\n");
-
-	// close(sockfd);
 	return sockfd;
 }
