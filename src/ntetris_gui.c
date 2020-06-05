@@ -209,6 +209,8 @@ void *run_gui (void *ui)
 		usleep(gui->refresh_delay);
 
 		// TODO: remove state reference from GUI?
+		// BUG: this isn't updating from server
+		// printf("hello %d\n", gui->state->tetrimino[PLAYER_1].bits[0].y);
 		update_well(gui, PLAYER_1, gui->state->tetrimino[PLAYER_1].bits, gui->state->well_contents[PLAYER_1]);
 		update_hold(gui, PLAYER_1, gui->state->currently_held_tetrimino[PLAYER_1]);
 

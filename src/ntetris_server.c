@@ -33,23 +33,25 @@ void *server_send_thread(void *send_args)
 	GameState *state = args->state;
 
 	ServerResponse response;
-	response.game_over_flag = state->game_over_flag;
-	for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
-		response.currently_held_tetrimino[i] = state->current_y_checkpoint[i];
-		response.garbage_line_counter[i] = state->garbage_line[i].counter;
-
-		for (j = 0; j < NUM_BITS; j++) {
-			response.tetrmino_bits[i][j] = state->tetrimino[i].bits[j];
-			response.tetrmino_bits[i][j] = state->tetrimino[i].bits[j];
-		}
-
-		for (j = 0; j < WELL_CONTENTS_HEIGHT; j++)
-			for (k = 0; k < WELL_CONTENTS_WIDTH; k++)
-				response.well_contents[i][j][k] = state->well_contents[i][j][k];
-	}
 
 	while (TRUE)
 	{
+		// printf("hello %d\n", state->tetrimino[PLAYER_1].bits[0].y);
+		response.game_over_flag = state->game_over_flag;
+		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
+			response.currently_held_tetrimino[i] = state->current_y_checkpoint[i];
+			response.garbage_line_counter[i] = state->garbage_line[i].counter;
+
+			for (j = 0; j < NUM_BITS; j++) {
+				response.tetrimino_bits[i][j] = state->tetrimino[i].bits[j];
+				response.tetrimino_bits[i][j] = state->tetrimino[i].bits[j];
+			}
+
+			for (j = 0; j < WELL_CONTENTS_HEIGHT; j++)
+				for (k = 0; k < WELL_CONTENTS_WIDTH; k++)
+					response.well_contents[i][j][k] = state->well_contents[i][j][k];
+		}
+
 		if (send(client_socket, &response, sizeof(ServerResponse), 0) == -1) {
 			perror("send");
 		}

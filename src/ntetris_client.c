@@ -39,15 +39,15 @@ void *client_recv_thread(void *recv_args)
 			perror("recv");
 			printf("%d\n", socket);
 		}
-
+		// printf("hello %d\n", response.tetrimino_bits[PLAYER_1][0].y);
 		state->game_over_flag = response.game_over_flag;
 		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
 			state->current_y_checkpoint[i] = response.currently_held_tetrimino[i];
 			state->garbage_line[i].counter = response.garbage_line_counter[i];
 
 			for (j = 0; j < NUM_BITS; j++) {
-				state->tetrimino[i].bits[j] = response.tetrmino_bits[i][j];
-				state->tetrimino[i].bits[j] = response.tetrmino_bits[i][j];
+				state->tetrimino[i].bits[j] = response.tetrimino_bits[i][j];
+				state->tetrimino[i].bits[j] = response.tetrimino_bits[i][j];
 			}
 
 			for (j = 0; j < WELL_CONTENTS_HEIGHT; j++)

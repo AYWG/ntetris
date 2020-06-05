@@ -305,7 +305,7 @@ typedef struct
 {
 	EGameOver game_over_flag;
 	ETetrimino currently_held_tetrimino[NUM_PLAYERS];
-	COORDINATE_PAIR tetrmino_bits[NUM_PLAYERS][NUM_BITS];
+	COORDINATE_PAIR tetrimino_bits[NUM_PLAYERS][NUM_BITS];
 	COORDINATE_PAIR well_contents[NUM_PLAYERS][WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
 	int garbage_line_counter[NUM_PLAYERS];
 } ServerResponse;
