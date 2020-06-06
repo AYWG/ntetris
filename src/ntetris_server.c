@@ -38,7 +38,7 @@ void *server_send_thread(void *send_args)
 	{
 		response.game_over_flag = state->game_over_flag;
 		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
-			response.currently_held_tetrimino[i] = state->current_y_checkpoint[i];
+			response.currently_held_tetrimino[i] = state->currently_held_tetrimino[i];
 			response.garbage_line_counter[i] = state->garbage_line[i].counter;
 
 			for (j = 0; j < NUM_BITS; j++) {

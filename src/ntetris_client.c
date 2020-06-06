@@ -42,7 +42,7 @@ void *client_recv_thread(void *recv_args)
 		// printf("hello %d\n", response.tetrimino_bits[PLAYER_1][0].y);
 		state->game_over_flag = response.game_over_flag;
 		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
-			state->current_y_checkpoint[i] = response.currently_held_tetrimino[i];
+			state->currently_held_tetrimino[i] = response.currently_held_tetrimino[i];
 			state->garbage_line[i].counter = response.garbage_line_counter[i];
 
 			for (j = 0; j < NUM_BITS; j++) {
