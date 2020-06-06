@@ -67,6 +67,17 @@ void play_ntetris_remote(GameState *local_game_state) {
 	args.client_server_socket = socket_to_server;
 	args.state = local_game_state;
 
+	// This needs to be sent only once
+	int well_max[] = {
+		local_game_state->well_max_x[PLAYER_1],
+		local_game_state->well_max_y[PLAYER_1],
+		local_game_state->well_max_x[PLAYER_2],
+		local_game_state->well_max_y[PLAYER_2],
+	};
+	if (send(socket_to_server, well_max, sizeof(int) * 4, MSG_NOSIGNAL) == -1) {
+		perror("sending well_max");
+	}
+
 	if (pthread_create(&recv_t, NULL, &client_recv_thread, &args))
 		printf("Could not run periodic thread\n");
 

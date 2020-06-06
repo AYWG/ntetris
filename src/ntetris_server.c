@@ -86,6 +86,16 @@ void run_game(int client_socket)
 
 	game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
 
+	// Get well_max dimensions before actually starting
+	int well_max[4];
+	if (recv(client_socket, well_max, sizeof(int) * 4, 0) == -1) {
+		perror("recv well_max");
+	}
+	state.well_max_x[PLAYER_1] = well_max[0];
+	state.well_max_y[PLAYER_1] = well_max[1];
+	state.well_max_x[PLAYER_2] = well_max[2];
+	state.well_max_y[PLAYER_2] = well_max[3];
+
 	init_tetrimino(&state, PLAYER_1, get_rand_num(0, 6));
 	init_tetrimino(&state, PLAYER_2, get_rand_num(0, 6));
 
