@@ -36,7 +36,6 @@ void *server_send_thread(void *send_args)
 
 	while (TRUE)
 	{
-		// printf("hello %d\n", state->tetrimino[PLAYER_1].bits[0].y);
 		response.game_over_flag = state->game_over_flag;
 		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
 			response.currently_held_tetrimino[i] = state->current_y_checkpoint[i];
@@ -52,8 +51,8 @@ void *server_send_thread(void *send_args)
 					response.well_contents[i][j][k] = state->well_contents[i][j][k];
 		}
 
-		if (send(client_socket, &response, sizeof(ServerResponse), 0) == -1) {
-			perror("send");
+		if (send(client_socket, &response, sizeof(ServerResponse), MSG_NOSIGNAL) == -1) {
+			break;
 		}
 	}
 }

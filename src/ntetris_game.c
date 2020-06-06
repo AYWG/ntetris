@@ -418,7 +418,6 @@ then GAME_OVER_FLAG is set */
 
 void init_tetrimino (GameState *state, EPlayer player_id, ETetrimino tetrimino_id)
 {
-	printf("this should be printed\n");
 	state->tetrimino[player_id].tetrimino_type = tetrimino_id;
 	state->tetrimino[player_id].pivot_bit = pivot_bits[tetrimino_id];
 
@@ -427,7 +426,6 @@ void init_tetrimino (GameState *state, EPlayer player_id, ETetrimino tetrimino_i
 	{
 		if ((state->well_contents[player_id][init_y[tetrimino_id][i] - 1][init_x[tetrimino_id][i] - 1].value & A_CHARTEXT) != ' ')
 		{
-			printf("init_tetrimino failing\n");
 			state->game_over_flag = player_id == PLAYER_1 ? PLAYER_1_LOST : PLAYER_2_LOST;
 			return;
 		}
@@ -851,9 +849,9 @@ void *periodic_thread (void *arguments)
 	{
 		usleep(state->game_delay); 
 		
-		pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
+		pthread_mutex_lock(&(state->tetrimino[player_id].lock));
 		move_tetrimino(state, player_id, DOWN);
-		pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
+		pthread_mutex_unlock(&(state->tetrimino[player_id].lock));
 	}
 }
 
@@ -866,7 +864,7 @@ void *lock_in_thread (void *arguments)
 	EPlayer player_id = args->player_id;
 	EPlayer other_player_id = player_id == PLAYER_1 ? PLAYER_2 : PLAYER_1;
 	COORDINATE_PAIR current_bits[NUM_BITS];
-	int pivot_bit = state->tetrimino[PLAYER_1].pivot_bit;
+	int pivot_bit = state->tetrimino[player_id].pivot_bit;
 	int num_complete_lines;
 
 	while(TRUE)
@@ -894,7 +892,7 @@ void *lock_in_thread (void *arguments)
 			continue;
 		}
 
-		pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
+		pthread_mutex_lock(&(state->tetrimino[player_id].lock));
 		lock_tetrimino_into_well(state, player_id);
 		num_complete_lines = update_lines(state, player_id);
 
@@ -904,6 +902,6 @@ void *lock_in_thread (void *arguments)
 		}
 		
 		init_tetrimino(state, player_id, get_rand_num(0, 6));
-		pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
+		pthread_mutex_unlock(&(state->tetrimino[player_id].lock));
 	}
 }

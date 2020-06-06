@@ -75,8 +75,8 @@ void play_ntetris_remote(GameState *local_game_state) {
 
 	while ((ch = getch()) != QUIT_KEY) {
 		if (ch != ERR) {
-			if (send(socket_to_server, &ch, sizeof(int), 0) == -1) {
-    		    perror("send");
+			if (send(socket_to_server, &ch, sizeof(int), MSG_NOSIGNAL) == -1) {
+    		    break;
     		}
 		}
 	}
