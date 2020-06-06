@@ -180,7 +180,6 @@ void run_game(int client_socket)
 		if (state.game_over_flag) break;
 	}
 
-	printf("this should not happen %d\n", state.game_over_flag);
 	pthread_cancel(periodic_t_p1);
 	pthread_cancel(lock_in_t_p1);
 	pthread_cancel(periodic_t_p2);
@@ -262,25 +261,26 @@ int main (void)
 
     printf("server: waiting for connections...\n");
 
-    sin_size = sizeof their_addr;
-    new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-    if (new_fd == -1) {
-        perror("accept");
-    }
+	while (TRUE) {
+		sin_size = sizeof their_addr;
+		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+		if (new_fd == -1) {
+			perror("accept");
+		}
 
-    inet_ntop(their_addr.ss_family,
-        get_in_addr((struct sockaddr *)&their_addr),
-        s, sizeof s);
-    printf("server: got connection from %s\n", s);
+		inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s);
+		printf("server: got connection from %s\n", s);
 
-	run_game(new_fd);
+		run_game(new_fd);
 
-
+		close(new_fd);
+	}
 
     // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
     //     perror("send");
     // }
-
     // sin_size = sizeof their_addr;
     // new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
     // if (new_fd2 == -1) {
@@ -300,7 +300,7 @@ int main (void)
     //     perror("send");
     // }
 
-    close(new_fd);
+    
     close(sockfd);
 
     return 0;

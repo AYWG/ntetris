@@ -90,6 +90,7 @@ void play_ntetris_remote(GameState *local_game_state) {
     		    break;
     		}
 		}
+		if (local_game_state->game_over_flag) break;
 	}
 	// TODO: Notify server that client has quit.
 	close(socket_to_server);
