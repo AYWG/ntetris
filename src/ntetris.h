@@ -342,6 +342,7 @@ void print_title_small(GUI *gui);
 
 /* Game prototypes*/
 void game_state_init(GameState *state, EDifficulty difficulty, int mode);
+void game_state_reset(GameState *state);
 void play_ntetris_single (GameState *state);
 void play_ntetris_versus (GameState *state);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);

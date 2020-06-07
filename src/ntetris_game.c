@@ -44,7 +44,17 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 		state->game_delay = INTERMEDIATE_INIT_DELAY;
 	}
 
-	// Init well contents
+	// Reset variables
+	game_state_reset(state);
+
+	// Init locks
+	pthread_mutex_init(&(state->tetrimino[PLAYER_1].lock), NULL);
+	pthread_mutex_init(&(state->tetrimino[PLAYER_2].lock), NULL);
+	pthread_mutex_init(&(state->garbage_line[PLAYER_1].lock), NULL);
+	pthread_mutex_init(&(state->garbage_line[PLAYER_2].lock), NULL);
+}
+
+void game_state_reset(GameState *state) {
 	int i, j;
 	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
 	{
@@ -54,15 +64,12 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 			state->well_contents[PLAYER_1][i][j].x = j + 1;
 			state->well_contents[PLAYER_1][i][j].value = ' ';
 
-			if (mode == VERSUS) {
-				state->well_contents[PLAYER_2][i][j].y = i + 1;
-				state->well_contents[PLAYER_2][i][j].x = j + 1;
-				state->well_contents[PLAYER_2][i][j].value = ' ';
-			}
+			state->well_contents[PLAYER_2][i][j].y = i + 1;
+			state->well_contents[PLAYER_2][i][j].x = j + 1;
+			state->well_contents[PLAYER_2][i][j].value = ' ';
 		}
 	}
 
-	// Init variables
 	state->currently_held_tetrimino[PLAYER_1] = INVALID_ID;
 	state->currently_held_tetrimino[PLAYER_2] = INVALID_ID;
 	state->game_over_flag = NOT_OVER;
@@ -74,12 +81,6 @@ void game_state_init(GameState *state, EDifficulty difficulty, int mode)
 	state->current_y_checkpoint[PLAYER_2] = 0;
 	state->garbage_line[PLAYER_1].counter = 0;
 	state->garbage_line[PLAYER_2].counter = 0;
-
-	// Init locks
-	pthread_mutex_init(&(state->tetrimino[PLAYER_1].lock), NULL);
-	pthread_mutex_init(&(state->tetrimino[PLAYER_2].lock), NULL);
-	pthread_mutex_init(&(state->garbage_line[PLAYER_1].lock), NULL);
-	pthread_mutex_init(&(state->garbage_line[PLAYER_2].lock), NULL);
 }
 
 /* Checks if the given input is an element of controls */
@@ -580,8 +581,6 @@ int update_lines(GameState *state, EPlayer player_id)
 
 void play_ntetris_single (GameState *state) 
 {
-	// GameState *state = (GameState *) game_state;
-
 	init_tetrimino(state, PLAYER_1, get_rand_num(0, 6));
 
 	pthread_t periodic_t;
@@ -639,7 +638,6 @@ void play_ntetris_single (GameState *state)
 		}
 	}
 	/* getch() calls are now blocking as usual */
-	nocbreak();
 	cbreak();
 
 	/* This point is reached if user presses QUIT_KEY or GAME_OVER_FLAG is set; 
@@ -758,7 +756,6 @@ void play_ntetris_versus (GameState *state)
 		}
 	}
 	/* getch() calls are now blocking as usual */
-	nocbreak();
 	cbreak();
 
 	/* This point is reached if user presses QUIT_KEY or GAME_OVER_FLAG is set; 

@@ -37,9 +37,7 @@ void *client_recv_thread(void *recv_args)
 	{
 		if (recv(socket, &response, sizeof(ServerResponse), 0) == -1) {
 			perror("recv");
-			printf("%d\n", socket);
 		}
-		// printf("hello %d\n", response.tetrimino_bits[PLAYER_1][0].y);
 		state->game_over_flag = response.game_over_flag;
 		for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
 			state->currently_held_tetrimino[i] = response.currently_held_tetrimino[i];
@@ -92,12 +90,15 @@ void play_ntetris_remote(GameState *local_game_state) {
 		}
 		if (local_game_state->game_over_flag) break;
 	}
-	// TODO: Notify server that client has quit.
-	close(socket_to_server);
+
+	// Reads are now blocking
+	cbreak();
 
 	pthread_cancel(recv_t);
 	if (pthread_join(recv_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
+	// TODO: Notify server that client has quit.
+	close(socket_to_server);
 }
 
 int connect_to_server(const char * hostname) {

@@ -117,6 +117,9 @@ void run_game(int client_socket)
 		if (numbytes == -1) {
 			perror("server recv");
 		}
+		if (numbytes <= 0) {
+			break;
+		}
         printf("server: received '%d'\n", input);
 
 		if (is_input_useful(input, controls_p1)) {

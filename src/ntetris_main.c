@@ -149,6 +149,7 @@ int main(int argc, char **argv)
 		{
 			// TODO: this is hacky
 			state.mode = VERSUS;
+			game_state_reset(&state);
 			clear();
 			refresh();
 			gui_init(&gui, &state);
@@ -160,8 +161,6 @@ int main(int argc, char **argv)
 
 			pthread_cancel(gui_t);
 			gui_cleanup(&gui, SINGLE);
-
-			break;
 
 			// game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
 			// clear();
@@ -175,27 +174,27 @@ int main(int argc, char **argv)
 			// pthread_cancel(gui_t);
 			// gui_cleanup(&gui, VERSUS);
 
-			// if(state.game_over_flag)
-			// {
-			// 	clear();
-			// 	attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-			// 	if (state.game_over_flag == 1)
-			// 		mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
-			// 	else if (state.game_over_flag == 2)
-			// 		mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
-			// 	attroff(COLOR_PAIR(Z_COLOR_PAIR));
+			if(state.game_over_flag)
+			{
+				clear();
+				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+				if (state.game_over_flag == 1)
+					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
+				else if (state.game_over_flag == 2)
+					mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
+				attroff(COLOR_PAIR(Z_COLOR_PAIR));
 
-			// 	mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
-			// 	mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
+				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
+				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
 
-			// 	int game_over_choice = getch();
-			// 	if (game_over_choice == RESTART_KEY)
-			// 	{
-			// 		continue;
-			// 	} 
-			// 	else break;
-			// }
-			// else continue; 
+				int game_over_choice = getch();
+				if (game_over_choice == RESTART_KEY)
+				{
+					continue;
+				} 
+				else break;
+			}
+			else continue; 
 		}
 		else if (choice == CONTROLS)
 		{
