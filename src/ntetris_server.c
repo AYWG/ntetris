@@ -163,14 +163,14 @@ void run_game(int client_sockets[NUM_PLAYERS])
 	if (pthread_create(&send_t, NULL, &server_send_thread, &server_send_args))
 		printf("Could not run server send thread\n");
 
-	for (i = PLAYER_1; i < NUM_PLAYERS; i++)
-		if (pthread_join(recv_t[i], NULL))
-			printf("Could not properly terminate server recv thread\n");
+	// for (i = PLAYER_1; i < NUM_PLAYERS; i++)
+	// 	if (pthread_join(recv_t[i], NULL))
+	// 		printf("Could not properly terminate server recv thread\n");
 
 	// Cleanup
-	pthread_cancel(send_t);
 	if (pthread_join(send_t, NULL))
 		printf("Could not properly terminate send thread\n");
+
 	for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
 		pthread_cancel(periodic_t[i]);
 		if (pthread_join(periodic_t[i], NULL))
@@ -179,6 +179,10 @@ void run_game(int client_sockets[NUM_PLAYERS])
 		pthread_cancel(lock_in_t[i]);
 		if (pthread_join(lock_in_t[i], NULL))
 			printf("Could not properly terminate lock in thread\n");
+
+		pthread_cancel(recv_t[i]);
+		if (pthread_join(recv_t[i], NULL))
+			printf("Could not properly terminate recv thread\n");
 	}
 }
 

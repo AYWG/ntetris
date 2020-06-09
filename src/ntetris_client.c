@@ -56,8 +56,8 @@ void *client_recv_thread(void *recv_args)
 
 }
 
-void play_ntetris_remote(GameState *local_game_state) {
-	int ch;
+int play_ntetris_remote(GameState *local_game_state) {
+	int ch, exit_status = 0;
 	int socket_to_server = connect_to_server("localhost");
 	EPlayer player_id;
 	pthread_t recv_t;
@@ -65,8 +65,6 @@ void play_ntetris_remote(GameState *local_game_state) {
 	args.server_socket = socket_to_server;
 	args.state = local_game_state;
 
-	// TODO: check if this is first client or second client
-	// Value received from server will indicate player 1 or 2
 	if (recv(socket_to_server, &player_id, sizeof(EPlayer), 0) == -1) {
 		perror("waiting on both clients");
 	}
@@ -86,13 +84,10 @@ void play_ntetris_remote(GameState *local_game_state) {
 	// Enable semi-non-blocking reads of user input
 	halfdelay(1);
 
-	// TODO: deal with other client quitting
-
 	while ((ch = getch()) != QUIT_KEY) {
-		if (ch != ERR) {
-			if (send(socket_to_server, &ch, sizeof(int), MSG_NOSIGNAL) == -1) {
-    		    break;
-    		}
+		if (send(socket_to_server, &ch, sizeof(int), MSG_NOSIGNAL) == -1) {
+			exit_status = 1;
+			break;
 		}
 		if (local_game_state->game_over_flag) break;
 	}
@@ -103,8 +98,9 @@ void play_ntetris_remote(GameState *local_game_state) {
 	pthread_cancel(recv_t);
 	if (pthread_join(recv_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
-	// TODO: Notify server that client has quit.
 	close(socket_to_server);
+
+	return exit_status;
 }
 
 int connect_to_server(const char * hostname) {

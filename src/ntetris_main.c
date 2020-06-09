@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 	ntetris_init();
 	
 	int choice;
+	int exit_status;
 	EDifficulty difficulty;
 	int row, col;
 	getmaxyx(stdscr, row, col);
@@ -95,6 +96,7 @@ int main(int argc, char **argv)
 	char game_over_msg_opt_2[] = "Press any other key to quit";
 	char versus_p1_win_msg[] = "Player 1 wins!";
 	char versus_p2_win_msg[] = "Player 2 wins!";
+	char disconnect_msg[] = "Other player disconnected";
 
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
@@ -157,7 +159,7 @@ int main(int argc, char **argv)
 			if (pthread_create(&gui_t, NULL, &run_gui, &gui))
 				printf("Could not run GUI\n");
 
-			play_ntetris_remote(&state);
+			exit_status = play_ntetris_remote(&state);
 
 			pthread_cancel(gui_t);
 			gui_cleanup(&gui, SINGLE);
@@ -192,6 +194,17 @@ int main(int argc, char **argv)
 				{
 					continue;
 				} 
+				else break;
+			}
+			else if (exit_status)
+			{
+				clear();
+				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+				mvprintw(row/2 - 6, (col-strlen(disconnect_msg))/2, "%s", disconnect_msg);
+				attroff(COLOR_PAIR(Z_COLOR_PAIR));
+				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
+				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
+				if (getch() == RESTART_KEY) continue;
 				else break;
 			}
 			else continue; 
