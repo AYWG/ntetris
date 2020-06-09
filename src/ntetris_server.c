@@ -27,9 +27,8 @@ void *server_send_thread(void *send_args)
 {
 	EPlayer i;
 	int j, k;
-	ClientServerThreadArgs *args = (ClientServerThreadArgs *) send_args;
+	ServerSendThreadArgs *args = (ServerSendThreadArgs *) send_args;
 
-	int client_socket = args->client_server_socket;
 	GameState *state = args->state;
 
 	ServerResponse response;
@@ -51,156 +50,136 @@ void *server_send_thread(void *send_args)
 					response.well_contents[i][j][k] = state->well_contents[i][j][k];
 		}
 
-		if (send(client_socket, &response, sizeof(ServerResponse), MSG_NOSIGNAL) == -1) {
+		if (send(args->client_sockets[PLAYER_1], &response, sizeof(ServerResponse), MSG_NOSIGNAL) == -1) {
+			break;
+		}
+
+		if (send(args->client_sockets[PLAYER_2], &response, sizeof(ServerResponse), MSG_NOSIGNAL) == -1) {
 			break;
 		}
 	}
 }
 
-
-void run_game(int client_socket)
+void *server_recv_thread(void *recv_args)
 {
-	int numbytes, input;
-	int num_complete_lines_1;
-	int num_complete_lines_2;
-	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
-	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
+	ServerRecvThreadArgs *args = (ServerRecvThreadArgs *) recv_args;
 
-	GameState state;
-	
-	pthread_t send_t;
-	pthread_t periodic_t_p1, periodic_t_p2;
-	pthread_t lock_in_t_p1, lock_in_t_p2;
-	
-	ThreadArgs args_p1;
-	args_p1.state = &state;
-	args_p1.player_id = PLAYER_1;
-
-	ThreadArgs args_p2;
-	args_p2.state = &state;
-	args_p2.player_id = PLAYER_2;
-
-	ClientServerThreadArgs args;
-	args.client_server_socket = client_socket;
-	args.state = &state;
-
-	game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
-
-	// Get well_max dimensions before actually starting
-	int well_max[4];
-	if (recv(client_socket, well_max, sizeof(int) * 4, 0) == -1) {
-		perror("recv well_max");
-	}
-	state.well_max_x[PLAYER_1] = well_max[0];
-	state.well_max_y[PLAYER_1] = well_max[1];
-	state.well_max_x[PLAYER_2] = well_max[2];
-	state.well_max_y[PLAYER_2] = well_max[3];
-
-	init_tetrimino(&state, PLAYER_1, get_rand_num(0, 6));
-	init_tetrimino(&state, PLAYER_2, get_rand_num(0, 6));
-
-	if (pthread_create(&periodic_t_p1, NULL, &periodic_thread, &args_p1))
-		printf("Could not run periodic thread\n");
-	if (pthread_create(&lock_in_t_p1, NULL, &lock_in_thread, &args_p1))
-		printf("Could not run lock in thread\n");
-
-	if (pthread_create(&periodic_t_p2, NULL, &periodic_thread, &args_p2))
-		printf("Could not run periodic thread\n");
-	if (pthread_create(&lock_in_t_p2, NULL, &lock_in_thread, &args_p2))
-		printf("Could not run lock in thread\n");
-
-	if (pthread_create(&send_t, NULL, &server_send_thread, &args))
-		printf("Could not run send thread\n");
+	int input, numbytes, num_complete_lines;
+	EPlayer player_id = args->player_id;
+	EPlayer other_player_id = player_id == PLAYER_1 ? PLAYER_2 : PLAYER_1;
+	GameState *state = args->state;
 
 	while (TRUE) {
-		numbytes = recv(client_socket, &input, sizeof(int), 0);
+		numbytes = recv(args->client_socket, &input, sizeof(int), 0);
 		if (numbytes == -1) {
 			perror("server recv");
 		}
 		if (numbytes <= 0) {
 			break;
 		}
-        printf("server: received '%d'\n", input);
+		pthread_mutex_lock(&(state->tetrimino[player_id].lock));
 
-		if (is_input_useful(input, controls_p1)) {
-			pthread_mutex_lock(&(state.tetrimino[PLAYER_1].lock));
-
-			switch(input)
-			{
-				case KEY_LEFT:
-					move_tetrimino(&state, PLAYER_1, LEFT); break;
-				case KEY_RIGHT:
-					move_tetrimino(&state, PLAYER_1, RIGHT); break;
-				case KEY_DOWN:
-					move_tetrimino(&state, PLAYER_1, DOWN); break;
-				case KEY_UP:
-					num_complete_lines_1 = drop_tetrimino(&state, PLAYER_1); break;
-				case P_KEY:
-					rotate_tetrimino(&state, PLAYER_1, CW); break;
-				case O_KEY:
-					rotate_tetrimino(&state, PLAYER_1, CCW); break;
-				case ENTER_KEY:
-					hold_tetrimino(&state, PLAYER_1); break;
-			}
-			if (input == KEY_UP) // if tetrimino was dropped
-				add_garbage(&state, PLAYER_2, PLAYER_1, num_complete_lines_1);
-
-			pthread_mutex_unlock(&(state.tetrimino[PLAYER_1].lock));
-			usleep(random() % STALL);
+		if (input == args->controls[MOVE_LEFT]) 
+			move_tetrimino(state, player_id, LEFT);
+		else if (input == args->controls[MOVE_RIGHT]) 
+			move_tetrimino(state, player_id, RIGHT);
+		else if (input == args->controls[MOVE_DOWN]) 
+			move_tetrimino(state, player_id, DOWN);
+		else if (input == args->controls[DROP]) {
+			num_complete_lines = drop_tetrimino(state, player_id);
+			add_garbage(state, other_player_id, player_id, num_complete_lines);
 		}
+		else if (input == args->controls[ROTATE_CW])
+			rotate_tetrimino(state, player_id, CW);
+		else if (input == args->controls[ROTATE_CW])
+			rotate_tetrimino(state, player_id, CCW);
+		else if (input == args->controls[HOLD])
+			hold_tetrimino(state, player_id);
 
-		else if (is_input_useful(input, controls_p2))
-		{
-			pthread_mutex_lock(&(state.tetrimino[PLAYER_2].lock));
+		pthread_mutex_unlock(&(state->tetrimino[player_id].lock));
+		usleep(random() % STALL);
+	}
+}
 
-			switch(input)
-			{
-				case A_KEY:
-					move_tetrimino(&state, PLAYER_2, LEFT); break;
-				case D_KEY:
-					move_tetrimino(&state, PLAYER_2, RIGHT); break;
-				case S_KEY:
-					move_tetrimino(&state, PLAYER_2, DOWN); break;
-				case W_KEY:
-					num_complete_lines_2 = drop_tetrimino(&state, PLAYER_2); break;
-				case G_KEY:
-					rotate_tetrimino(&state, PLAYER_2, CW); break;
-				case F_KEY:
-					rotate_tetrimino(&state, PLAYER_2, CCW); break;
-				case SPACE_KEY:
-					hold_tetrimino(&state, PLAYER_2); break;
-			}
-			if (input == W_KEY) // if tetrimino was dropped
-				add_garbage(&state, PLAYER_1, PLAYER_2, num_complete_lines_2);
 
-			pthread_mutex_unlock(&(state.tetrimino[PLAYER_2].lock));
-			usleep(random() % STALL);
-		}
-		else {
-			usleep(random() % STALL);
-		}
-		// TODO: how to resolve game over with client
-		if (state.game_over_flag) break;
+void run_game(int client_sockets[NUM_PLAYERS])
+{
+	int controls[NUM_PLAYERS][NUM_CONTROLS] = {
+		{KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY},
+		{A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY}
+	};
+	EPlayer i;
+	int c;
+
+	GameState state;
+	game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
+	
+	pthread_t periodic_t[NUM_PLAYERS];
+	pthread_t lock_in_t[NUM_PLAYERS];
+	pthread_t send_t;
+	pthread_t recv_t[NUM_PLAYERS];
+	
+	ThreadArgs thread_args[NUM_PLAYERS];
+
+	ServerSendThreadArgs server_send_args;
+	server_send_args.state = &state;
+
+	ServerRecvThreadArgs server_recv_args[NUM_PLAYERS];
+
+	// Get well_max dimensions before actually starting
+	int well_max[4];
+	if (recv(client_sockets[PLAYER_1], well_max, sizeof(int) * 2, 0) == -1) {
+		perror("recv well_max");
 	}
 
-	pthread_cancel(periodic_t_p1);
-	pthread_cancel(lock_in_t_p1);
-	pthread_cancel(periodic_t_p2);
-	pthread_cancel(lock_in_t_p2);
+	if (recv(client_sockets[PLAYER_2], well_max + 2, sizeof(int) * 2, 0) == -1) {
+		perror("recv well_max");
+	}
 
+	for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
+		state.well_max_x[i] = well_max[i * 2];
+		state.well_max_y[i] = well_max[i * 2 + 1];
+
+		init_tetrimino(&state, i, get_rand_num(0, 6));
+
+		thread_args[i].state = &state;
+		thread_args[i].player_id = i;
+		server_send_args.client_sockets[i] = client_sockets[i];
+
+		if (pthread_create(&periodic_t[i], NULL, &periodic_thread, &thread_args[i]))
+			printf("Could not run periodic thread\n");
+		if (pthread_create(&lock_in_t[i], NULL, &lock_in_thread, &thread_args[i]))
+			printf("Could not run lock in thread\n");
+
+		server_recv_args[i].client_socket = client_sockets[i];
+		for (c = 0; c < NUM_CONTROLS; c++)  
+			server_recv_args[i].controls[c] = controls[i][c];
+		server_recv_args[i].player_id = i;
+		server_recv_args[i].state = &state;
+
+		if (pthread_create(&recv_t[i], NULL, &server_recv_thread, &server_recv_args[i]))
+			printf("Could not run server recv thread\n");
+	}
+	if (pthread_create(&send_t, NULL, &server_send_thread, &server_send_args))
+		printf("Could not run server send thread\n");
+
+	for (i = PLAYER_1; i < NUM_PLAYERS; i++)
+		if (pthread_join(recv_t[i], NULL))
+			printf("Could not properly terminate server recv thread\n");
+
+	// Cleanup
 	pthread_cancel(send_t);
-
-	if (pthread_join(periodic_t_p1, NULL))
-		printf("Could not properly terminate periodic thread\n");
-	if (pthread_join(lock_in_t_p1, NULL))
-		printf("Could not properly terminate lock in thread\n");
-	if (pthread_join(periodic_t_p2, NULL))
-		printf("Could not properly terminate periodic thread\n");
-	if (pthread_join(lock_in_t_p2, NULL))
-		printf("Could not properly terminate lock in thread\n");
-
 	if (pthread_join(send_t, NULL))
 		printf("Could not properly terminate send thread\n");
+	for (i = PLAYER_1; i < NUM_PLAYERS; i++) {
+		pthread_cancel(periodic_t[i]);
+		if (pthread_join(periodic_t[i], NULL))
+			printf("Could not properly terminate periodic thread\n");
+		
+		pthread_cancel(lock_in_t[i]);
+		if (pthread_join(lock_in_t[i], NULL))
+			printf("Could not properly terminate lock in thread\n");
+	}
 }
 
 int main (void)
@@ -214,6 +193,8 @@ int main (void)
 	socklen_t sin_size;
 	// struct sigaction sa;
 	int yes=1;
+	EPlayer player_1 = PLAYER_1;
+	EPlayer player_2 = PLAYER_2;
 	char s[INET6_ADDRSTRLEN];
 	int rv;
 
@@ -264,46 +245,45 @@ int main (void)
 
     printf("server: waiting for connections...\n");
 
-	while (TRUE) {
-		sin_size = sizeof their_addr;
-		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-		if (new_fd == -1) {
-			perror("accept");
-		}
-
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s);
-		printf("server: got connection from %s\n", s);
-
-		run_game(new_fd);
-
-		close(new_fd);
+	sin_size = sizeof their_addr;
+	new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+	if (new_fd == -1) {
+		perror("accept");
 	}
+
+	// inet_ntop(their_addr.ss_family,
+	// 	get_in_addr((struct sockaddr *)&their_addr),
+	// 	s, sizeof s);
+	// printf("server: got connection from %s\n", s);
 
     // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
     //     perror("send");
     // }
-    // sin_size = sizeof their_addr;
-    // new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-    // if (new_fd2 == -1) {
-    //     perror("accept");
-    // }
+    sin_size = sizeof their_addr;
+    new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+    if (new_fd2 == -1) {
+        perror("accept");
+    }
 
     // inet_ntop(their_addr.ss_family,
     //     get_in_addr((struct sockaddr *)&their_addr),
     //     s, sizeof s);
     // printf("server: got connection from %s\n", s);
 
-    // if (send(new_fd, "Both players connected!", 23, 0) == -1) {
-    //     perror("send");
-    // }
+    if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
+        perror("send");
+    }
 
-    // if (send(new_fd2, "Both players connected!", 23, 0) == -1) {
-    //     perror("send");
-    // }
+    if (send(new_fd2, &player_2, sizeof(EPlayer), 0) == -1) {
+        perror("send");
+    }
 
-    
+	int client_sockets[] = {new_fd, new_fd2};
+
+	run_game(client_sockets);
+
+	close(new_fd);
+	close(new_fd2);
     close(sockfd);
 
     return 0;

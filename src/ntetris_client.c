@@ -27,9 +27,9 @@ void *client_recv_thread(void *recv_args)
 {
 	EPlayer i;
 	int j, k;
-	ClientServerThreadArgs* args = (ClientServerThreadArgs *) recv_args;
+	ClientThreadArgs* args = (ClientThreadArgs *) recv_args;
 
-	int socket = args->client_server_socket;
+	int socket = args->server_socket;
 	GameState *state = args->state;
 	ServerResponse response;
 
@@ -59,20 +59,24 @@ void *client_recv_thread(void *recv_args)
 void play_ntetris_remote(GameState *local_game_state) {
 	int ch;
 	int socket_to_server = connect_to_server("localhost");
-
+	EPlayer player_id;
 	pthread_t recv_t;
-	ClientServerThreadArgs args;
-	args.client_server_socket = socket_to_server;
+	ClientThreadArgs args;
+	args.server_socket = socket_to_server;
 	args.state = local_game_state;
+
+	// TODO: check if this is first client or second client
+	// Value received from server will indicate player 1 or 2
+	if (recv(socket_to_server, &player_id, sizeof(EPlayer), 0) == -1) {
+		perror("waiting on both clients");
+	}
 
 	// This needs to be sent only once
 	int well_max[] = {
-		local_game_state->well_max_x[PLAYER_1],
-		local_game_state->well_max_y[PLAYER_1],
-		local_game_state->well_max_x[PLAYER_2],
-		local_game_state->well_max_y[PLAYER_2],
+		local_game_state->well_max_x[player_id],
+		local_game_state->well_max_y[player_id],
 	};
-	if (send(socket_to_server, well_max, sizeof(int) * 4, MSG_NOSIGNAL) == -1) {
+	if (send(socket_to_server, well_max, sizeof(int) * 2, MSG_NOSIGNAL) == -1) {
 		perror("sending well_max");
 	}
 
@@ -81,6 +85,8 @@ void play_ntetris_remote(GameState *local_game_state) {
 
 	// Enable semi-non-blocking reads of user input
 	halfdelay(1);
+
+	// TODO: deal with other client quitting
 
 	while ((ch = getch()) != QUIT_KEY) {
 		if (ch != ERR) {
@@ -137,8 +143,8 @@ int connect_to_server(const char * hostname) {
 		fprintf(stderr, "client: failed to connect\n");
 	}
 
-	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-			s, sizeof s);
+	// inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
+	// 		s, sizeof s);
 
 	freeaddrinfo(servinfo); // all done with this structure
 	return sockfd;

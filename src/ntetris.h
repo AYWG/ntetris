@@ -292,13 +292,28 @@ typedef struct
 	EPlayer player_id;
 } ThreadArgs;
 
-/* Struct for server_send_thread and client_recv_thread*/
 typedef struct
 {
-	int client_server_socket;
+	GameState *state;
+	EControls controls[NUM_CONTROLS];
+	EPlayer player_id;
+	int client_socket;
+} ServerRecvThreadArgs;
+
+/* Struct for server_send_thread */
+typedef struct
+{
+	int client_sockets[NUM_PLAYERS];
 	GameState *state;
 
-} ClientServerThreadArgs;
+} ServerSendThreadArgs;
+
+/* Struct for client_recv_thread */
+typedef struct
+{
+	int server_socket;
+	GameState *state;
+} ClientThreadArgs;
 
 /* Struct for game data that server sends to client */
 typedef struct
@@ -320,8 +335,6 @@ void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int n
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 void *run_gui(void *ui);
-void *server_send_thread(void *send_args);
-void *client_recv_thread(void *recv_args);
 
 /* GUI prototypes */
 void ntetris_init ();
@@ -365,9 +378,3 @@ void play_ntetris_remote(GameState *local_game_state);
 int connect_to_server(const char * hostname);
 
 #endif
-
-
-
-
-
-
