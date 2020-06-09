@@ -97,6 +97,7 @@ int main(int argc, char **argv)
 	char versus_p1_win_msg[] = "Player 1 wins!";
 	char versus_p2_win_msg[] = "Player 2 wins!";
 	char disconnect_msg[] = "Other player disconnected";
+	char waiting_msg[] = "Waiting for another player...";
 
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	

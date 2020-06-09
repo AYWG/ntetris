@@ -249,10 +249,33 @@ int main (void)
 
     printf("server: waiting for connections...\n");
 
-	sin_size = sizeof their_addr;
-	new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-	if (new_fd == -1) {
-		perror("accept");
+	while (TRUE) {
+		sin_size = sizeof their_addr;
+		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+		if (new_fd == -1) {
+			perror("accept");
+		}	
+
+		sin_size = sizeof their_addr;
+		new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+		if (new_fd2 == -1) {
+			perror("accept");
+		}
+
+		if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
+			perror("send");
+		}
+
+		if (send(new_fd2, &player_2, sizeof(EPlayer), 0) == -1) {
+			perror("send");
+		}
+
+		int client_sockets[] = {new_fd, new_fd2};
+
+		run_game(client_sockets);
+
+		close(new_fd);
+		close(new_fd2);
 	}
 
 	// inet_ntop(their_addr.ss_family,
@@ -263,31 +286,11 @@ int main (void)
     // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
     //     perror("send");
     // }
-    sin_size = sizeof their_addr;
-    new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-    if (new_fd2 == -1) {
-        perror("accept");
-    }
 
-    // inet_ntop(their_addr.ss_family,
+	    // inet_ntop(their_addr.ss_family,
     //     get_in_addr((struct sockaddr *)&their_addr),
     //     s, sizeof s);
     // printf("server: got connection from %s\n", s);
-
-    if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
-        perror("send");
-    }
-
-    if (send(new_fd2, &player_2, sizeof(EPlayer), 0) == -1) {
-        perror("send");
-    }
-
-	int client_sockets[] = {new_fd, new_fd2};
-
-	run_game(client_sockets);
-
-	close(new_fd);
-	close(new_fd2);
     close(sockfd);
 
     return 0;
