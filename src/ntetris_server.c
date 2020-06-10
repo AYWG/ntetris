@@ -276,7 +276,6 @@ int main (void)
 				new_fd = new_fd2;
 			}
 		}
-		
 
 		if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
 			perror("send");

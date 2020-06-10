@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 	ntetris_init();
 	
-	int choice, versus_choice;
+	int choice, versus_choice, game_over_choice;
 	EGameOver game_over_status;
 	EDifficulty difficulty;
 	int row, col;
@@ -95,8 +95,7 @@ int main(int argc, char **argv)
 								};
 
 	char game_over_msg[] = "GAME OVER";								 	  
-	char game_over_msg_opt_1[] = "Press R to return to the main menu";
-	char game_over_msg_opt_2[] = "Press any other key to quit";
+	char game_over_exit_msg[] = "Press ESC to return to the main menu";
 	char versus_p1_win_msg[] = "Player 1 wins!";
 	char versus_p2_win_msg[] = "Player 2 wins!";
 	char disconnect_msg[] = "Other player disconnected";
@@ -127,14 +126,11 @@ int main(int argc, char **argv)
 				mvprintw(row/2 - 3, 24, "Final # of lines cleared: %d", final_line_count);
 				mvprintw(row/2 - 2, 24, "Final score : %d", final_score);
 
-				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
-				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
-				
-				int game_over_choice = getch();
-				if (game_over_choice == RESTART_KEY) continue;
-				else break;
+				mvprintw(row/2 + 2, (col-strlen(game_over_exit_msg))/2, "%s", game_over_exit_msg);
+
+				while ((game_over_choice = getch()) != ESC_KEY);
 			}
-			else break;
+			continue;
 		}
 		else if (choice == VERSUS)
 		{
@@ -158,14 +154,11 @@ int main(int argc, char **argv)
 					mvprintw(row/2 - 6, (col-strlen(disconnect_msg))/2, "%s", disconnect_msg);
 				attroff(COLOR_PAIR(Z_COLOR_PAIR));
 
-				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
-				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
+				mvprintw(row/2 + 2, (col-strlen(game_over_exit_msg))/2, "%s", game_over_exit_msg);
 
-				int game_over_choice = getch();
-				if (game_over_choice == RESTART_KEY) continue;
-				else break;
+				while ((game_over_choice = getch()) != ESC_KEY);
 			}
-			else continue; 
+			continue; 
 		}
 		else if (choice == CONTROLS)
 		{

@@ -223,7 +223,7 @@ typedef enum {
 
 #define QUIT_KEY 113 // q
 #define RESTART_KEY 114 // r
-
+#define ESC_KEY 27
 #define P_KEY 112
 #define O_KEY 111
 #define ENTER_KEY 10 
