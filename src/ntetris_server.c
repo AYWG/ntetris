@@ -23,6 +23,12 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+int is_client_connected(int socket_fd) {
+	char buffer[32];
+
+	return !(recv(socket_fd, buffer, sizeof buffer, MSG_PEEK | MSG_DONTWAIT) == 0);
+}
+
 void *server_send_thread(void *send_args)
 {
 	EPlayer i;
@@ -256,11 +262,21 @@ int main (void)
 			perror("accept");
 		}	
 
-		sin_size = sizeof their_addr;
-		new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-		if (new_fd2 == -1) {
-			perror("accept");
+		while (TRUE) {
+			sin_size = sizeof their_addr;
+			new_fd2 = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+			if (new_fd2 == -1) {
+				perror("accept");
+			}
+
+			// Check if first connection still up
+			if (is_client_connected(new_fd)) break;
+			else {
+				// Treat new connection as "first" connection and try again
+				new_fd = new_fd2;
+			}
 		}
+		
 
 		if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
 			perror("send");
