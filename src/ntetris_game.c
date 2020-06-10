@@ -579,16 +579,25 @@ int update_lines(GameState *state, EPlayer player_id)
 	
 }
 
-void play_ntetris_single (GameState *state) 
+EGameOver play_ntetris_single(EDifficulty difficulty, int *line_count, int *score) 
 {
-	init_tetrimino(state, PLAYER_1, get_rand_num(0, 6));
-
-	pthread_t periodic_t;
-	pthread_t lock_in_t;
-
+	GameState state;
+	GUI gui;
+	pthread_t gui_t, periodic_t, lock_in_t;
 	ThreadArgs args;
-	args.state = state;
+
+	game_state_init(&state, difficulty, SINGLE);
+	clear();
+	refresh();
+	gui_init(&gui, &state);
+
+	args.state = &state;
 	args.player_id = PLAYER_1;
+
+	init_tetrimino(&state, PLAYER_1, get_rand_num(0, 6));
+
+	if (pthread_create(&gui_t, NULL, &run_gui, &gui))
+		printf("Could not run GUI\n");
 	
 	if (pthread_create(&periodic_t, NULL, &periodic_thread, &args))
 		printf("Could not run periodic thread\n");
@@ -607,33 +616,33 @@ void play_ntetris_single (GameState *state)
 		if (ch != ERR)
 		{
 			/* Acquire tetrimino lock before we do anything to the tetrimino */
-			pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
+			pthread_mutex_lock(&(state.tetrimino[PLAYER_1].lock));
 			switch(ch)
 			{
 				case KEY_LEFT:
-					move_tetrimino(state, PLAYER_1, LEFT); break;
+					move_tetrimino(&state, PLAYER_1, LEFT); break;
 				case KEY_RIGHT:
-					move_tetrimino(state, PLAYER_1, RIGHT); break;
+					move_tetrimino(&state, PLAYER_1, RIGHT); break;
 				case KEY_DOWN:
-					move_tetrimino(state, PLAYER_1, DOWN); break;
+					move_tetrimino(&state, PLAYER_1, DOWN); break;
 				case KEY_UP:
-					drop_tetrimino(state, PLAYER_1); break;
+					drop_tetrimino(&state, PLAYER_1); break;
 				case P_KEY:
-					rotate_tetrimino(state, PLAYER_1, CW); break;
+					rotate_tetrimino(&state, PLAYER_1, CW); break;
 				case O_KEY:
-					rotate_tetrimino(state, PLAYER_1, CCW); break;
+					rotate_tetrimino(&state, PLAYER_1, CCW); break;
 				case ENTER_KEY:
-					hold_tetrimino(state, PLAYER_1); break;
+					hold_tetrimino(&state, PLAYER_1); break;
 			}
 			/* Done, so release tetrimino lock */
-			pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
+			pthread_mutex_unlock(&(state.tetrimino[PLAYER_1].lock));
 
 			/* Wait a bit so other threads can acquire lock */
 			usleep(random() % STALL);
 		}
 		else 
 		{
-			if (state->game_over_flag) break;
+			if (state.game_over_flag) break;
 			usleep(random() % STALL);
 		}
 	}
@@ -644,31 +653,52 @@ void play_ntetris_single (GameState *state)
 	need to stop the other threads */
 	pthread_cancel(periodic_t);
 	pthread_cancel(lock_in_t);
+	pthread_cancel(gui_t);
 	if (pthread_join(periodic_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
 	if (pthread_join(lock_in_t, NULL))
 		printf("Could not properly terminate lock in thread\n");
+	if (pthread_join(gui_t, NULL))
+		printf("Could not properly terminate gui thread\n");
+
+	gui_cleanup(&gui, SINGLE);
+	*line_count = state.line_count;
+	*score = state.score;
+	return state.game_over_flag;
 }
 
-void play_ntetris_versus (GameState *state)
+EGameOver play_ntetris_versus()
 {
+	GameState state;
+	GUI gui;
+	pthread_t gui_t;
+	pthread_t periodic_t_p1, periodic_t_p2;
+	pthread_t lock_in_t_p1, lock_in_t_p2;
+	ThreadArgs args_p1, args_p2;
+
+	int ch;
+	int num_complete_lines_1;
+	int num_complete_lines_2;
+
 	int controls_p1[NUM_CONTROLS] = {KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, P_KEY, O_KEY, ENTER_KEY};
 	int controls_p2[NUM_CONTROLS] = {A_KEY, D_KEY, S_KEY, W_KEY, G_KEY, F_KEY, SPACE_KEY};
 
-	init_tetrimino(state, PLAYER_1, get_rand_num(0, 6));
-	init_tetrimino(state, PLAYER_2, get_rand_num(0, 6));
+	game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
+	clear();
+	refresh();
+	gui_init(&gui, &state);
 
-	pthread_t periodic_t_p1, periodic_t_p2;
-	pthread_t lock_in_t_p1, lock_in_t_p2;
-	
-	ThreadArgs args_p1;
-	args_p1.state = state;
+	args_p1.state = &state;
 	args_p1.player_id = PLAYER_1;
 
-	ThreadArgs args_p2;
-	args_p2.state = state;
+	args_p2.state = &state;
 	args_p2.player_id = PLAYER_2;
 
+	init_tetrimino(&state, PLAYER_1, get_rand_num(0, 6));
+	init_tetrimino(&state, PLAYER_2, get_rand_num(0, 6));
+
+	if (pthread_create(&gui_t, NULL, &run_gui, &gui))
+		printf("Could not run gui thread\n");
 	if (pthread_create(&periodic_t_p1, NULL, &periodic_thread, &args_p1))
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t_p1, NULL, &lock_in_thread, &args_p1))
@@ -678,10 +708,6 @@ void play_ntetris_versus (GameState *state)
 		printf("Could not run periodic thread\n");
 	if (pthread_create(&lock_in_t_p2, NULL, &lock_in_thread, &args_p2))
 		printf("Could not run lock in thread\n");
-
-	int ch;
-	int num_complete_lines_1;
-	int num_complete_lines_2;
 
 	/* Cause getch() calls to wait for user input for 0.1 s (rather than wait indefinitely). 
 	If no input is received, getch() returns ERR*/
@@ -695,63 +721,63 @@ void play_ntetris_versus (GameState *state)
 			a given input has any "usefulness" to a specific player (to avoid unnecessary computations) */
 			if (is_input_useful(ch, controls_p1))
 			{
-				pthread_mutex_lock(&(state->tetrimino[PLAYER_1].lock));
+				pthread_mutex_lock(&(state.tetrimino[PLAYER_1].lock));
 
 				switch(ch)
 				{
 					case KEY_LEFT:
-						move_tetrimino(state, PLAYER_1, LEFT); break;
+						move_tetrimino(&state, PLAYER_1, LEFT); break;
 					case KEY_RIGHT:
-						move_tetrimino(state, PLAYER_1, RIGHT); break;
+						move_tetrimino(&state, PLAYER_1, RIGHT); break;
 					case KEY_DOWN:
-						move_tetrimino(state, PLAYER_1, DOWN); break;
+						move_tetrimino(&state, PLAYER_1, DOWN); break;
 					case KEY_UP:
-						num_complete_lines_1 = drop_tetrimino(state, PLAYER_1); break;
+						num_complete_lines_1 = drop_tetrimino(&state, PLAYER_1); break;
 					case P_KEY:
-						rotate_tetrimino(state, PLAYER_1, CW); break;
+						rotate_tetrimino(&state, PLAYER_1, CW); break;
 					case O_KEY:
-						rotate_tetrimino(state, PLAYER_1, CCW); break;
+						rotate_tetrimino(&state, PLAYER_1, CCW); break;
 					case ENTER_KEY:
-						hold_tetrimino(state, PLAYER_1); break;
+						hold_tetrimino(&state, PLAYER_1); break;
 				}
 				if (ch == KEY_UP) // if tetrimino was dropped
-					add_garbage(state, PLAYER_2, PLAYER_1, num_complete_lines_1);
+					add_garbage(&state, PLAYER_2, PLAYER_1, num_complete_lines_1);
 
-				pthread_mutex_unlock(&(state->tetrimino[PLAYER_1].lock));
+				pthread_mutex_unlock(&(state.tetrimino[PLAYER_1].lock));
 				usleep(random() % STALL);
 			}
 
 			else if (is_input_useful(ch, controls_p2))
 			{
-				pthread_mutex_lock(&(state->tetrimino[PLAYER_2].lock));
+				pthread_mutex_lock(&(state.tetrimino[PLAYER_2].lock));
 
 				switch(ch)
 				{
 					case A_KEY:
-						move_tetrimino(state, PLAYER_2, LEFT); break;
+						move_tetrimino(&state, PLAYER_2, LEFT); break;
 					case D_KEY:
-						move_tetrimino(state, PLAYER_2, RIGHT); break;
+						move_tetrimino(&state, PLAYER_2, RIGHT); break;
 					case S_KEY:
-						move_tetrimino(state, PLAYER_2, DOWN); break;
+						move_tetrimino(&state, PLAYER_2, DOWN); break;
 					case W_KEY:
-						num_complete_lines_2 = drop_tetrimino(state, PLAYER_2); break;
+						num_complete_lines_2 = drop_tetrimino(&state, PLAYER_2); break;
 					case G_KEY:
-						rotate_tetrimino(state, PLAYER_2, CW); break;
+						rotate_tetrimino(&state, PLAYER_2, CW); break;
 					case F_KEY:
-						rotate_tetrimino(state, PLAYER_2, CCW); break;
+						rotate_tetrimino(&state, PLAYER_2, CCW); break;
 					case SPACE_KEY:
-						hold_tetrimino(state, PLAYER_2); break;
+						hold_tetrimino(&state, PLAYER_2); break;
 				}
 				if (ch == W_KEY) // if tetrimino was dropped
-					add_garbage(state, PLAYER_1, PLAYER_2, num_complete_lines_2);
+					add_garbage(&state, PLAYER_1, PLAYER_2, num_complete_lines_2);
 
-				pthread_mutex_unlock(&(state->tetrimino[PLAYER_2].lock));
+				pthread_mutex_unlock(&(state.tetrimino[PLAYER_2].lock));
 				usleep(random() % STALL);
 			}
 		}
 		else 
 		{
-			if (state->game_over_flag) break;
+			if (state.game_over_flag) break;
 			usleep(random() % STALL);
 		}
 	}
@@ -764,6 +790,7 @@ void play_ntetris_versus (GameState *state)
 	pthread_cancel(lock_in_t_p1);
 	pthread_cancel(periodic_t_p2);
 	pthread_cancel(lock_in_t_p2);
+	pthread_cancel(gui_t);
 	
 	if (pthread_join(periodic_t_p1, NULL))
 		printf("Could not properly terminate periodic thread\n");
@@ -773,6 +800,12 @@ void play_ntetris_versus (GameState *state)
 		printf("Could not properly terminate periodic thread\n");
 	if (pthread_join(lock_in_t_p2, NULL))
 		printf("Could not properly terminate lock in thread\n");
+	if (pthread_join(gui_t, NULL))
+		printf("Could not properly terminate gui thread\n");
+
+	gui_cleanup(&gui, VERSUS);
+
+	return state.game_over_flag;
 }
 
 /* Adds garbage lines to well_contents, resets garbage_counter, and adds num_complete_lines to

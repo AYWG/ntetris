@@ -28,6 +28,12 @@
 #define HOWTOPLAY 3
 #define EXIT 4
 
+typedef enum {
+	LOCAL,
+	ONLINE,
+	BACK
+} EVersusMenu;
+
 /* Maximum number of players */
 typedef enum {
 	PLAYER_1,
@@ -353,12 +359,14 @@ void update_garbage_line_counter(GUI *gui, EPlayer player_id, int garbage_counte
 void print_controls();
 void print_howtoplay();
 void print_title_small(GUI *gui);
+void print_message(char *message);
 
 /* Game prototypes*/
 void game_state_init(GameState *state, EDifficulty difficulty, int mode);
 void game_state_reset(GameState *state);
-void play_ntetris_single (GameState *state);
-void play_ntetris_versus (GameState *state);
+EGameOver play_ntetris_single(EDifficulty difficulty, int *line_count, int *score);
+// EGameOver play_ntetris_versus (GameState *state);
+EGameOver play_ntetris_versus(void);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
 int valid_position (int well_max_x, int well_max_y, COORDINATE_PAIR new_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_HEIGHT][WELL_CONTENTS_WIDTH]);
@@ -375,7 +383,7 @@ int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WEL
 int update_lines(GameState *state, EPlayer player_id);
 
 /* Networking stuff */
-int play_ntetris_remote(GameState *local_game_state);
+EGameOver play_ntetris_remote(void);
 int connect_to_server(const char * hostname);
 
 #endif

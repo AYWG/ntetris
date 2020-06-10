@@ -56,25 +56,40 @@ void *client_recv_thread(void *recv_args)
 
 }
 
-int play_ntetris_remote(GameState *local_game_state) {
-	int ch, exit_status = 0;
-	int socket_to_server = connect_to_server("localhost");
+EGameOver play_ntetris_remote() {
+	GameState state;
+	GUI gui;
+	pthread_t gui_t;
 	EPlayer player_id;
 	pthread_t recv_t;
 	ClientThreadArgs args;
-	args.server_socket = socket_to_server;
-	args.state = local_game_state;
+	EGameOver game_over_status = NOT_OVER;
+	int ch, server_socket;
+	char waiting_msg[] = "Waiting for another player...";
+	
+	server_socket = connect_to_server("localhost");
+	args.server_socket = server_socket;
+	args.state = &state;
 
-	if (recv(socket_to_server, &player_id, sizeof(EPlayer), 0) == -1) {
+	state.mode = VERSUS;
+	game_state_reset(&state);
+
+	print_message(waiting_msg);
+
+	if (recv(server_socket, &player_id, sizeof(EPlayer), 0) == -1) {
 		perror("waiting on both clients");
 	}
 
+	gui_init(&gui, &state);
+	if (pthread_create(&gui_t, NULL, &run_gui, &gui)) {
+		printf("Could not run gui thread");
+	}
 	// This needs to be sent only once
 	int well_max[] = {
-		local_game_state->well_max_x[player_id],
-		local_game_state->well_max_y[player_id],
+		state.well_max_x[player_id],
+		state.well_max_y[player_id],
 	};
-	if (send(socket_to_server, well_max, sizeof(int) * 2, MSG_NOSIGNAL) == -1) {
+	if (send(server_socket, well_max, sizeof(int) * 2, MSG_NOSIGNAL) == -1) {
 		perror("sending well_max");
 	}
 
@@ -85,11 +100,14 @@ int play_ntetris_remote(GameState *local_game_state) {
 	halfdelay(1);
 
 	while ((ch = getch()) != QUIT_KEY) {
-		if (send(socket_to_server, &ch, sizeof(int), MSG_NOSIGNAL) == -1) {
-			exit_status = 1;
+		if (send(server_socket, &ch, sizeof(int), MSG_NOSIGNAL) == -1) {
+			game_over_status = PLAYER_DISCONNECT;
 			break;
 		}
-		if (local_game_state->game_over_flag) break;
+		if (state.game_over_flag) {
+			game_over_status = state.game_over_flag;
+			break;
+		}
 	}
 
 	// Reads are now blocking
@@ -98,9 +116,12 @@ int play_ntetris_remote(GameState *local_game_state) {
 	pthread_cancel(recv_t);
 	if (pthread_join(recv_t, NULL))
 		printf("Could not properly terminate periodic thread\n");
-	close(socket_to_server);
+	close(server_socket);
 
-	return exit_status;
+	pthread_cancel(gui_t);
+	gui_cleanup(&gui, VERSUS);
+
+	return game_over_status;
 }
 
 int connect_to_server(const char * hostname) {

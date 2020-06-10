@@ -66,6 +66,8 @@ void gui_init(GUI *gui, GameState *state)
 {
 	gui->state = state;
 	gui->refresh_delay = 25000;
+	clear();
+	refresh();
 
 	if (state->mode == SINGLE) {
 		// Init windows
@@ -203,7 +205,6 @@ void *run_gui (void *ui)
 {
 	GUI *gui = (GUI *) ui;
 	int mode = gui->state->mode;
-
 	while(TRUE)
 	{
 		usleep(gui->refresh_delay);
@@ -511,4 +512,13 @@ void print_title_small(GUI *gui)
 
 	mvwprintw(win, 9, 0, "Press Q to quit");
 	wnoutrefresh(win);
+}
+
+void print_message(char *message)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	mvprintw(row/2 - 6, (col-strlen(message))/2, "%s", message);
+	refresh();
 }
