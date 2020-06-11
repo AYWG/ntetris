@@ -1,4 +1,5 @@
 /* Server code for running ntetris versus mode. */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,12 +7,26 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 #include "ntetris.h"
 
 #define PORT "3490"
 
-#define BACKLOG 2
+#define BACKLOG 10
+
+void sigchld_handler(int s)
+{
+	(void)s; // quiet unused variable warning
+
+	// waitpid() might overwrite errno, so we save and restore it:
+	int saved_errno = errno;
+
+	while(waitpid(-1, NULL, WNOHANG) > 0);
+
+	errno = saved_errno;
+}
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -201,7 +216,7 @@ int main (void)
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t sin_size;
-	// struct sigaction sa;
+	struct sigaction sa;
 	int yes=1;
 	EPlayer player_1 = PLAYER_1;
 	EPlayer player_2 = PLAYER_2;
@@ -253,6 +268,14 @@ int main (void)
 		exit(1);
 	}
 
+	sa.sa_handler = sigchld_handler; // reap all dead processes
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+		perror("sigaction");
+		exit(1);
+	}
+
     printf("server: waiting for connections...\n");
 
 	while (TRUE) {
@@ -277,18 +300,26 @@ int main (void)
 			}
 		}
 
-		if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
-			perror("send");
+		if (!fork()) { // Child
+			// Child doesn't need listener
+			close(sockfd);
+			if (send(new_fd, &player_1, sizeof(EPlayer), 0) == -1) {
+				perror("send");
+			}
+
+			if (send(new_fd2, &player_2, sizeof(EPlayer), 0) == -1) {
+				perror("send");
+			}
+
+			int client_sockets[] = {new_fd, new_fd2};
+
+			run_game(client_sockets);
+
+			close(new_fd);
+			close(new_fd2);
+			exit(0);
 		}
-
-		if (send(new_fd2, &player_2, sizeof(EPlayer), 0) == -1) {
-			perror("send");
-		}
-
-		int client_sockets[] = {new_fd, new_fd2};
-
-		run_game(client_sockets);
-
+		// parent doesn't need these
 		close(new_fd);
 		close(new_fd2);
 	}
