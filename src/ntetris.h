@@ -351,7 +351,7 @@ void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
 void update_well(GUI *gui, EPlayer player_id, COORDINATE_PAIR tetrimino_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
-void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id);
+void update_hold(GUI *gui, EPlayer player_id, ETetrimino tetrimino_id);
 void update_line_count(GUI *gui, EPlayer player_id);
 void update_level(GUI *gui, EPlayer player_id);
 void update_score(GUI *gui, EPlayer player_id);
@@ -359,6 +359,9 @@ void update_garbage_line_counter(GUI *gui, EPlayer player_id, int garbage_counte
 void print_controls();
 void print_howtoplay();
 void print_title_small(GUI *gui);
+void print_single_end_screen(int final_line_count, int final_score);
+void print_versus_end_screen(EGameOver game_over_status);
+void print_message_with_esc(char *message);
 void print_message(char *message);
 
 /* Game prototypes*/

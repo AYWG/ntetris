@@ -184,10 +184,6 @@ void run_game(int client_sockets[NUM_PLAYERS])
 	if (pthread_create(&send_t, NULL, &server_send_thread, &server_send_args))
 		printf("Could not run server send thread\n");
 
-	// for (i = PLAYER_1; i < NUM_PLAYERS; i++)
-	// 	if (pthread_join(recv_t[i], NULL))
-	// 		printf("Could not properly terminate server recv thread\n");
-
 	// Cleanup
 	if (pthread_join(send_t, NULL))
 		printf("Could not properly terminate send thread\n");
@@ -209,9 +205,7 @@ void run_game(int client_sockets[NUM_PLAYERS])
 
 int main (void)
 {
-	// Networking stuff
-    int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
-    int new_fd2;
+    int sockfd, new_fd, new_fd2;  // listen on sock_fd, new connection on new_fd
 	int numbytes;
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -278,6 +272,7 @@ int main (void)
 
     printf("server: waiting for connections...\n");
 
+	// Accept loop
 	while (TRUE) {
 		sin_size = sizeof their_addr;
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);

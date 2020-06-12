@@ -94,12 +94,7 @@ int main(int argc, char **argv)
 										"Back"
 								};
 
-	char game_over_msg[] = "GAME OVER";								 	  
-	char game_over_exit_msg[] = "Press ESC to return to the main menu";
-	char versus_p1_win_msg[] = "Player 1 wins!";
-	char versus_p2_win_msg[] = "Player 2 wins!";
-	char disconnect_msg[] = "Other player disconnected";
-
+	
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
 	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);
 	int num_versus_menu_choices = sizeof(versus_menu_choices) / sizeof (char *);
@@ -118,15 +113,7 @@ int main(int argc, char **argv)
 			game_over_status = play_ntetris_single(difficulty, &final_line_count, &final_score);
 			if(game_over_status)
 			{
-				clear();
-				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-				mvprintw(row/2 - 6, (col-strlen(game_over_msg))/2, "%s", game_over_msg);
-				attroff(COLOR_PAIR(Z_COLOR_PAIR));
-				mvprintw(row/2 - 4, 24, "Final level : %d", final_line_count / 10);
-				mvprintw(row/2 - 3, 24, "Final # of lines cleared: %d", final_line_count);
-				mvprintw(row/2 - 2, 24, "Final score : %d", final_score);
-
-				mvprintw(row/2 + 2, (col-strlen(game_over_exit_msg))/2, "%s", game_over_exit_msg);
+				print_single_end_screen(final_line_count, final_score);
 
 				while ((game_over_choice = getch()) != ESC_KEY);
 			}
@@ -144,18 +131,7 @@ int main(int argc, char **argv)
 			}
 			if(game_over_status)
 			{
-				clear();
-				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-				if (game_over_status == PLAYER_1_LOST)
-					mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
-				else if (game_over_status == PLAYER_2_LOST)
-					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
-				else if (game_over_status == PLAYER_DISCONNECT)
-					mvprintw(row/2 - 6, (col-strlen(disconnect_msg))/2, "%s", disconnect_msg);
-				attroff(COLOR_PAIR(Z_COLOR_PAIR));
-
-				mvprintw(row/2 + 2, (col-strlen(game_over_exit_msg))/2, "%s", game_over_exit_msg);
-
+				print_versus_end_screen(game_over_status);
 				while ((game_over_choice = getch()) != ESC_KEY);
 			}
 			continue; 

@@ -26,7 +26,7 @@ void *get_in_addr(struct sockaddr *sa)
 void *client_recv_thread(void *recv_args)
 {
 	EPlayer i;
-	int j, k;
+	int numbytes, j, k;
 	ClientThreadArgs* args = (ClientThreadArgs *) recv_args;
 
 	int socket = args->server_socket;
@@ -35,7 +35,7 @@ void *client_recv_thread(void *recv_args)
 
 	while (TRUE)
 	{
-		if (recv(socket, &response, sizeof(ServerResponse), 0) == -1) {
+		if ((numbytes = recv(socket, &response, sizeof(ServerResponse), MSG_WAITALL)) == -1) {
 			perror("recv");
 		}
 		state->game_over_flag = response.game_over_flag;
@@ -59,14 +59,14 @@ void *client_recv_thread(void *recv_args)
 EGameOver play_ntetris_remote() {
 	GameState state;
 	GUI gui;
-	pthread_t gui_t;
+	pthread_t gui_t, recv_t;
 	EPlayer player_id;
-	pthread_t recv_t;
 	ClientThreadArgs args;
 	EGameOver game_over_status = NOT_OVER;
 	int ch, server_socket;
 	char waiting_msg[] = "Waiting for another player...";
 	
+	// TODO: setup actual server??
 	server_socket = connect_to_server("localhost");
 	args.server_socket = server_socket;
 	args.state = &state;
@@ -74,10 +74,17 @@ EGameOver play_ntetris_remote() {
 	state.mode = VERSUS;
 	game_state_reset(&state);
 
-	print_message(waiting_msg);
+	print_message_with_esc(waiting_msg);
+	// Enable semi-non-blocking reads of user input
+	halfdelay(1);
 
-	if (recv(server_socket, &player_id, sizeof(EPlayer), 0) == -1) {
-		perror("waiting on both clients");
+	while (recv(server_socket, &player_id, sizeof(EPlayer), MSG_DONTWAIT) == -1 ) {
+		ch = getch();
+		if (ch == ESC_KEY) {
+			cbreak();
+			close(server_socket);
+			return game_over_status;
+		}
 	}
 
 	gui_init(&gui, &state);
@@ -95,9 +102,6 @@ EGameOver play_ntetris_remote() {
 
 	if (pthread_create(&recv_t, NULL, &client_recv_thread, &args))
 		printf("Could not run periodic thread\n");
-
-	// Enable semi-non-blocking reads of user input
-	halfdelay(1);
 
 	while ((ch = getch()) != QUIT_KEY) {
 		if (send(server_socket, &ch, sizeof(int), MSG_NOSIGNAL) == -1) {

@@ -20,7 +20,11 @@ static int hold_x[NUM_TETRIMINOS][NUM_BITS] = {{2, 3, 4, 5},
 										{2, 3, 3, 4} 
 										};
 
-
+static char game_over_msg[] = "GAME OVER";
+static char esc_msg[] = "Press ESC to return to the main menu";
+static char versus_p1_win_msg[] = "Player 1 wins!";
+static char versus_p2_win_msg[] = "Player 2 wins!";
+static char disconnect_msg[] = "Other player disconnected";
 
 /* Initialization function that must be called */
 						   
@@ -388,7 +392,7 @@ void update_well(GUI *gui, EPlayer player_id, COORDINATE_PAIR tetrimino_bits[NUM
 /* Updates the player's hold window by displaying the tetrimino specified by
 tetrimino_id. */
 
-void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id)
+void update_hold(GUI *gui, EPlayer player_id, ETetrimino tetrimino_id)
 {
 	WINDOW *win = gui->win[player_id][HOLD_ID];
 	int i, j;
@@ -512,6 +516,50 @@ void print_title_small(GUI *gui)
 
 	mvwprintw(win, 9, 0, "Press Q to quit");
 	wnoutrefresh(win);
+}
+
+void print_single_end_screen(int final_line_count, int final_score)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+	mvprintw(row/2 - 6, (col-strlen(game_over_msg))/2, "%s", game_over_msg);
+	attroff(COLOR_PAIR(Z_COLOR_PAIR));
+	mvprintw(row/2 - 4, 24, "Final level : %d", final_line_count / 10);
+	mvprintw(row/2 - 3, 24, "Final # of lines cleared: %d", final_line_count);
+	mvprintw(row/2 - 2, 24, "Final score : %d", final_score);
+
+	mvprintw(row/2 + 2, (col-strlen(esc_msg))/2, "%s", esc_msg);
+	refresh();
+}
+
+void print_versus_end_screen(EGameOver game_over_status)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+	if (game_over_status == PLAYER_1_LOST)
+		mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
+	else if (game_over_status == PLAYER_2_LOST)
+		mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
+	else if (game_over_status == PLAYER_DISCONNECT)
+		mvprintw(row/2 - 6, (col-strlen(disconnect_msg))/2, "%s", disconnect_msg);
+	attroff(COLOR_PAIR(Z_COLOR_PAIR));
+
+	mvprintw(row/2 + 2, (col-strlen(esc_msg))/2, "%s", esc_msg);
+	refresh();
+}
+
+void print_message_with_esc(char *message)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	mvprintw(row/2 - 6, (col-strlen(message))/2, "%s", message);
+	mvprintw(row/2 + 2, (col-strlen(esc_msg))/2, "%s", esc_msg);
+	refresh();
 }
 
 void print_message(char *message)
