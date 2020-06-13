@@ -189,7 +189,8 @@ typedef enum {
 	NOT_OVER,
 	PLAYER_1_LOST,
 	PLAYER_2_LOST,
-	PLAYER_DISCONNECT
+	PLAYER_DISCONNECT,
+	FAILED_CONNECT
 } EGameOver;
 
 /* Difficulty levels */
@@ -389,6 +390,5 @@ int update_lines(GameState *state, EPlayer player_id);
 
 /* Networking stuff */
 EGameOver play_ntetris_remote(void);
-// int connect_to_server(const char * hostname);
 
 #endif

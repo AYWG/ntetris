@@ -57,6 +57,7 @@ static int connect_to_server(const char * hostname) {
 
 	if (p == NULL) {
 		fprintf(stderr, "client: failed to connect\n");
+		return -1;
 	}
 
 	freeaddrinfo(servinfo); // all done with this structure
@@ -122,6 +123,9 @@ EGameOver play_ntetris_remote() {
 	
 	// TODO: setup actual server??
 	server_socket = connect_to_server("localhost");
+	if (server_socket == -1) {
+		return FAILED_CONNECT;
+	}
 	args.server_socket = server_socket;
 	args.state = &state;
 

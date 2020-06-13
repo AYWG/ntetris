@@ -129,11 +129,17 @@ int main(int argc, char **argv)
 			else {
 				game_over_status = play_ntetris_remote();
 			}
-			if(game_over_status)
+			if (game_over_status == FAILED_CONNECT)
+			{
+				print_message_with_esc("Failed to connect to server");
+				while ((game_over_choice = getch()) != ESC_KEY);
+			}
+			else if(game_over_status)
 			{
 				print_versus_end_screen(game_over_status);
 				while ((game_over_choice = getch()) != ESC_KEY);
 			}
+			
 			continue; 
 		}
 		else if (choice == CONTROLS)
