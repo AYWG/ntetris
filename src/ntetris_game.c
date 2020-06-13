@@ -636,15 +636,10 @@ EGameOver play_ntetris_single(EDifficulty difficulty, int *line_count, int *scor
 			}
 			/* Done, so release tetrimino lock */
 			pthread_mutex_unlock(&(state.tetrimino[PLAYER_1].lock));
-
 			/* Wait a bit so other threads can acquire lock */
 			usleep(random() % STALL);
 		}
-		else 
-		{
-			if (state.game_over_flag) break;
-			usleep(random() % STALL);
-		}
+		if (state.game_over_flag) break;
 	}
 	/* getch() calls are now blocking as usual */
 	cbreak();
@@ -744,7 +739,6 @@ EGameOver play_ntetris_versus()
 					add_garbage(&state, PLAYER_2, PLAYER_1, num_complete_lines_1);
 
 				pthread_mutex_unlock(&(state.tetrimino[PLAYER_1].lock));
-				usleep(random() % STALL);
 			}
 
 			else if (is_input_useful(ch, controls_p2))
@@ -772,14 +766,10 @@ EGameOver play_ntetris_versus()
 					add_garbage(&state, PLAYER_1, PLAYER_2, num_complete_lines_2);
 
 				pthread_mutex_unlock(&(state.tetrimino[PLAYER_2].lock));
-				usleep(random() % STALL);
 			}
 		}
-		else 
-		{
-			if (state.game_over_flag) break;
-			usleep(random() % STALL);
-		}
+		usleep(random() % STALL);
+		if (state.game_over_flag) break;
 	}
 	/* getch() calls are now blocking as usual */
 	cbreak();
