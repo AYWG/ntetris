@@ -293,7 +293,12 @@ int main (void)
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
 			perror("accept");
-		}	
+		}
+
+		inet_ntop(their_addr.ss_family,
+		get_in_addr((struct sockaddr *)&their_addr),
+		s, sizeof s);
+		printf("server: got connection from %s\n", s);	
 
 		while (TRUE) {
 			sin_size = sizeof their_addr;
@@ -301,6 +306,11 @@ int main (void)
 			if (new_fd2 == -1) {
 				perror("accept");
 			}
+
+			inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s);
+			printf("server: got connection from %s\n", s);
 
 			// Check if first connection still up
 			if (is_client_connected(new_fd)) break;
