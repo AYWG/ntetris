@@ -13,6 +13,9 @@
 
 #define MAXDATASIZE 100
 
+#define USE_LOCAL_SERVER FALSE
+#define SERVER_IP "192.168.1.69"
+
 // get sockaddr, IPv4 or IPv6:
 static void *get_in_addr(struct sockaddr *sa)
 {
@@ -121,8 +124,8 @@ EGameOver play_ntetris_remote() {
 	int ch, server_socket;
 	char waiting_msg[] = "Waiting for another player...";
 	
-	// TODO: setup actual server??
-	server_socket = connect_to_server("localhost");
+	char *hostname = USE_LOCAL_SERVER ? "localhost" : SERVER_IP;
+	server_socket = connect_to_server(hostname);
 	if (server_socket == -1) {
 		return FAILED_CONNECT;
 	}
