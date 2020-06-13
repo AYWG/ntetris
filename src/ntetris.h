@@ -28,27 +28,6 @@
 #define HOWTOPLAY 3
 #define EXIT 4
 
-/* Maximum number of players */
-typedef enum {
-	PLAYER_1,
-	PLAYER_2,
-	NUM_PLAYERS
-} EPlayer;
-
-typedef enum {
-	NOT_OVER,
-	PLAYER_1_LOST,
-	PLAYER_2_LOST
-} EGameOver;
-
-/* Difficulty levels */
-typedef enum {
-	CASUAL,
-	INTERMEDIATE,
-	EXPERT,
-	INVALID_DIFFICULTY
-} EDifficulty;
-
 /* Game delays (in microseconds) */
 #define CASUAL_INIT_DELAY 1000000
 #define INTERMEDIATE_INIT_DELAY 500000
@@ -56,69 +35,8 @@ typedef enum {
 #define MIN_DELAY 30000 // Game delay cannot go below this amount
 #define STALL 1000
 
-/* IDs of the different game pieces */
-typedef enum {
-	TETRIMINO_I, 
-	TETRIMINO_J, 
-	TETRIMINO_L, 
-	TETRIMINO_O, 
-	TETRIMINO_S, 
-	TETRIMINO_T, 
-	TETRIMINO_Z, 
-	NUM_TETRIMINOS, 
-	INVALID_ID
-} ETetrimino;
-
-/* FOR REFERENCE
-I : oooo - bits: 0 1 2 3  Pivot = 1
-
-J : ooo  - bits: 0 1 2    Pivot = 1
-  	  o 			 3
-
-L : ooo  - bits: 0 1 2    Pivot = 1
-	o 			 3
-
-O : oo 	 - bits: 0 1  	  Pivot = 4 (no pivot)
-	oo 			 2 3
-
-S :  oo  - bits:  0 1     Pivot = 3
-	oo 			2 3
-
-T : ooo  - bits: 0 1 2 	  Pivot = 1
-	 o 			   3
-
-Z : oo 	 - bits: 0 1 	  Pivot = 2
-	 oo 		   2 3
-*/
-
 /* Number of bits that make up each tetrimino */
 #define NUM_BITS 4
-
-/* Directions of movement */
-typedef enum {
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT,
-	CW,
-	CCW
-} EDirection;
-
-/* Dimensions and initial coordinates for 
-the WINDOWs used */
-typedef enum {
-	WELL_ID,
-	COVER_ID,
-	HOLD_ID,
-	LINE_COUNT_ID,
-	SCORE_ID,
-	LEVEL_ID,
-	TITLE_SMALL_ID,
-	GARBAGE_ID,
-	OTHER_GARBAGE_ID,
-	NUM_WINDOWS
-} EWindow;
-#define NUM_WINDOWS 9
 
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
@@ -200,23 +118,11 @@ typedef enum {
 #define CONTROLS_INIT_X 8
 #define HOWTOPLAY_INIT_X 6
 
-/* Constants representing the different controls */
-typedef enum {
-	MOVE_LEFT,
-	MOVE_RIGHT,
-	MOVE_DOWN,
-	DROP,
-	ROTATE_CW,
-	ROTATE_CCW,
-	HOLD,
-	NUM_CONTROLS
-} EControls;
-
 /* Decimal value of needed ASCII characters */
 
 #define QUIT_KEY 113 // q
 #define RESTART_KEY 114 // r
-
+#define ESC_KEY 27
 #define P_KEY 112
 #define O_KEY 111
 #define ENTER_KEY 10 
@@ -228,6 +134,108 @@ typedef enum {
 #define G_KEY 103
 #define F_KEY 102
 #define SPACE_KEY 32
+
+#define COUNTDOWN_LENGTH 5
+
+/* IDs of the different game pieces */
+typedef enum {
+	TETRIMINO_I, 
+	TETRIMINO_J, 
+	TETRIMINO_L, 
+	TETRIMINO_O, 
+	TETRIMINO_S, 
+	TETRIMINO_T, 
+	TETRIMINO_Z, 
+	NUM_TETRIMINOS, 
+	INVALID_ID
+} ETetrimino;
+
+/* FOR REFERENCE
+I : oooo - bits: 0 1 2 3  Pivot = 1
+
+J : ooo  - bits: 0 1 2    Pivot = 1
+  	  o 			 3
+
+L : ooo  - bits: 0 1 2    Pivot = 1
+	o 			 3
+
+O : oo 	 - bits: 0 1  	  Pivot = 4 (no pivot)
+	oo 			 2 3
+
+S :  oo  - bits:  0 1     Pivot = 3
+	oo 			2 3
+
+T : ooo  - bits: 0 1 2 	  Pivot = 1
+	 o 			   3
+
+Z : oo 	 - bits: 0 1 	  Pivot = 2
+	 oo 		   2 3
+*/
+
+typedef enum {
+	LOCAL,
+	ONLINE,
+	BACK
+} EVersusMenu;
+
+/* Maximum number of players */
+typedef enum {
+	PLAYER_1,
+	PLAYER_2,
+	NUM_PLAYERS
+} EPlayer;
+
+typedef enum {
+	NOT_OVER,
+	PLAYER_1_LOST,
+	PLAYER_2_LOST,
+	PLAYER_DISCONNECT
+} EGameOver;
+
+/* Difficulty levels */
+typedef enum {
+	CASUAL,
+	INTERMEDIATE,
+	EXPERT,
+	INVALID_DIFFICULTY
+} EDifficulty;
+
+/* Directions of movement */
+typedef enum {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+	CW,
+	CCW
+} EDirection;
+
+/* Dimensions and initial coordinates for 
+the WINDOWs used */
+typedef enum {
+	WELL_ID,
+	COVER_ID,
+	HOLD_ID,
+	LINE_COUNT_ID,
+	SCORE_ID,
+	LEVEL_ID,
+	TITLE_SMALL_ID,
+	GARBAGE_ID,
+	OTHER_GARBAGE_ID,
+	NUM_WINDOWS
+} EWindow;
+
+/* Constants representing the different controls */
+typedef enum {
+	MOVE_LEFT,
+	MOVE_RIGHT,
+	MOVE_DOWN,
+	DROP,
+	ROTATE_CW,
+	ROTATE_CCW,
+	HOLD,
+	NUM_CONTROLS
+} EControls;
 
 /* Struct to represent a coordinate and its associated value */
 typedef struct 
@@ -249,7 +257,16 @@ typedef struct
 	/* The coordinates of each of
 	the bits that make up the tetrimino*/
 	COORDINATE_PAIR bits[NUM_BITS];
+
+	/* Lock for modifying the tetrimino*/
+	pthread_mutex_t lock;
 } TETRIMINO;
+
+typedef struct
+{
+	int counter;
+	pthread_mutex_t lock;
+} GarbageLine;
 
 typedef struct
 {
@@ -258,13 +275,13 @@ typedef struct
 	EDifficulty difficulty;
 	COORDINATE_PAIR well_contents[NUM_PLAYERS][WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
 	EGameOver game_over_flag;	
+	GarbageLine garbage_line[NUM_PLAYERS];
 	int has_held_recently[NUM_PLAYERS];
 	int mode;
 	int game_delay;
 	int line_count;
 	int score; 
 	int current_y_checkpoint[NUM_PLAYERS];
-	int garbage_counter[NUM_PLAYERS];
 	int well_max_y[NUM_PLAYERS];
 	int well_max_x[NUM_PLAYERS];
 } GameState;
@@ -283,6 +300,39 @@ typedef struct
 	EPlayer player_id;
 } ThreadArgs;
 
+typedef struct
+{
+	GameState *state;
+	EControls controls[NUM_CONTROLS];
+	EPlayer player_id;
+	int client_socket;
+} ServerRecvThreadArgs;
+
+/* Struct for server_send_thread */
+typedef struct
+{
+	int client_sockets[NUM_PLAYERS];
+	GameState *state;
+
+} ServerSendThreadArgs;
+
+/* Struct for client_recv_thread */
+typedef struct
+{
+	int server_socket;
+	GameState *state;
+} ClientThreadArgs;
+
+/* Struct for game data that server sends to client */
+typedef struct
+{
+	EGameOver game_over_flag;
+	ETetrimino currently_held_tetrimino[NUM_PLAYERS];
+	COORDINATE_PAIR tetrimino_bits[NUM_PLAYERS][NUM_BITS];
+	COORDINATE_PAIR well_contents[NUM_PLAYERS][WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH];
+	int garbage_line_counter[NUM_PLAYERS];
+} ServerResponse;
+
 /* Main prototypes */
 void print_help_message();
 void print_howtoplay_message();
@@ -290,8 +340,6 @@ void print_howtoplay_message();
 /* Thread prototypes */
 int is_input_useful(int input, int controls[NUM_CONTROLS]);
 void add_garbage(GameState *state, EPlayer from_player, EPlayer to_player, int num_complete_lines);
-void *play_ntetris_single (void *difficulty);
-void *play_ntetris_versus(void *unused);
 void *periodic_thread(void *arguments);
 void *lock_in_thread(void *arguments);
 void *run_gui(void *ui);
@@ -299,26 +347,34 @@ void *run_gui(void *ui);
 /* GUI prototypes */
 void ntetris_init ();
 void gui_init(GUI *gui, GameState *state);
-void gui_cleanup(GUI *gui);
+void gui_cleanup(GUI *gui, int mode);
 void print_title (WINDOW *win, char *title[], int title_size);
 void print_menu (WINDOW *menu_win, int highlight, char *menu_choices[], int num_menu_choices);
 int get_menu_choice (char *menu_choices[], int num_menu_choices);
-void update_well(GUI *gui, EPlayer player_id);
-void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id);
+void update_well(GUI *gui, EPlayer player_id, COORDINATE_PAIR tetrimino_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
+void update_hold(GUI *gui, EPlayer player_id, ETetrimino tetrimino_id);
 void update_line_count(GUI *gui, EPlayer player_id);
 void update_level(GUI *gui, EPlayer player_id);
 void update_score(GUI *gui, EPlayer player_id);
-void update_garbage_line_counter(GUI *gui, EPlayer player_id);
+void update_garbage_line_counter(GUI *gui, EPlayer player_id, int garbage_counter);
 void print_controls();
 void print_howtoplay();
 void print_title_small(GUI *gui);
+void print_single_end_screen(int final_line_count, int final_score);
+void print_versus_end_screen(EGameOver game_over_status);
+void print_message_with_esc(char *message);
+void print_message(char *message);
+void print_countdown(int countdown_val, EPlayer player_id);
 
 /* Game prototypes*/
 void game_state_init(GameState *state, EDifficulty difficulty, int mode);
-void reset_game_state(GameState *state);
+void game_state_reset(GameState *state);
+EGameOver play_ntetris_single(EDifficulty difficulty, int *line_count, int *score);
+// EGameOver play_ntetris_versus (GameState *state);
+EGameOver play_ntetris_versus(void);
 void copy_bits (COORDINATE_PAIR source_bits[NUM_BITS], COORDINATE_PAIR dest_bits[NUM_BITS]);
 int get_y_checkpoint (COORDINATE_PAIR bits[NUM_BITS]);
-int valid_position (GameState *state, EPlayer player_id, COORDINATE_PAIR new_bits[NUM_BITS]);
+int valid_position (int well_max_x, int well_max_y, COORDINATE_PAIR new_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_HEIGHT][WELL_CONTENTS_WIDTH]);
 void move_tetrimino (GameState *state, EPlayer player_id, EDirection direction);
 void get_rotated_bits (COORDINATE_PAIR pivot, COORDINATE_PAIR bits_to_rotate[NUM_BITS],
 					  EDirection direction);
@@ -331,10 +387,8 @@ int get_rand_num (int lower, int upper);
 int line_empty (int row, COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH]);
 int update_lines(GameState *state, EPlayer player_id);
 
+/* Networking stuff */
+EGameOver play_ntetris_remote(void);
+// int connect_to_server(const char * hostname);
+
 #endif
-
-
-
-
-
-

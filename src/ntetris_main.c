@@ -54,16 +54,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	GameState state;
-	GUI gui;
-	pthread_t game_t;
-	pthread_t gui_t;
-
 	ntetris_init();
 	
-	int choice;
+	int choice, versus_choice, game_over_choice;
+	EGameOver game_over_status;
 	EDifficulty difficulty;
 	int row, col;
+	int final_line_count, final_score;
 	getmaxyx(stdscr, row, col);
 
 	char change_term_dim_msg[] = "Please increase terminal dimensions (minimum: 24x80)";
@@ -90,16 +87,20 @@ int main(int argc, char **argv)
 										"Expert",
 										"Back"
 								 	  };
+	
+	char *versus_menu_choices[] = {
+										"Local",
+										"Online",
+										"Back"
+								};
 
-	char game_over_msg[] = "GAME OVER";								 	  
-	char game_over_msg_opt_1[] = "Press R to return to the main menu";
-	char game_over_msg_opt_2[] = "Press any other key to quit";
-	char versus_p1_win_msg[] = "Player 1 wins!";
-	char versus_p2_win_msg[] = "Player 2 wins!";
-
+	
 	int num_start_menu_choices = sizeof(start_menu_choices) / sizeof (char *);
-	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);							  	
+	int num_diff_menu_choices = sizeof(difficulty_menu_choices) / sizeof (char *);
+	int num_versus_menu_choices = sizeof(versus_menu_choices) / sizeof (char *);
 
+	/* Enable input from arrow keys */
+	keypad(stdscr, TRUE);
 	while (TRUE)
 	{
 		clear();
@@ -109,89 +110,31 @@ int main(int argc, char **argv)
 		{	
 			if ((difficulty = get_menu_choice(difficulty_menu_choices, num_diff_menu_choices)) == INVALID_DIFFICULTY)
 				continue;
-			                                                               
+			game_over_status = play_ntetris_single(difficulty, &final_line_count, &final_score);
+			if(game_over_status)
 			{
-				game_state_init(&state, difficulty, SINGLE);
-				clear();
-				refresh();
-				gui_init(&gui, &state);
-				
-				if (pthread_create(&gui_t, NULL, &run_gui, &gui))
-					printf("Could not run GUI\n");
+				print_single_end_screen(final_line_count, final_score);
 
-				if (pthread_create(&game_t, NULL, &play_ntetris_single, &state))
-					printf("Could not run main phase of game\n");	
-
-				if (pthread_join(game_t, NULL))
-					printf("Could not properly terminate main phase of game\n");
-				
-				pthread_cancel(gui_t);
-				gui_cleanup(&gui);
-
-				if(state.game_over_flag)
-				{
-					clear();
-					attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-					mvprintw(row/2 - 6, (col-strlen(game_over_msg))/2, "%s", game_over_msg);
-					attroff(COLOR_PAIR(Z_COLOR_PAIR));
-					mvprintw(row/2 - 4, 24, "Final level : %d", state.line_count / 10);
-					mvprintw(row/2 - 3, 24, "Final # of lines cleared: %d", state.line_count);
-					mvprintw(row/2 - 2, 24, "Final score : %d", state.score);
-
-					mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
-					mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
-					
-					int game_over_choice = getch();
-					if (game_over_choice == RESTART_KEY)
-					{
-						reset_game_state(&state);
-						continue;
-					} 
-					else break;
-				}
-				else break;
+				while ((game_over_choice = getch()) != ESC_KEY);
 			}
+			continue;
 		}
 		else if (choice == VERSUS)
 		{
-			game_state_init(&state, INVALID_DIFFICULTY, VERSUS);
-			clear();
-			refresh();
-			gui_init(&gui, &state);
-			if (pthread_create(&gui_t, NULL, &run_gui, &gui))
-				printf("Could not run GUI\n");
-			
-			if (pthread_create(&game_t, NULL, &play_ntetris_versus, &state))
-				printf("Could not run versus phase of game\n");
-
-			if (pthread_join(game_t, NULL))
-				printf("Could not properly terminate versus phase of game\n");
-			
-			pthread_cancel(gui_t);
-			gui_cleanup(&gui);
-
-			if(state.game_over_flag)
-			{
-				clear();
-				attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
-				if (state.game_over_flag == PLAYER_1_LOST)
-					mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
-				else if (state.game_over_flag == PLAYER_2_LOST)
-					mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
-				attroff(COLOR_PAIR(Z_COLOR_PAIR));
-
-				mvprintw(row/2 + 2, (col-strlen(game_over_msg_opt_1))/2, "%s", game_over_msg_opt_1);
-				mvprintw(row/2 + 3, (col-strlen(game_over_msg_opt_2))/2, "%s", game_over_msg_opt_2);
-
-				int game_over_choice = getch();
-				if (game_over_choice == RESTART_KEY)
-				{
-					reset_game_state(&state);
-					continue;
-				} 
-				else break;
+			if ((versus_choice = get_menu_choice(versus_menu_choices, num_versus_menu_choices)) == BACK)
+				continue;
+			else if (versus_choice == LOCAL) {
+				game_over_status = play_ntetris_versus();
 			}
-			else break; 
+			else {
+				game_over_status = play_ntetris_remote();
+			}
+			if(game_over_status)
+			{
+				print_versus_end_screen(game_over_status);
+				while ((game_over_choice = getch()) != ESC_KEY);
+			}
+			continue; 
 		}
 		else if (choice == CONTROLS)
 		{
@@ -218,9 +161,9 @@ int main(int argc, char **argv)
 	if(STATS && choice == SINGLE)
 	{
 		printf("\n----------------------\n");
-		printf("Final level : %d\n", state.line_count / 10);
-		printf("Final # of lines cleared: %d\n", state.line_count);
-		printf("Final score : %d\n", state.score);
+		printf("Final level : %d\n", final_line_count / 10);
+		printf("Final # of lines cleared: %d\n", final_line_count);
+		printf("Final score : %d\n", final_score);
 	}
 	return 0;
 }

@@ -20,7 +20,12 @@ static int hold_x[NUM_TETRIMINOS][NUM_BITS] = {{2, 3, 4, 5},
 										{2, 3, 3, 4} 
 										};
 
-
+static char game_over_msg[] = "GAME OVER";
+static char esc_msg[] = "Press ESC to return to the main menu";
+static char versus_p1_win_msg[] = "Player 1 wins!";
+static char versus_p2_win_msg[] = "Player 2 wins!";
+static char disconnect_msg[] = "Other player disconnected";
+static char versus_identity_msg[] = "You will be Player: ";
 
 /* Initialization function that must be called */
 						   
@@ -66,6 +71,8 @@ void gui_init(GUI *gui, GameState *state)
 {
 	gui->state = state;
 	gui->refresh_delay = 25000;
+	clear();
+	refresh();
 
 	if (state->mode == SINGLE) {
 		// Init windows
@@ -151,8 +158,8 @@ void gui_init(GUI *gui, GameState *state)
 		mvwprintw(gui->win[PLAYER_2][GARBAGE_ID], 2, 0, "Lines");
 		wattroff(gui->win[PLAYER_1][GARBAGE_ID], A_BOLD);
 		wattroff(gui->win[PLAYER_2][GARBAGE_ID], A_BOLD);
-		update_garbage_line_counter(gui, PLAYER_1);
-		update_garbage_line_counter(gui, PLAYER_2);
+		update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_line[PLAYER_1].counter);
+		update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_line[PLAYER_2].counter);
 
 		wnoutrefresh(stdscr);
 		wnoutrefresh(gui->win[PLAYER_1][WELL_ID]);
@@ -174,9 +181,8 @@ void gui_init(GUI *gui, GameState *state)
 	
 }
 
-void gui_cleanup(GUI *gui)
+void gui_cleanup(GUI *gui, int mode)
 {
-	int mode = gui->state->mode;
 	// Cleanup dependent on single or versus
 	delwin(gui->win[PLAYER_1][WELL_ID]);
 	delwin(gui->win[PLAYER_1][COVER_ID]);
@@ -198,6 +204,37 @@ void gui_cleanup(GUI *gui)
 		delwin(gui->win[PLAYER_2][GARBAGE_ID]);
 	}
 }
+
+/* Thread responsible updating the GUI */
+void *run_gui (void *ui)
+{
+	GUI *gui = (GUI *) ui;
+	int mode = gui->state->mode;
+	while(TRUE)
+	{
+		usleep(gui->refresh_delay);
+
+		// TODO: remove state reference from GUI?
+		update_well(gui, PLAYER_1, gui->state->tetrimino[PLAYER_1].bits, gui->state->well_contents[PLAYER_1]);
+		update_hold(gui, PLAYER_1, gui->state->currently_held_tetrimino[PLAYER_1]);
+
+		if (mode == SINGLE) {
+			update_line_count(gui, PLAYER_1);
+			update_level(gui, PLAYER_1);
+			update_score(gui, PLAYER_1);
+		}
+
+		if (mode == VERSUS) {
+			update_garbage_line_counter(gui, PLAYER_1, gui->state->garbage_line[PLAYER_1].counter);
+
+			update_well(gui, PLAYER_2, gui->state->tetrimino[PLAYER_2].bits, gui->state->well_contents[PLAYER_2]);
+			update_hold(gui, PLAYER_2, gui->state->currently_held_tetrimino[PLAYER_2]);
+			update_garbage_line_counter(gui, PLAYER_2, gui->state->garbage_line[PLAYER_2].counter);
+		}
+		doupdate();
+	}
+}
+
 
 /* Displays the title of the game at the top of the screen 
 in ASCII. */
@@ -309,18 +346,17 @@ static void clear_well(GUI *gui, EPlayer player_id)
 /* Draw the well, the tetrimino, and the tetrimino's "ghost" which indicates
 where it will land in the well */
 
-void update_well(GUI *gui, EPlayer player_id)
+void update_well(GUI *gui, EPlayer player_id, COORDINATE_PAIR tetrimino_bits[NUM_BITS], COORDINATE_PAIR well_contents[WELL_CONTENTS_HEIGHT][WELL_CONTENTS_WIDTH])
 {
 	WINDOW *win = gui->win[player_id][WELL_ID];
-	TETRIMINO *tetrimino = &gui->state->tetrimino[player_id];
 	COORDINATE_PAIR shadow_bits[NUM_BITS];
 	int i, j;
 	int locked_in = 1;
 	clear_well(gui, player_id); // erase everything before drawing
 
-	copy_bits(tetrimino->bits, shadow_bits);
+	copy_bits(tetrimino_bits, shadow_bits);
 
-	while (valid_position(gui->state, player_id, shadow_bits)) 
+	while (valid_position(getmaxx(win), getmaxy(win), shadow_bits, well_contents)) 
 	{
 		for (i = 0; i < NUM_BITS; i++)
 			shadow_bits[i].y++;
@@ -336,20 +372,20 @@ void update_well(GUI *gui, EPlayer player_id)
 
 		/* Only draw shadow bits if they're outside the cover window */
 		if (shadow_bits[i].y >= COVER_B_BNDRY)
-			mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino->bits[i].value | A_DIM);
+			mvwaddch(win, shadow_bits[i].y, shadow_bits[i].x, tetrimino_bits[i].value | A_DIM);
 	}
 	
 	for (i = 0; i < NUM_BITS; i++)
 		/* Only draw tetrimino bits if they're outside the cover window */
-		if (tetrimino->bits[i].y >= COVER_B_BNDRY)
-			mvwaddch(win, tetrimino->bits[i].y, tetrimino->bits[i].x, tetrimino->bits[i].value);
+		if (tetrimino_bits[i].y >= COVER_B_BNDRY)
+			mvwaddch(win, tetrimino_bits[i].y, tetrimino_bits[i].x, tetrimino_bits[i].value);
 		
 	for (i = 0; i < WELL_CONTENTS_HEIGHT; i++)
 		for (j = 0; j < WELL_CONTENTS_WIDTH; j++)
 			/* Only draw well contents if their corresponding character is an 'o' and they are located
 			outside the cover window */
-			if ((gui->state->well_contents[player_id][i][j].value & A_CHARTEXT) == 'o' && gui->state->well_contents[player_id][i][j].y >= COVER_B_BNDRY)
-				mvwaddch(win, gui->state->well_contents[player_id][i][j].y, gui->state->well_contents[player_id][i][j].x, gui->state->well_contents[player_id][i][j].value);
+			if ((well_contents[i][j].value & A_CHARTEXT) == 'o' && well_contents[i][j].y >= COVER_B_BNDRY)
+				mvwaddch(win, well_contents[i][j].y, well_contents[i][j].x, well_contents[i][j].value);
 				
 	wnoutrefresh(win);
 }
@@ -357,7 +393,7 @@ void update_well(GUI *gui, EPlayer player_id)
 /* Updates the player's hold window by displaying the tetrimino specified by
 tetrimino_id. */
 
-void update_hold(GUI *gui, EPlayer player_id, int tetrimino_id)
+void update_hold(GUI *gui, EPlayer player_id, ETetrimino tetrimino_id)
 {
 	WINDOW *win = gui->win[player_id][HOLD_ID];
 	int i, j;
@@ -407,12 +443,12 @@ void update_score(GUI *gui, EPlayer player_id)
 	wnoutrefresh(score_win);
 }
 
-void update_garbage_line_counter(GUI *gui, EPlayer player_id)
+void update_garbage_line_counter(GUI *gui, EPlayer player_id, int garbage_counter)
 {
 	WINDOW *garbage_win = gui->win[player_id][GARBAGE_ID];
 	wmove(garbage_win, 4, 0);
 	wclrtoeol(garbage_win);
-	mvwprintw(garbage_win, 4, 0, "%d", gui->state->garbage_counter[player_id]);
+	mvwprintw(garbage_win, 4, 0, "%d", garbage_counter);
 	wnoutrefresh(garbage_win);
 }
 
@@ -481,4 +517,67 @@ void print_title_small(GUI *gui)
 
 	mvwprintw(win, 9, 0, "Press Q to quit");
 	wnoutrefresh(win);
+}
+
+void print_single_end_screen(int final_line_count, int final_score)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+	mvprintw(row/2 - 6, (col-strlen(game_over_msg))/2, "%s", game_over_msg);
+	attroff(COLOR_PAIR(Z_COLOR_PAIR));
+	mvprintw(row/2 - 4, 24, "Final level : %d", final_line_count / 10);
+	mvprintw(row/2 - 3, 24, "Final # of lines cleared: %d", final_line_count);
+	mvprintw(row/2 - 2, 24, "Final score : %d", final_score);
+
+	mvprintw(row/2 + 2, (col-strlen(esc_msg))/2, "%s", esc_msg);
+	refresh();
+}
+
+void print_versus_end_screen(EGameOver game_over_status)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	attron(COLOR_PAIR(Z_COLOR_PAIR)); // red
+	if (game_over_status == PLAYER_1_LOST)
+		mvprintw(row/2 - 6, (col-strlen(versus_p2_win_msg))/2, "%s", versus_p2_win_msg);
+	else if (game_over_status == PLAYER_2_LOST)
+		mvprintw(row/2 - 6, (col-strlen(versus_p1_win_msg))/2, "%s", versus_p1_win_msg);
+	else if (game_over_status == PLAYER_DISCONNECT)
+		mvprintw(row/2 - 6, (col-strlen(disconnect_msg))/2, "%s", disconnect_msg);
+	attroff(COLOR_PAIR(Z_COLOR_PAIR));
+
+	mvprintw(row/2 + 2, (col-strlen(esc_msg))/2, "%s", esc_msg);
+	refresh();
+}
+
+void print_message_with_esc(char *message)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	mvprintw(row/2 - 6, (col-strlen(message))/2, "%s", message);
+	mvprintw(row/2 + 2, (col-strlen(esc_msg))/2, "%s", esc_msg);
+	refresh();
+}
+
+void print_message(char *message)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	mvprintw(row/2 - 6, (col-strlen(message))/2, "%s", message);
+	refresh();
+}
+
+void print_countdown(int countdown_val, EPlayer player_id)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	mvprintw(row/2 - 6, (col-strlen(versus_identity_msg))/2, "%s%d", versus_identity_msg, player_id + 1);
+	mvprintw(row/2 + 2, col/2, "%d", countdown_val);
+	refresh();
 }
