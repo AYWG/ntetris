@@ -25,6 +25,7 @@ static char esc_msg[] = "Press ESC to return to the main menu";
 static char versus_p1_win_msg[] = "Player 1 wins!";
 static char versus_p2_win_msg[] = "Player 2 wins!";
 static char disconnect_msg[] = "Other player disconnected";
+static char versus_identity_msg[] = "You will be Player: ";
 
 /* Initialization function that must be called */
 						   
@@ -568,5 +569,15 @@ void print_message(char *message)
 	getmaxyx(stdscr, row, col);
 	clear();
 	mvprintw(row/2 - 6, (col-strlen(message))/2, "%s", message);
+	refresh();
+}
+
+void print_countdown(int countdown_val, EPlayer player_id)
+{
+	int row, col;
+	getmaxyx(stdscr, row, col);
+	clear();
+	mvprintw(row/2 - 6, (col-strlen(versus_identity_msg))/2, "%s%d", versus_identity_msg, player_id + 1);
+	mvprintw(row/2 + 2, col/2, "%d", countdown_val);
 	refresh();
 }

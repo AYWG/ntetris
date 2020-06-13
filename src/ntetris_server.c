@@ -16,6 +16,7 @@
 
 #define BACKLOG 10
 
+/* For releasing resources associated with terminated child processes */
 void sigchld_handler(int s)
 {
 	(void)s; // quiet unused variable warning
@@ -42,6 +43,20 @@ int is_client_connected(int socket_fd) {
 	char buffer[32];
 
 	return !(recv(socket_fd, buffer, sizeof buffer, MSG_PEEK | MSG_DONTWAIT) == 0);
+}
+
+int run_countdown(int client_sockets[NUM_PLAYERS]) {
+	int i;
+	EPlayer player_id;
+
+	for (i = COUNTDOWN_LENGTH; i >= 0; i--) {
+		for (player_id = PLAYER_1; player_id < NUM_PLAYERS; player_id++) {
+			if (send(client_sockets[player_id], &i, sizeof(int), MSG_NOSIGNAL) == -1) {
+				perror("send countdown");
+			}
+		}
+		usleep(1000000);
+	}
 }
 
 void *server_send_thread(void *send_args)
@@ -112,7 +127,7 @@ void *server_recv_thread(void *recv_args)
 		}
 		else if (input == args->controls[ROTATE_CW])
 			rotate_tetrimino(state, player_id, CW);
-		else if (input == args->controls[ROTATE_CW])
+		else if (input == args->controls[ROTATE_CCW])
 			rotate_tetrimino(state, player_id, CCW);
 		else if (input == args->controls[HOLD])
 			hold_tetrimino(state, player_id);
@@ -308,7 +323,11 @@ int main (void)
 
 			int client_sockets[] = {new_fd, new_fd2};
 
-			run_game(client_sockets);
+			run_countdown(client_sockets);
+
+			if (is_client_connected(new_fd) && is_client_connected(new_fd)) {
+				run_game(client_sockets);
+			}
 
 			close(new_fd);
 			close(new_fd2);
@@ -318,20 +337,6 @@ int main (void)
 		close(new_fd);
 		close(new_fd2);
 	}
-
-	// inet_ntop(their_addr.ss_family,
-	// 	get_in_addr((struct sockaddr *)&their_addr),
-	// 	s, sizeof s);
-	// printf("server: got connection from %s\n", s);
-
-    // if (send(new_fd, "Waiting for second player", 25, 0) == -1) {
-    //     perror("send");
-    // }
-
-	    // inet_ntop(their_addr.ss_family,
-    //     get_in_addr((struct sockaddr *)&their_addr),
-    //     s, sizeof s);
-    // printf("server: got connection from %s\n", s);
     close(sockfd);
 
     return 0;

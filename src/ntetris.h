@@ -28,34 +28,6 @@
 #define HOWTOPLAY 3
 #define EXIT 4
 
-typedef enum {
-	LOCAL,
-	ONLINE,
-	BACK
-} EVersusMenu;
-
-/* Maximum number of players */
-typedef enum {
-	PLAYER_1,
-	PLAYER_2,
-	NUM_PLAYERS
-} EPlayer;
-
-typedef enum {
-	NOT_OVER,
-	PLAYER_1_LOST,
-	PLAYER_2_LOST,
-	PLAYER_DISCONNECT
-} EGameOver;
-
-/* Difficulty levels */
-typedef enum {
-	CASUAL,
-	INTERMEDIATE,
-	EXPERT,
-	INVALID_DIFFICULTY
-} EDifficulty;
-
 /* Game delays (in microseconds) */
 #define CASUAL_INIT_DELAY 1000000
 #define INTERMEDIATE_INIT_DELAY 500000
@@ -63,69 +35,8 @@ typedef enum {
 #define MIN_DELAY 30000 // Game delay cannot go below this amount
 #define STALL 1000
 
-/* IDs of the different game pieces */
-typedef enum {
-	TETRIMINO_I, 
-	TETRIMINO_J, 
-	TETRIMINO_L, 
-	TETRIMINO_O, 
-	TETRIMINO_S, 
-	TETRIMINO_T, 
-	TETRIMINO_Z, 
-	NUM_TETRIMINOS, 
-	INVALID_ID
-} ETetrimino;
-
-/* FOR REFERENCE
-I : oooo - bits: 0 1 2 3  Pivot = 1
-
-J : ooo  - bits: 0 1 2    Pivot = 1
-  	  o 			 3
-
-L : ooo  - bits: 0 1 2    Pivot = 1
-	o 			 3
-
-O : oo 	 - bits: 0 1  	  Pivot = 4 (no pivot)
-	oo 			 2 3
-
-S :  oo  - bits:  0 1     Pivot = 3
-	oo 			2 3
-
-T : ooo  - bits: 0 1 2 	  Pivot = 1
-	 o 			   3
-
-Z : oo 	 - bits: 0 1 	  Pivot = 2
-	 oo 		   2 3
-*/
-
 /* Number of bits that make up each tetrimino */
 #define NUM_BITS 4
-
-/* Directions of movement */
-typedef enum {
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT,
-	CW,
-	CCW
-} EDirection;
-
-/* Dimensions and initial coordinates for 
-the WINDOWs used */
-typedef enum {
-	WELL_ID,
-	COVER_ID,
-	HOLD_ID,
-	LINE_COUNT_ID,
-	SCORE_ID,
-	LEVEL_ID,
-	TITLE_SMALL_ID,
-	GARBAGE_ID,
-	OTHER_GARBAGE_ID,
-	NUM_WINDOWS
-} EWindow;
-#define NUM_WINDOWS 9
 
 #define WELL_HEIGHT 23
 #define WELL_WIDTH 22
@@ -207,18 +118,6 @@ typedef enum {
 #define CONTROLS_INIT_X 8
 #define HOWTOPLAY_INIT_X 6
 
-/* Constants representing the different controls */
-typedef enum {
-	MOVE_LEFT,
-	MOVE_RIGHT,
-	MOVE_DOWN,
-	DROP,
-	ROTATE_CW,
-	ROTATE_CCW,
-	HOLD,
-	NUM_CONTROLS
-} EControls;
-
 /* Decimal value of needed ASCII characters */
 
 #define QUIT_KEY 113 // q
@@ -235,6 +134,108 @@ typedef enum {
 #define G_KEY 103
 #define F_KEY 102
 #define SPACE_KEY 32
+
+#define COUNTDOWN_LENGTH 5
+
+/* IDs of the different game pieces */
+typedef enum {
+	TETRIMINO_I, 
+	TETRIMINO_J, 
+	TETRIMINO_L, 
+	TETRIMINO_O, 
+	TETRIMINO_S, 
+	TETRIMINO_T, 
+	TETRIMINO_Z, 
+	NUM_TETRIMINOS, 
+	INVALID_ID
+} ETetrimino;
+
+/* FOR REFERENCE
+I : oooo - bits: 0 1 2 3  Pivot = 1
+
+J : ooo  - bits: 0 1 2    Pivot = 1
+  	  o 			 3
+
+L : ooo  - bits: 0 1 2    Pivot = 1
+	o 			 3
+
+O : oo 	 - bits: 0 1  	  Pivot = 4 (no pivot)
+	oo 			 2 3
+
+S :  oo  - bits:  0 1     Pivot = 3
+	oo 			2 3
+
+T : ooo  - bits: 0 1 2 	  Pivot = 1
+	 o 			   3
+
+Z : oo 	 - bits: 0 1 	  Pivot = 2
+	 oo 		   2 3
+*/
+
+typedef enum {
+	LOCAL,
+	ONLINE,
+	BACK
+} EVersusMenu;
+
+/* Maximum number of players */
+typedef enum {
+	PLAYER_1,
+	PLAYER_2,
+	NUM_PLAYERS
+} EPlayer;
+
+typedef enum {
+	NOT_OVER,
+	PLAYER_1_LOST,
+	PLAYER_2_LOST,
+	PLAYER_DISCONNECT
+} EGameOver;
+
+/* Difficulty levels */
+typedef enum {
+	CASUAL,
+	INTERMEDIATE,
+	EXPERT,
+	INVALID_DIFFICULTY
+} EDifficulty;
+
+/* Directions of movement */
+typedef enum {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+	CW,
+	CCW
+} EDirection;
+
+/* Dimensions and initial coordinates for 
+the WINDOWs used */
+typedef enum {
+	WELL_ID,
+	COVER_ID,
+	HOLD_ID,
+	LINE_COUNT_ID,
+	SCORE_ID,
+	LEVEL_ID,
+	TITLE_SMALL_ID,
+	GARBAGE_ID,
+	OTHER_GARBAGE_ID,
+	NUM_WINDOWS
+} EWindow;
+
+/* Constants representing the different controls */
+typedef enum {
+	MOVE_LEFT,
+	MOVE_RIGHT,
+	MOVE_DOWN,
+	DROP,
+	ROTATE_CW,
+	ROTATE_CCW,
+	HOLD,
+	NUM_CONTROLS
+} EControls;
 
 /* Struct to represent a coordinate and its associated value */
 typedef struct 
@@ -363,6 +364,7 @@ void print_single_end_screen(int final_line_count, int final_score);
 void print_versus_end_screen(EGameOver game_over_status);
 void print_message_with_esc(char *message);
 void print_message(char *message);
+void print_countdown(int countdown_val, EPlayer player_id);
 
 /* Game prototypes*/
 void game_state_init(GameState *state, EDifficulty difficulty, int mode);
@@ -387,6 +389,6 @@ int update_lines(GameState *state, EPlayer player_id);
 
 /* Networking stuff */
 EGameOver play_ntetris_remote(void);
-int connect_to_server(const char * hostname);
+// int connect_to_server(const char * hostname);
 
 #endif
